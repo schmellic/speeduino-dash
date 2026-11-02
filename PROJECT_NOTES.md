@@ -3,6 +3,18 @@
 Wireless dash for a 1961 VW Beetle running a Speeduino (Mega-based v0.4). Two ESP32 nodes
 talk over ESP-NOW; nothing has been flashed or run on hardware yet.
 
+## Working across computers (read first)
+
+This project is edited from several computers, each with its own Claude session, so the repo can change between sessions.
+
+- Before doing any work, run `git pull --ff-only`, then re-read this file and `SHOPPING_LIST.md`. Do this again whenever
+  `git log` shows commits you didn't make.
+- `--ff-only` makes the pull fail instead of creating a merge commit or conflicts. If it refuses, local and remote have both
+  moved: stop, tell the user, and decide together whether to merge or rebase. Don't force anything.
+- When work changes the project's state (decisions, status, measurements, open questions), update these notes in the same
+  commit and push, so the next computer starts from the truth.
+- Set the git identity once per machine (`git config --global user.name` / `user.email`) rather than committing with `-c`.
+
 ## Architecture
 
 ```
