@@ -52,9 +52,8 @@ Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V 
 
 ## Open questions / unverified
 
-1. Speeduino realtime byte offsets in `readSpeeduino()` are from memory. Check against `[OutputChannels]` in your
-   firmware's `speeduino.ini`. Newer firmware may add a header byte to the 'A' reply.
-2. AFR is shown as O2 byte / 10; check the scaling.
+1. Realtime byte offsets now match the 61Bug mainController.ini (speeduino 202402; advance is byte 24, TPS byte 25). Still unconfirmed on the wire: whether Serial3 answers the ini's `r` command, and whether it echoes an `r` first (the code tolerates both). The secondary-serial protocol setting in TunerStudio may matter (try msDroid or Generic).
+2. AFR is shown as the `afr` channel (byte 10, scale 0.1 in the ini); it only means something if a wideband is wired in.
 3. "Head temp" is the Speeduino CLT input; needs a CHT sender wired to it and calibrated in TunerStudio.
 4. GC9B72 library on a classic ESP32 (its example is S3), and two screens on one SPI bus.
 5. Warning thresholds (head 190/220 C, battery, 5000/5500 rpm shift/redline) are guesses.

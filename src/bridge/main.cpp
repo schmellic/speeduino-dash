@@ -17,33 +17,38 @@ constexpr int SPEEDUINO_RX = 16;
 constexpr int SPEEDUINO_TX = 17;
 #endif
 constexpr uint32_t SPEEDUINO_BAUD = 115200;
-constexpr size_t REALTIME_LEN = 75;   // 'A' command reply length; verify against your firmware's .ini
+constexpr size_t REALTIME_LEN = 32;   // only the first 32 bytes of the realtime block are needed
 constexpr uint32_t POLL_MS = 50;      // 20 Hz
 
 static const uint8_t BROADCAST[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 static uint8_t seq = 0;
 
-// Offsets within the realtime block. Check against [OutputChannels] in your speeduino.ini.
+// Offsets taken from [OutputChannels] in the 61Bug mainController.ini (speeduino 202402).
+// Request is the ini's ochGetCommand: 'r', canId, 0x30, offset (2 bytes), length (2 bytes).
 static bool readSpeeduino(Telemetry &t) {
   while (SpeeduinoSerial.available()) SpeeduinoSerial.read();
-  SpeeduinoSerial.write('A');
+  const uint8_t req[] = {'r', 0x00, 0x30, 0x00, 0x00, (uint8_t)REALTIME_LEN, 0x00};
+  SpeeduinoSerial.write(req, sizeof(req));
 
-  uint8_t buf[REALTIME_LEN];
+  uint8_t buf[REALTIME_LEN + 1];
   size_t n = 0;
   uint32_t start = millis();
-  while (n < REALTIME_LEN && millis() - start < 100) {
+  while (n < REALTIME_LEN + 1 && millis() - start < 100) {
     if (SpeeduinoSerial.available()) buf[n++] = SpeeduinoSerial.read();
   }
-  if (n < REALTIME_LEN) return false;
+  // Some firmware echoes 'r' before the data; skip it if the length says so.
+  const uint8_t *d = buf;
+  if (n == REALTIME_LEN + 1 && buf[0] == 'r') d = buf + 1;
+  else if (n < REALTIME_LEN) return false;
 
-  t.mapKpa     = buf[4] | (buf[5] << 8);
-  t.iatC       = (int16_t)buf[6] - 40;
-  t.cltC       = (int16_t)buf[7] - 40;
-  t.battMv     = buf[9] * 100;
-  t.o2Raw      = buf[10];
-  t.rpm        = buf[14] | (buf[15] << 8);
-  t.advanceDeg = (int8_t)buf[23];
-  t.tpsPct     = buf[24] / 2;
+  t.mapKpa     = d[4] | (d[5] << 8);
+  t.iatC       = (int16_t)d[6] - 40;
+  t.cltC       = (int16_t)d[7] - 40;
+  t.battMv     = d[9] * 100;
+  t.o2Raw      = d[10];
+  t.rpm        = d[14] | (d[15] << 8);
+  t.advanceDeg = (int8_t)d[24];
+  t.tpsPct     = d[25] / 2;
   return true;
 }
 
