@@ -106,6 +106,9 @@ Built in Fusion (via the Fusion MCP) from a parametric script; an equivalent Ope
 
 1. ~~Check the radio link~~ done 2026-11-02. Optional: unplug the C3 and confirm the receiver prints `no data`.
 2. When screens arrive: flash `dash_sim`, check both screens and the shared SPI bus.
-3. Verify ECU byte offsets, wire up the bridge, try `bridge_c3_live` + `dash`.
+3. Design the enclosure for the new bridge board (40x60 mm perfboard, terminals A and B on the edges; see Wiring), then solder the
+   bridge wires to the Speeduino (D14 -> A1, D15 -> A2, J6 GND -> B1; run the D21 continuity check first). Then test in the car with
+   `bridge_c3_live` on the C3 and `display_rx` on the classic ESP32 plugged into a laptop (it prints `no data` until real values arrive).
+   TunerStudio needs Secondary Serial IO enabled at 115200, burned, then power-cycled. Then verify the ECU byte offsets and try `dash`.
 4. Measure the C3, buck and caps, update `BridgeBox.py`, export STLs and print the bridge box (PETG).
 5. Measure the glovebox and the real screens, then design the 3D-printed mount.
