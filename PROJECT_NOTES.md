@@ -55,7 +55,10 @@ rpm/map/clt/iat/batt values. Not yet tested: the 'no data' stale case, range, th
 
 ## Wiring
 
-Bridge (ESP32-C3, Serial1): Speeduino TX3 (pin 14) -> 1k/2k divider -> GPIO4 (RX); GPIO5 (TX) -> Speeduino RX3 (pin 15); common GND.
+Bridge (ESP32-C3 SuperMini, Serial1): Speeduino TX3 (pin 14) -> 1k resistor -> GPIO4 (RX, right header), with a 2k resistor from
+that junction to GND; GPIO5 (TX, left header) -> Speeduino RX3 (pin 15) direct. The buck's 5 V goes to the C3 5V pin and its GND
+joins the Speeduino GND wire at the C3's single GND header pin. Do not power from the buck and USB at the same time.
+SuperMini pin order (USB at top): left 5,6,7,8(LED),9(BOOT),10,20,21; right 5V,GND,3V3,4,3,2,1,0. Matches the user's board.
 Speeduino needs Secondary Serial IO enabled in TunerStudio, 115200 baud. Check the v0.4 Serial3 header on your board.
 
 Dash (classic ESP32): SCK 18, MOSI 23, DC 21 shared. Tach: CS 5, RST 22, BL 25. Info: CS 4, RST 27, LED 26.
@@ -87,7 +90,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script; an equivalent Ope
 3. "Head temp" is the Speeduino CLT input; needs a CHT sender wired to it and calibrated in TunerStudio.
 4. GC9B72 library on a classic ESP32 (its example is S3), and two screens on one SPI bus.
 5. Warning thresholds (head 190/220 C, battery, 5000/5500 rpm shift/redline) are guesses.
-6. C3 pins GPIO4/5 depend on which pins your C3 board breaks out.
+6. Where the Serial3 pins are on the user's Speeduino v0.4 board is unconfirmed (Mega pins 14/15, shield may cover them). `bridge_c3_live` is flashed; the C3 reports link=0 until it is wired.
 
 ## Next steps
 
