@@ -1,7 +1,7 @@
 # Speeduino dash: project notes
 
 Wireless dash for a 1961 VW Beetle running a Speeduino (Mega-based v0.4). Two ESP32 nodes
-talk over ESP-NOW; nothing has been flashed or run on hardware yet.
+talk over ESP-NOW; the radio link is verified on the bench (simulated data), nothing else has run on hardware yet.
 
 ## Working across computers (read first)
 
@@ -36,7 +36,9 @@ Speeduino Serial3 --wire--> [ESP32-C3 "bridge"] ~~ESP-NOW~~> [ESP32 "dash"] --SP
 | `dash_sim` | dash draws fake data locally, no bridge needed |
 | `dash` | dash receives from the bridge |
 
-Compiled OK: all of the above. Not flashed, not tested on hardware.
+Compiled OK: all of the above. Hardware-tested so far: `bridge_c3_sim` on the C3 (native USB, `/dev/ttyACM0`, flags OK) and
+`display_rx` on the classic ESP32 (CH340, `/dev/ttyUSB0`). The ESP-NOW link works: the receiver printed the simulated
+rpm/map/clt/iat/batt values. Not yet tested: the 'no data' stale case, range, the ECU link, any screens.
 
 ## Hardware plan
 
@@ -89,7 +91,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script; an equivalent Ope
 
 ## Next steps
 
-1. Flash `bridge_c3_sim` and `display_rx` to check the radio link (no screens needed).
+1. ~~Check the radio link~~ done 2026-11-02. Optional: unplug the C3 and confirm the receiver prints `no data`.
 2. When screens arrive: flash `dash_sim`, check both screens and the shared SPI bus.
 3. Verify ECU byte offsets, wire up the bridge, try `bridge_c3_live` + `dash`.
 4. Measure the C3, buck and caps, update `BridgeBox.py`, export STLs and print the bridge box (PETG).
