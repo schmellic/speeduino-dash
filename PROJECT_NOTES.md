@@ -77,6 +77,13 @@ Dash (classic ESP32): SCK 18, MOSI 23, DC 21 shared. Tach: CS 5, RST 22, BL 25. 
 Power: switched 12 V -> 1 A fuse -> automotive 12V->5V buck (36 V+ input, TVS + caps on input) -> 5 V pins.
 Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V rail. See `SHOPPING_LIST.md`.
 
+## Reference images (`docs/`)
+
+- `docs/wiring.svg`: wiring between the Speeduino v0.4.4d, the bridge board (terminals A1/A2, B1/B2, R1 1k, R2 2k, C3, buck) and the 12 V feed.
+- `docs/bridge_board_labelled.jpg`: photo of the built bridge board with A1/A2, B1/B2, R1/R2 and the C3 pins labelled.
+- `docs/speeduino_solder_points.png`: photo of the Speeduino shield marking where to solder D14 (TX3), D15 (RX3) and GND (J6),
+  plus the D21 continuity-check pads. Positions are derived from the board layout; confirm with the D21 beep test before soldering.
+
 ## Bridge enclosure (ESP32-C3 + buck converter)
 
 Small two-part box (base + lid, PETG) holding the C3 and the 12V->5V buck with its input filter parts.
