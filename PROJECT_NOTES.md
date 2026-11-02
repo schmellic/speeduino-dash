@@ -65,7 +65,7 @@ Bridge board (built 2026-11-02): 40x60 mm perfboard with the C3, the 12V->5V buc
 (one beside the buck, one top-left). With USB-C facing right the C3 pins read: top row 21,20,10,9,8,7,6,5; bottom row 0,1,2,3,4,3V3,GND,5V.
 Terminals (photo, component side, board upright with USB-C facing right): the one beside the buck is the 12 V input, right screw 12 V+, left screw 12 V-.
 Resistors: R1 (vertical, beside the C3, near the top-left terminal) is the 1k; R2 (horizontal, under the C3's bottom pins) is the 2k.
-The top-left terminal's two screws are labelled A1 = RX, A2 = TX by the user, but whether that is the board's or the Speeduino's viewpoint is not yet confirmed (matters: A1 must go to Speeduino TX3 via the divider).
+Top-left terminal (board's viewpoint, confirmed by continuity): A1 (upper) = C3 RX, reads 1k to GPIO4, so it goes to Speeduino TX3 (pin 14); A2 (lower) = C3 TX, wired to GPIO5, so it goes to Speeduino RX3 (pin 15).
 The user continuity-checked the board (resistor values, GPIO4 divider, GPIO5 line, buck 5V/GND to the C3, no shorts) and reports it all
 checks out. Only two serial terminal screws, so there is no dedicated ground wire to the Speeduino: in the car the grounds are shared
 through the chassis, but on the bench the ECU ground must be joined to the board's ground by hand. The solder side is coated in green
