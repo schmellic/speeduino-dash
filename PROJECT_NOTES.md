@@ -50,6 +50,22 @@ Dash (classic ESP32): SCK 18, MOSI 23, DC 21 shared. Tach: CS 5, RST 22, BL 25. 
 Power: switched 12 V -> 1 A fuse -> automotive 12V->5V buck (36 V+ input, TVS + caps on input) -> 5 V pins.
 Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V rail. See `SHOPPING_LIST.md`.
 
+## Bridge enclosure (ESP32-C3 + buck converter)
+
+Small two-part box (base + lid, PETG) holding the C3 and the 12V->5V buck with its input filter parts.
+Built in Fusion (via the Fusion MCP) from a parametric script; an equivalent OpenSCAD version is kept as a reference.
+
+- `enclosure/BridgeBox/BridgeBox.py` (+ `.manifest`): Fusion script. Install by copying the folder into Fusion's
+  `API/Scripts` directory, then Utilities > Scripts and Add-ins > BridgeBox > Run. Dimensions are constants at the top (mm).
+- `enclosure/bridge_box.scad`: OpenSCAD equivalent, never rendered (OpenSCAD not installed).
+- Default size 96.8 x 38.8 x 22.0 mm base, plus a 4.4 mm lid laid out beside it. Corner M3 posts, C3 on two rails,
+  four pads for the buck area, USB-C slot on one end wall, two 8 mm square wire holes (12 V in, ECU serial out) on the other,
+  floor vents under the buck, lip on the lid.
+- Status: base and lid built and checked in a Fusion screenshot; fit not test-printed. Document not saved, no STL exported.
+- Guessed, not measured: C3 board 55 x 26 mm, buck area 25 x 20 mm, 14 mm component height, USB slot centred on the box width.
+  Measure the real C3, buck and caps (and check where the C3's USB port sits) and edit the constants before printing.
+- Wire holes are bare holes: add grommets or strain relief; the box is not sealed against water.
+
 ## Open questions / unverified
 
 1. Realtime byte offsets now match the 61Bug mainController.ini (speeduino 202402; advance is byte 24, TPS byte 25). Still unconfirmed on the wire: whether Serial3 answers the ini's `r` command, and whether it echoes an `r` first (the code tolerates both). The secondary-serial protocol setting in TunerStudio may matter (try msDroid or Generic).
@@ -64,4 +80,5 @@ Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V 
 1. Flash `bridge_c3_sim` and `display_rx` to check the radio link (no screens needed).
 2. When screens arrive: flash `dash_sim`, check both screens and the shared SPI bus.
 3. Verify ECU byte offsets, wire up the bridge, try `bridge_c3_live` + `dash`.
-4. Measure the glovebox and the real screens, then design the 3D-printed mount.
+4. Measure the C3, buck and caps, update `BridgeBox.py`, export STLs and print the bridge box (PETG).
+5. Measure the glovebox and the real screens, then design the 3D-printed mount.

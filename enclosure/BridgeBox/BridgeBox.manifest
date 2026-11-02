@@ -1,0 +1,8 @@
+{
+  "autodeskProduct": "Fusion",
+  "type": "script",
+  "author": "schmellic",
+  "description": { "": "Enclosure for the Speeduino bridge: ESP32-C3 + 12V->5V buck" },
+  "supportedOS": "windows|mac",
+  "editEnabled": true
+}
