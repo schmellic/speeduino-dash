@@ -63,6 +63,8 @@ Speeduino needs Secondary Serial IO enabled in TunerStudio, 115200 baud. Check t
 
 Bridge board (built 2026-11-02): 40x60 mm perfboard with the C3, the 12V->5V buck, the 1k/2k divider and two 2-way screw terminals
 (one beside the buck, one top-left). With USB-C facing right the C3 pins read: top row 21,20,10,9,8,7,6,5; bottom row 0,1,2,3,4,3V3,GND,5V.
+Terminals (photo, component side, board upright with USB-C facing right): the one beside the buck is the 12 V input, right screw 12 V+, left screw 12 V-.
+The top-left terminal's two screws (serial TX/RX) are not recorded yet.
 The user continuity-checked the board (resistor values, GPIO4 divider, GPIO5 line, buck 5V/GND to the C3, no shorts) and reports it all
 checks out. Only two serial terminal screws, so there is no dedicated ground wire to the Speeduino: in the car the grounds are shared
 through the chassis, but on the bench the ECU ground must be joined to the board's ground by hand. The solder side is coated in green
