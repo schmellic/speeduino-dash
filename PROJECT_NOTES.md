@@ -100,7 +100,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script; an equivalent Ope
 3. "Head temp" is the Speeduino CLT input; needs a CHT sender wired to it and calibrated in TunerStudio.
 4. GC9B72 library on a classic ESP32 (its example is S3), and two screens on one SPI bus.
 5. Warning thresholds (head 190/220 C, battery, 5000/5500 rpm shift/redline) are guesses.
-6. Where the Serial3 pins are on the user's Speeduino v0.4 board is unconfirmed (Mega pins 14/15, shield may cover them). `bridge_c3_live` is flashed; the C3 reports link=0 until the board is connected to the ECU.
+6. Where the Serial3 pins are on the user's Speeduino v0.4.4d board is unconfirmed. The schematic (v0.4, rev 4d) shows the shield's J2 "HC-05 Bluetooth" header is on D1/D0 (TX0/RX0, Serial0, shared with USB) through a 2k/1k divider, NOT Serial3, so don't use J2 for the bridge. D14 (TX3) and D15 (RX3) appear only on the Mega's own pin headers; find where they come through the shield. `bridge_c3_live` is flashed; the C3 reports link=0 until the board is connected to the ECU.
 
 ## Next steps
 
