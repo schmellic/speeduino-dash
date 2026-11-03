@@ -112,6 +112,8 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
   terminal B centre 31 mm across from the board's left (low-Y) edge; wire entry centre 4.5 mm above the board surface. The 12 x 6 mm windows use
   these values (`TERM_*`, `SLOT_*`, `ENTRY_Z` in `BridgeBox.py`). Not measured: the wire-entry opening size (12 x 6 mm window is a guess that suits
   wire up to about 2.5 mm^2 with insulation) and B's entry height (assumed the same as A's). Terminal B's window clears the nearby lid post.
+- Material: the user only has PLA for now. PLA softens at about 55-60 C and a parked car's cabin can exceed that, so treat a PLA box as a fit test
+  and print the car version in PETG (or ASA/ABS) before it lives in the car. Same STLs, same settings; the walls were tuned for a 0.4 mm nozzle.
 - STLs of the current design (base and lid) are in `enclosure/stl/` (exported from Fusion with the medium mesh setting). Not printed yet.
   Regenerate them after any change to `BridgeBox.py`.
 - The wire windows are open slots: use sleeving or sealant around the wires if dust or moisture is a concern; the box is not sealed against water.
