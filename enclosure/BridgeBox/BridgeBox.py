@@ -16,9 +16,9 @@ import adsk.fusion
 BOARD_LEN, BOARD_WID, BOARD_T = 60.0, 40.0, 1.6
 COMP_H = 14.0            # tallest part above the board (C3 headers / terminals / buck cap): MEASURE
 STANDOFF = 5.0           # board lift off the floor (clears the solder side)
-STANDOFF_D = 6.0
-PILOT_D = 1.8            # pilot hole for an M2 self-tapping screw (needs a hole near each board corner)
-HOLE_INSET = 3.5         # corner standoff centre, in from the board edges
+STANDOFF_D = 4.5
+PILOT_D = 1.8            # pilot hole for an M2 self-tapping screw (the board has a hole 2 mm in at each corner)
+HOLE_INSET = 2.0         # corner hole centre, in from the board edges (measured by the user)
 
 # ---- Box ---------------------------------------------------------------
 WALL, FLOOR, LID_T = 2.4, 2.0, 2.4

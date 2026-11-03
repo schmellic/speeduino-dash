@@ -92,15 +92,19 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 
 - `enclosure/BridgeBox/BridgeBox.py` (+ `.manifest`): Fusion script, constants at the top (mm). Install by copying the folder into
   Fusion's `API/Scripts` directory, then Utilities > Scripts and Add-ins > BridgeBox > Run. `build_all()` makes a new design with both bodies.
-- Design: 81.8 x 48.8 x 24.6 mm base plus a 2.4 mm lid (laid out beside it, with a locating lip). Four corner standoffs (5 mm, 6 mm dia) with
-  1.8 mm pilot holes for M2 self-tapping screws, 3.5 mm in from the board corners. Four M3 lid posts in the box corners. Two 8 mm square
-  wire holes on the +X end wall (12 V in, ECU serial out), 8 mm of spare space on that end for wires to turn. No USB slot, no vents.
-- Status: built; checked by point-containment tests in Fusion (standoffs, pilot holes, wire holes, posts, lid holes) and body volumes.
-  Screenshots of the new design came back washed out (render glitch under Wine), so it has not been looked at visually. Not saved, no STL
-  exported, not printed.
-- Assumed, not measured: board corner holes exist (if the perfboard has no holes near its corners, drill them or change `HOLE_INSET`),
-  tallest part 14 mm above the board (`COMP_H`), which end wall the wires should leave by (the terminals are on the board edges, so check
-  that wires reach). Measure the real board height and edit the constants before printing.
+- Design: 81.8 x 48.8 x 24.6 mm base plus a 2.4 mm lid (laid out beside it, with a locating lip). Four corner standoffs (5 mm tall, 4.5 mm dia)
+  at the board's four mounting holes (all four are 2 mm in from the board edges, confirmed by the user; the bottom-right one only looks hidden
+  behind terminal B in the photo because of the camera angle), each with a 1.8 mm pilot hole for an M2 self-tapping screw. Four M3 lid posts in
+  the box corners. Two 8 mm square wire holes on the +X end wall (12 V in, ECU serial out), 8 mm of spare room at that end for wires to turn.
+  No USB slot, no vents.
+- Status: built; checked by point-containment tests in Fusion (standoffs, pilot holes, wire holes, posts, lid holes) and body volumes, and the
+  exported STLs were rendered in matplotlib (Fusion's own viewport screenshots come out washed out under Wine). Not saved, no STL committed,
+  not printed.
+- Still assumed, not measured: tallest part 14 mm above the board (`COMP_H`; probably the screw terminals, maybe 10-11 mm), corner hole diameter
+  (M2 assumed), solder-side lead height (5 mm standoffs assumed), and which direction the terminals' wire entries face. In the photo the board
+  is 60 x 40 mm, terminal A is on the left long edge near the C3 end and terminal B (12 V) at the buck end, with apparent overhangs of
+  1-3 mm that are likely just the camera angle. A and B are at opposite short ends, so one wire hole per end wall (aligned with its terminal)
+  may suit better than both on the +X wall: not done yet.
 - The wire holes are bare: add grommets or strain relief; the box is not sealed against water.
 - The earlier OpenSCAD version was removed (it modelled a bare C3 plus a separate buck, and was never rendered).
 
