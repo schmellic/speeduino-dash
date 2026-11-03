@@ -100,7 +100,8 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 - Status: built; checked by point-containment tests in Fusion (standoffs, pilot holes, wire holes, posts, lid holes) and body volumes, and the
   exported STLs were rendered in matplotlib (Fusion's own viewport screenshots come out washed out under Wine). Not saved, no STL committed,
   not printed.
-- Still assumed, not measured: tallest part 14 mm above the board (`COMP_H`; probably the screw terminals, maybe 10-11 mm), corner hole diameter
+- Measured by the user: tallest part is about 12 mm above the board, so `COMP_H = 14` stays (2 mm headroom).
+- Still assumed, not measured: corner hole diameter
   (M2 assumed), solder-side lead height (5 mm standoffs assumed), and which direction the terminals' wire entries face. In the photo the board
   is 60 x 40 mm, terminal A is on the left long edge near the C3 end and terminal B (12 V) at the buck end, with apparent overhangs of
   1-3 mm that are likely just the camera angle. A and B are at opposite short ends, so one wire hole per end wall (aligned with its terminal)
