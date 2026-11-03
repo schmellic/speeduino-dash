@@ -84,21 +84,25 @@ Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V 
 - `docs/speeduino_solder_points.png`: photo of the Speeduino shield marking where to solder D14 (TX3), D15 (RX3) and GND (J6),
   plus the D21 continuity-check pads. Positions are derived from the board layout; confirm with the D21 beep test before soldering.
 
-## Bridge enclosure (ESP32-C3 + buck converter)
+## Bridge enclosure
 
-Small two-part box (base + lid, PETG) holding the C3 and the 12V->5V buck with its input filter parts.
-Built in Fusion (via the Fusion MCP) from a parametric script; an equivalent OpenSCAD version is kept as a reference.
+Fit-and-forget two-part box (base + lid, PETG) around the built bridge board (40 x 60 mm perfboard, see Wiring). Decisions (user, 2026-11-03):
+board on standoffs; no access to the screw terminals or the C3's USB-C once the lid is on (flash and test before closing it).
+Built in Fusion (via the Fusion MCP) from a parametric script.
 
-- `enclosure/BridgeBox/BridgeBox.py` (+ `.manifest`): Fusion script. Install by copying the folder into Fusion's
-  `API/Scripts` directory, then Utilities > Scripts and Add-ins > BridgeBox > Run. Dimensions are constants at the top (mm).
-- `enclosure/bridge_box.scad`: OpenSCAD equivalent, never rendered (OpenSCAD not installed).
-- Default size 96.8 x 38.8 x 22.0 mm base, plus a 4.4 mm lid laid out beside it. Corner M3 posts, C3 on two rails,
-  four pads for the buck area, USB-C slot on one end wall, two 8 mm square wire holes (12 V in, ECU serial out) on the other,
-  floor vents under the buck, lip on the lid.
-- Status: base and lid built and checked in a Fusion screenshot; fit not test-printed. Document not saved, no STL exported.
-- Guessed, not measured: C3 board 55 x 26 mm, buck area 25 x 20 mm, 14 mm component height, USB slot centred on the box width.
-  Measure the real C3, buck and caps (and check where the C3's USB port sits) and edit the constants before printing.
-- Wire holes are bare holes: add grommets or strain relief; the box is not sealed against water.
+- `enclosure/BridgeBox/BridgeBox.py` (+ `.manifest`): Fusion script, constants at the top (mm). Install by copying the folder into
+  Fusion's `API/Scripts` directory, then Utilities > Scripts and Add-ins > BridgeBox > Run. `build_all()` makes a new design with both bodies.
+- Design: 81.8 x 48.8 x 24.6 mm base plus a 2.4 mm lid (laid out beside it, with a locating lip). Four corner standoffs (5 mm, 6 mm dia) with
+  1.8 mm pilot holes for M2 self-tapping screws, 3.5 mm in from the board corners. Four M3 lid posts in the box corners. Two 8 mm square
+  wire holes on the +X end wall (12 V in, ECU serial out), 8 mm of spare space on that end for wires to turn. No USB slot, no vents.
+- Status: built; checked by point-containment tests in Fusion (standoffs, pilot holes, wire holes, posts, lid holes) and body volumes.
+  Screenshots of the new design came back washed out (render glitch under Wine), so it has not been looked at visually. Not saved, no STL
+  exported, not printed.
+- Assumed, not measured: board corner holes exist (if the perfboard has no holes near its corners, drill them or change `HOLE_INSET`),
+  tallest part 14 mm above the board (`COMP_H`), which end wall the wires should leave by (the terminals are on the board edges, so check
+  that wires reach). Measure the real board height and edit the constants before printing.
+- The wire holes are bare: add grommets or strain relief; the box is not sealed against water.
+- The earlier OpenSCAD version was removed (it modelled a bare C3 plus a separate buck, and was never rendered).
 
 ## Open questions / unverified
 
@@ -113,9 +117,9 @@ Built in Fusion (via the Fusion MCP) from a parametric script; an equivalent Ope
 
 1. ~~Check the radio link~~ done 2026-11-02. Optional: unplug the C3 and confirm the receiver prints `no data`.
 2. When screens arrive: flash `dash_sim`, check both screens and the shared SPI bus.
-3. Design the enclosure for the new bridge board (40x60 mm perfboard, terminals A and B on the edges; see Wiring), then solder the
+3. Enclosure for the bridge board is designed (see Bridge enclosure; measure the board and print it). Solder the
    bridge wires to the Speeduino (D14 -> A1, D15 -> A2, J6 GND -> B1; run the D21 continuity check first). Then test in the car with
    `bridge_c3_live` on the C3 and `display_rx` on the classic ESP32 plugged into a laptop (it prints `no data` until real values arrive).
    TunerStudio needs Secondary Serial IO enabled at 115200, burned, then power-cycled. Then verify the ECU byte offsets and try `dash`.
-4. Measure the C3, buck and caps, update `BridgeBox.py`, export STLs and print the bridge box (PETG).
+4. Measure the bridge board height, update `BridgeBox.py` if needed, export STLs and print the box (PETG). Close the lid only after the in-car test.
 5. Measure the glovebox and the real screens, then design the 3D-printed mount.

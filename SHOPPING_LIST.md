@@ -24,3 +24,4 @@ Already have: ESP32 DevKitC (WROOM-32), ESP32-C3. Prices not checked.
 - Multimeter.
 - PETG filament (heat resistant, better than PLA for a hot glovebox) for the 3D-printed mount.
 - M3 x 8-10 mm self-tapping screws (4) for the bridge box lid, and rubber grommets for its wire holes.
+- M2 x 6 mm self-tapping screws (4) to hold the bridge board on its standoffs.
