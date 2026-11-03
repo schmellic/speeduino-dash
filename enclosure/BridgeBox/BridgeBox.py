@@ -25,7 +25,9 @@ HOLE_INSET = 2.0         # corner hole centre, in from the board edges (measured
 # Wall thicknesses are multiples of a 0.4 mm extrusion line (0.2 mm layers): 2.0 = 5 lines, 1.6 = 4 lines / 8 layers.
 WALL, FLOOR, LID_T = 2.0, 1.6, 2.0
 SIDE_GAP = 2.0           # clearance board <-> side walls
-WIRE_GAP = 8.0           # extra room at the +X end for wires to turn
+END_GAP_C3 = 2.5         # friction mode: clearance between the board's C3 end and the -X end wall
+END_GAP_B = 3.0          # friction mode: clearance at the +X end (terminal B is flush with the board edge, measured)
+WIRE_GAP = 8.0           # screws mode: extra room at the +X end
 POST_D, SCREW_D = 7.0, 2.6   # corner lid posts (2.2 mm wall around the pilot), M3 self-tapping pilot hole
 LID_HOLE_D = 3.4         # M3 clearance hole in the lid
 TOL = 0.3                # lid lip clearance in 'screws' mode
@@ -43,8 +45,12 @@ ENTRY_Z = 4.5            # wire entry centre above the board surface (measured)
 TERM_A_X = 14.0          # terminal A centre, along the board from its -X (C3) end
 TERM_B_Y = 31.0          # terminal B centre, across the board from its low-Y edge
 
-BOARD_X0 = WALL + POST_D + 1                      # board clears the lid posts at the -X end
-IN_LEN = (POST_D + 1) + BOARD_LEN + WIRE_GAP + 1
+if LID_MODE == 'screws':
+    GAP_C3, GAP_B = POST_D + 1, WIRE_GAP + 1          # board clears the corner posts
+else:
+    GAP_C3, GAP_B = END_GAP_C3, END_GAP_B             # no posts: tight ends
+BOARD_X0 = WALL + GAP_C3
+IN_LEN = GAP_C3 + BOARD_LEN + GAP_B
 IN_WID = BOARD_WID + 2 * SIDE_GAP
 IN_HGT = STANDOFF + BOARD_T + COMP_H + 2
 OUT_LEN, OUT_WID = IN_LEN + 2 * WALL, IN_WID + 2 * WALL
