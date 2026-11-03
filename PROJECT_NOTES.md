@@ -101,11 +101,12 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
   exported STLs were rendered in matplotlib (Fusion's own viewport screenshots come out washed out under Wine). Not saved, no STL committed,
   not printed.
 - Measured by the user: tallest part is about 12 mm above the board, so `COMP_H = 14` stays (2 mm headroom).
-- Still assumed, not measured: corner hole diameter
-  (M2 assumed), solder-side lead height (5 mm standoffs assumed), and which direction the terminals' wire entries face. In the photo the board
-  is 60 x 40 mm, terminal A is on the left long edge near the C3 end and terminal B (12 V) at the buck end, with apparent overhangs of
-  1-3 mm that are likely just the camera angle. A and B are at opposite short ends, so one wire hole per end wall (aligned with its terminal)
-  may suit better than both on the +X wall: not done yet.
+- Confirmed by the user: 5 mm standoffs are enough under the board, and M2 screws suit the corner holes.
+- Still unknown: which direction the terminals' wire entries face. A (ECU serial, left long edge near the C3 end) and B (12 V, at the buck end)
+  are at opposite short ends of the board, so one wire hole per end wall aligned with each terminal may suit better than both holes on the
+  +X wall (current design): not done yet.
+- STLs of the current design (base and lid) are in `enclosure/stl/` (exported from Fusion with the medium mesh setting). Not printed yet.
+  Regenerate them after any change to `BridgeBox.py`.
 - The wire holes are bare: add grommets or strain relief; the box is not sealed against water.
 - The earlier OpenSCAD version was removed (it modelled a bare C3 plus a separate buck, and was never rendered).
 
