@@ -1,8 +1,8 @@
 """Fusion script: fit-and-forget enclosure for the bridge board (40 x 60 mm perfboard with the ESP32-C3 SuperMini,
 12V->5V buck, 1k/2k divider and two screw terminals).
 
-The board sits on four standoffs; no access to the USB-C port is provided and the screws on the terminals need the lid off
-(the lid screws on and stays on). Wires enter through windows in the walls at the terminals' wire entries (B in the +X end
+The board sits on four standoffs; no access to the USB-C port is provided and the screws on the terminals need the lid off.
+The lid is a push (friction) fit by default (LID_MODE = 'friction'); LID_MODE = 'screws' gives four M3 corner posts instead. Wires enter through windows in the walls at the terminals' wire entries (B in the +X end
 wall, A in the low-Y side wall). Two bodies are made: the base and the lid (laid out beside it, with a locating lip and
 screw holes).
 
@@ -28,7 +28,10 @@ SIDE_GAP = 2.0           # clearance board <-> side walls
 WIRE_GAP = 8.0           # extra room at the +X end for wires to turn
 POST_D, SCREW_D = 7.0, 2.6   # corner lid posts (2.2 mm wall around the pilot), M3 self-tapping pilot hole
 LID_HOLE_D = 3.4         # M3 clearance hole in the lid
-TOL = 0.3                # lid lip clearance
+TOL = 0.3                # lid lip clearance in 'screws' mode
+LID_MODE = 'friction'    # 'friction' = lip is a tight push fit, no screws; 'screws' = four M3 corner posts
+LIP_TOL = 0.15           # friction mode: clearance per side between lip and inner wall (PLA prints about +-0.15; tune after a test fit)
+LIP_H = 3.0              # friction mode: lip depth into the box (terminals reach 12 mm above the board, leaving about 1 mm)
 # Terminal wire entries face outwards, so each gets a window in the wall it faces (wires go straight into the block).
 # Board orientation in the box (viewed from above, component side up): terminal B (12 V, buck end) at the +X end,
 # terminal A (ECU serial, C3 end) on the low-Y side wall; the C3's USB-C ends up on the high-Y side.
@@ -88,12 +91,13 @@ def build_base(comp):
     prism(comp, WALL, WALL, WALL + IN_LEN, WALL + IN_WID, FLOOR, OUT_HGT + 1, CUT)    # cavity
 
     # lid screw posts in the four corners, then their screw holes
-    p = POST_D / 2
-    corners = [(x, y) for x in (WALL + p, OUT_LEN - WALL - p) for y in (WALL + p, OUT_WID - WALL - p)]
-    for x, y in corners:
-        cyl(comp, x, y, POST_D, FLOOR - 0.1, OUT_HGT - LID_T, JOIN)
-    for x, y in corners:
-        cyl(comp, x, y, SCREW_D, OUT_HGT - LID_T - 8, OUT_HGT, CUT)
+    if LID_MODE == 'screws':
+        p = POST_D / 2
+        corners = [(x, y) for x in (WALL + p, OUT_LEN - WALL - p) for y in (WALL + p, OUT_WID - WALL - p)]
+        for x, y in corners:
+            cyl(comp, x, y, POST_D, FLOOR - 0.1, OUT_HGT - LID_T, JOIN)
+        for x, y in corners:
+            cyl(comp, x, y, SCREW_D, OUT_HGT - LID_T - 8, OUT_HGT, CUT)
 
     # board standoffs (one near each board corner) with M2 pilot holes
     by0 = WALL + SIDE_GAP
@@ -113,15 +117,19 @@ def build_base(comp):
 def build_lid(comp):
     ys = OUT_WID + 10   # lay the lid next to the base
     prism(comp, 0, 0, OUT_LEN, OUT_WID, 0, LID_T, NEW, ys)
-    x0, y0 = WALL + TOL, WALL + TOL
-    x1, y1 = WALL + IN_LEN - TOL, WALL + IN_WID - TOL
+    friction = LID_MODE == 'friction'
+    tol = LIP_TOL if friction else TOL
+    lip_h = LIP_H if friction else 2.0
+    x0, y0 = WALL + tol, WALL + tol
+    x1, y1 = WALL + IN_LEN - tol, WALL + IN_WID - tol
     t = 2.0
     for (a, b, c, d) in [(x0, y0, x1, y0 + t), (x0, y1 - t, x1, y1), (x0, y0, x0 + t, y1), (x1 - t, y0, x1, y1)]:
-        prism(comp, a, b, c, d, LID_T - 0.1, LID_T + 2, JOIN, ys)
-    p = POST_D / 2
-    for x in (WALL + p, OUT_LEN - WALL - p):
-        for y in (WALL + p, OUT_WID - WALL - p):
-            cyl(comp, x, y, LID_HOLE_D, -1, LID_T + 3, CUT, ys)
+        prism(comp, a, b, c, d, LID_T - 0.1, LID_T + lip_h, JOIN, ys)
+    if not friction:
+        p = POST_D / 2
+        for x in (WALL + p, OUT_LEN - WALL - p):
+            for y in (WALL + p, OUT_WID - WALL - p):
+                cyl(comp, x, y, LID_HOLE_D, -1, LID_T + 3, CUT, ys)
 
 
 def build_all():

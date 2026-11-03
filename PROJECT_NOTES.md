@@ -86,16 +86,18 @@ Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V 
 
 ## Bridge enclosure
 
-Fit-and-forget two-part box (base + lid, PETG) around the built bridge board (40 x 60 mm perfboard, see Wiring). Decisions (user, 2026-11-03):
-board on standoffs; no access to the screw terminals or the C3's USB-C once the lid is on (flash and test before closing it).
+Fit-and-forget two-part box (base + lid) around the built bridge board (40 x 60 mm perfboard, see Wiring). Decisions (user, 2026-11-03):
+board on standoffs; no access to the C3's USB-C once the lid is on (flash and test before closing it); the terminal screws need the lid off; lid is a push (friction) fit for now (2026-11-03).
 Built in Fusion (via the Fusion MCP) from a parametric script.
 
 - `enclosure/BridgeBox/BridgeBox.py` (+ `.manifest`): Fusion script, constants at the top (mm). Install by copying the folder into
   Fusion's `API/Scripts` directory, then Utilities > Scripts and Add-ins > BridgeBox > Run. `build_all()` makes a new design with both bodies.
 - Design: 81.0 x 48.0 x 24.1 mm base plus a 2.0 mm lid (laid out beside it, with a locating lip). Four corner standoffs (5 mm tall, 5.6 mm dia)
   at the board's four mounting holes (all four are 2 mm in from the board edges, confirmed by the user; the bottom-right one only looks hidden
-  behind terminal B in the photo because of the camera angle), each with a 1.9 mm pilot hole for an M2 machine screw to cut its own thread (the user has machine screws, not self-tapping; a 1.6 mm hole printed too small). Four M3 lid posts in
-  the box corners (2.6 mm pilot, 3.4 mm clearance holes in the lid). Two 12 x 6 mm wire
+  behind terminal B in the photo because of the camera angle), each with a 1.9 mm pilot hole for an M2 machine screw to cut its own thread (the user has machine screws, not self-tapping; a 1.6 mm hole printed too small). Lid: `LID_MODE = 'friction'` (default) makes a 3 mm deep lip with 0.15 mm clearance per side (`LIP_TOL`) that
+  pushes into the box, with no screws and no corner posts; `LID_MODE = 'screws'` brings back four M3 corner posts (2.6 mm pilot, 3.4 mm lid holes).
+  Tune `LIP_TOL` after a test fit (tighter if the lid is loose, looser if it won't go in). The lid is 5.0 mm tall in friction mode (2 mm plate + 3 mm lip).
+  Snap-fit hooks for a later PETG version were discussed (hooks crack in PLA) but not built. Two 12 x 6 mm wire
   windows aligned with the terminals' wire entries, which face outwards (user, 2026-11-03): B (12 V, buck end) in the +X end wall, A (ECU serial,
   C3 end) in the low-Y side wall, so the wires go straight into the blocks. Board orientation in the box: B end at +X, terminal A on the low-Y
   side, C3's USB-C toward the high-Y side. The terminal screws face up, so the lid still has to come off to tighten them.
