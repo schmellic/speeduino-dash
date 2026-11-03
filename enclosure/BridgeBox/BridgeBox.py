@@ -32,13 +32,13 @@ TOL = 0.3                # lid lip clearance
 # Terminal wire entries face outwards, so each gets a window in the wall it faces (wires go straight into the block).
 # Board orientation in the box (viewed from above, component side up): terminal B (12 V, buck end) at the +X end,
 # terminal A (ECU serial, C3 end) on the low-Y side wall; the C3's USB-C ends up on the high-Y side.
-# Positions are estimated from the board photo: CONFIRM with the calipers.
+# Positions measured with calipers by the user (2026-11-03).
 TERM_W = 10.0            # 2-way 5 mm pitch block width
 SLOT_W = 12.0            # window width (block width + clearance)
 SLOT_H = 6.0             # window height
-ENTRY_Z = 4.5            # wire entry centre above the board surface (estimate)
-TERM_A_X = 12.0          # terminal A centre, along the board from its -X end
-TERM_B_Y = 35.0          # terminal B centre, across the board from its low-Y edge
+ENTRY_Z = 4.5            # wire entry centre above the board surface (measured)
+TERM_A_X = 14.0          # terminal A centre, along the board from its -X (C3) end
+TERM_B_Y = 31.0          # terminal B centre, across the board from its low-Y edge
 
 BOARD_X0 = WALL + POST_D + 1                      # board clears the lid posts at the -X end
 IN_LEN = (POST_D + 1) + BOARD_LEN + WIRE_GAP + 1

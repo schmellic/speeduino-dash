@@ -108,9 +108,10 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
   (8 layers), screw columns have a 2.0-2.2 mm wall around the pilot holes. Print with at least 3-4 perimeters and about 25% gyroid infill;
   the standoffs and posts come out solid.
 - Confirmed by the user: 5 mm standoffs are enough under the board, and M2 screws suit the corner holes.
-- Board is 1.5 mm thick (user). Window positions are estimated from the photo, not measured: terminal A centre 12 mm from the board's C3 end,
-  terminal B centre 35 mm across from the low-Y edge, wire entry 4.5 mm above the board surface, 12 x 6 mm windows (constants `TERM_*`,
-  `SLOT_*`, `ENTRY_Z` in `BridgeBox.py`). Confirm with calipers; terminal B's window sits next to a lid post, which was checked clear in Fusion.
+- Measured by the user (calipers, 2026-11-03): board 1.5 mm thick; terminal blocks 10 mm wide; terminal A centre 14 mm from the board's C3 end;
+  terminal B centre 31 mm across from the board's left (low-Y) edge; wire entry centre 4.5 mm above the board surface. The 12 x 6 mm windows use
+  these values (`TERM_*`, `SLOT_*`, `ENTRY_Z` in `BridgeBox.py`). Not measured: the wire-entry opening size (12 x 6 mm window is a guess that suits
+  wire up to about 2.5 mm^2 with insulation) and B's entry height (assumed the same as A's). Terminal B's window clears the nearby lid post.
 - STLs of the current design (base and lid) are in `enclosure/stl/` (exported from Fusion with the medium mesh setting). Not printed yet.
   Regenerate them after any change to `BridgeBox.py`.
 - The wire windows are open slots: use sleeving or sealant around the wires if dust or moisture is a concern; the box is not sealed against water.
