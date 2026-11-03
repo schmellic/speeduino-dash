@@ -92,10 +92,13 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 
 - `enclosure/BridgeBox/BridgeBox.py` (+ `.manifest`): Fusion script, constants at the top (mm). Install by copying the folder into
   Fusion's `API/Scripts` directory, then Utilities > Scripts and Add-ins > BridgeBox > Run. `build_all()` makes a new design with both bodies.
-- Design: 81.0 x 48.0 x 24.2 mm base plus a 2.0 mm lid (laid out beside it, with a locating lip). Four corner standoffs (5 mm tall, 5.6 mm dia)
+- Design: 81.0 x 48.0 x 24.1 mm base plus a 2.0 mm lid (laid out beside it, with a locating lip). Four corner standoffs (5 mm tall, 5.6 mm dia)
   at the board's four mounting holes (all four are 2 mm in from the board edges, confirmed by the user; the bottom-right one only looks hidden
   behind terminal B in the photo because of the camera angle), each with a 1.6 mm pilot hole for an M2 self-tapping screw. Four M3 lid posts in
-  the box corners (2.6 mm pilot, 3.4 mm clearance holes in the lid). Two 8 mm square wire holes on the +X end wall (12 V in, ECU serial out), 8 mm of spare room at that end for wires to turn.
+  the box corners (2.6 mm pilot, 3.4 mm clearance holes in the lid). Two 12 x 6 mm wire
+  windows aligned with the terminals' wire entries, which face outwards (user, 2026-11-03): B (12 V, buck end) in the +X end wall, A (ECU serial,
+  C3 end) in the low-Y side wall, so the wires go straight into the blocks. Board orientation in the box: B end at +X, terminal A on the low-Y
+  side, C3's USB-C toward the high-Y side. The terminal screws face up, so the lid still has to come off to tighten them.
   No USB slot, no vents.
 - Status: built; checked by point-containment tests in Fusion (standoffs, pilot holes, wire holes, posts, lid holes) and body volumes, and the
   exported STLs were rendered in matplotlib (Fusion's own viewport screenshots come out washed out under Wine). Not saved, no STL committed,
@@ -105,12 +108,12 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
   (8 layers), screw columns have a 2.0-2.2 mm wall around the pilot holes. Print with at least 3-4 perimeters and about 25% gyroid infill;
   the standoffs and posts come out solid.
 - Confirmed by the user: 5 mm standoffs are enough under the board, and M2 screws suit the corner holes.
-- Still unknown: which direction the terminals' wire entries face. A (ECU serial, left long edge near the C3 end) and B (12 V, at the buck end)
-  are at opposite short ends of the board, so one wire hole per end wall aligned with each terminal may suit better than both holes on the
-  +X wall (current design): not done yet.
+- Board is 1.5 mm thick (user). Window positions are estimated from the photo, not measured: terminal A centre 12 mm from the board's C3 end,
+  terminal B centre 35 mm across from the low-Y edge, wire entry 4.5 mm above the board surface, 12 x 6 mm windows (constants `TERM_*`,
+  `SLOT_*`, `ENTRY_Z` in `BridgeBox.py`). Confirm with calipers; terminal B's window sits next to a lid post, which was checked clear in Fusion.
 - STLs of the current design (base and lid) are in `enclosure/stl/` (exported from Fusion with the medium mesh setting). Not printed yet.
   Regenerate them after any change to `BridgeBox.py`.
-- The wire holes are bare: add grommets or strain relief; the box is not sealed against water.
+- The wire windows are open slots: use sleeving or sealant around the wires if dust or moisture is a concern; the box is not sealed against water.
 - The earlier OpenSCAD version was removed (it modelled a bare C3 plus a separate buck, and was never rendered).
 
 ## Open questions / unverified

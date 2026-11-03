@@ -1,9 +1,10 @@
 """Fusion script: fit-and-forget enclosure for the bridge board (40 x 60 mm perfboard with the ESP32-C3 SuperMini,
 12V->5V buck, 1k/2k divider and two screw terminals).
 
-The board sits on four standoffs; no access to the USB-C port or the screw terminals is provided (the lid screws on and
-stays on). Wires leave through two square holes in the +X end wall. Two bodies are made: the base and the lid (laid out
-beside it, with a locating lip and screw holes).
+The board sits on four standoffs; no access to the USB-C port is provided and the screws on the terminals need the lid off
+(the lid screws on and stays on). Wires enter through windows in the walls at the terminals' wire entries (B in the +X end
+wall, A in the low-Y side wall). Two bodies are made: the base and the lid (laid out beside it, with a locating lip and
+screw holes).
 
 Install: copy this folder into Fusion's API/Scripts directory, then Utilities > Scripts and Add-ins > BridgeBox > Run.
 All values are millimetres; the Fusion API works in cm, so mm() converts. Edit the constants to match your board.
@@ -13,7 +14,7 @@ import adsk.core
 import adsk.fusion
 
 # ---- Board (mm): MEASURE the height, check the corner holes -----------
-BOARD_LEN, BOARD_WID, BOARD_T = 60.0, 40.0, 1.6
+BOARD_LEN, BOARD_WID, BOARD_T = 60.0, 40.0, 1.5
 COMP_H = 14.0            # tallest part above the board (C3 headers / terminals / buck cap): MEASURE
 STANDOFF = 5.0           # board lift off the floor (clears the solder side)
 STANDOFF_D = 5.6          # 2.0 mm wall around the pilot hole (5 lines at a 0.4 mm nozzle)
@@ -28,8 +29,16 @@ WIRE_GAP = 8.0           # extra room at the +X end for wires to turn
 POST_D, SCREW_D = 7.0, 2.6   # corner lid posts (2.2 mm wall around the pilot), M3 self-tapping pilot hole
 LID_HOLE_D = 3.4         # M3 clearance hole in the lid
 TOL = 0.3                # lid lip clearance
-WIRE_HOLE = 8.0          # square wire holes in the +X end wall (use grommets / strain relief)
-WIRE_DY = 7.0            # wire hole offset from the centreline
+# Terminal wire entries face outwards, so each gets a window in the wall it faces (wires go straight into the block).
+# Board orientation in the box (viewed from above, component side up): terminal B (12 V, buck end) at the +X end,
+# terminal A (ECU serial, C3 end) on the low-Y side wall; the C3's USB-C ends up on the high-Y side.
+# Positions are estimated from the board photo: CONFIRM with the calipers.
+TERM_W = 10.0            # 2-way 5 mm pitch block width
+SLOT_W = 12.0            # window width (block width + clearance)
+SLOT_H = 6.0             # window height
+ENTRY_Z = 4.5            # wire entry centre above the board surface (estimate)
+TERM_A_X = 12.0          # terminal A centre, along the board from its -X end
+TERM_B_Y = 35.0          # terminal B centre, across the board from its low-Y edge
 
 BOARD_X0 = WALL + POST_D + 1                      # board clears the lid posts at the -X end
 IN_LEN = (POST_D + 1) + BOARD_LEN + WIRE_GAP + 1
@@ -75,7 +84,6 @@ def cyl(comp, cx, cy, d, z0, z1, op, ys=0.0):
 
 
 def build_base(comp):
-    mid_y = OUT_WID / 2
     prism(comp, 0, 0, OUT_LEN, OUT_WID, 0, OUT_HGT, NEW)                              # outer shell
     prism(comp, WALL, WALL, WALL + IN_LEN, WALL + IN_WID, FLOOR, OUT_HGT + 1, CUT)    # cavity
 
@@ -94,11 +102,12 @@ def build_base(comp):
             cyl(comp, x, y, STANDOFF_D, FLOOR - 0.1, FLOOR + STANDOFF, JOIN)
             cyl(comp, x, y, PILOT_D, FLOOR + STANDOFF - 6, FLOOR + STANDOFF, CUT)
 
-    # two wire holes on the +X end wall (12 V in, ECU serial out)
-    zc = FLOOR + STANDOFF + BOARD_T + 4
-    for dy in (-WIRE_DY, WIRE_DY):
-        prism(comp, OUT_LEN - WALL - 1, mid_y + dy - WIRE_HOLE / 2, OUT_LEN + 1, mid_y + dy + WIRE_HOLE / 2,
-              zc - WIRE_HOLE / 2, zc + WIRE_HOLE / 2, CUT)
+    # wire windows: B in the +X end wall, A in the low-Y side wall (cut only through the wall, not the posts)
+    zc = FLOOR + STANDOFF + BOARD_T + ENTRY_Z
+    yb = by0 + TERM_B_Y
+    prism(comp, OUT_LEN - WALL, yb - SLOT_W / 2, OUT_LEN + 1, yb + SLOT_W / 2, zc - SLOT_H / 2, zc + SLOT_H / 2, CUT)
+    xa = BOARD_X0 + TERM_A_X
+    prism(comp, xa - SLOT_W / 2, -1, xa + SLOT_W / 2, WALL, zc - SLOT_H / 2, zc + SLOT_H / 2, CUT)
 
 
 def build_lid(comp):
