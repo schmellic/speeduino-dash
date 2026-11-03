@@ -94,7 +94,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
   Fusion's `API/Scripts` directory, then Utilities > Scripts and Add-ins > BridgeBox > Run. `build_all()` makes a new design with both bodies.
 - Design: 81.0 x 48.0 x 24.1 mm base plus a 2.0 mm lid (laid out beside it, with a locating lip). Four corner standoffs (5 mm tall, 5.6 mm dia)
   at the board's four mounting holes (all four are 2 mm in from the board edges, confirmed by the user; the bottom-right one only looks hidden
-  behind terminal B in the photo because of the camera angle), each with a 1.6 mm pilot hole for an M2 self-tapping screw. Four M3 lid posts in
+  behind terminal B in the photo because of the camera angle), each with a 1.9 mm pilot hole for an M2 machine screw to cut its own thread (the user has machine screws, not self-tapping; a 1.6 mm hole printed too small). Four M3 lid posts in
   the box corners (2.6 mm pilot, 3.4 mm clearance holes in the lid). Two 12 x 6 mm wire
   windows aligned with the terminals' wire entries, which face outwards (user, 2026-11-03): B (12 V, buck end) in the +X end wall, A (ECU serial,
   C3 end) in the low-Y side wall, so the wires go straight into the blocks. Board orientation in the box: B end at +X, terminal A on the low-Y
