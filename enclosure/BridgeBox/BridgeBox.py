@@ -16,15 +16,17 @@ import adsk.fusion
 BOARD_LEN, BOARD_WID, BOARD_T = 60.0, 40.0, 1.6
 COMP_H = 14.0            # tallest part above the board (C3 headers / terminals / buck cap): MEASURE
 STANDOFF = 5.0           # board lift off the floor (clears the solder side)
-STANDOFF_D = 4.5
-PILOT_D = 1.8            # pilot hole for an M2 self-tapping screw (the board has a hole 2 mm in at each corner)
+STANDOFF_D = 5.6          # 2.0 mm wall around the pilot hole (5 lines at a 0.4 mm nozzle)
+PILOT_D = 1.6            # pilot hole for an M2 self-tapping screw (the board has a hole 2 mm in at each corner)
 HOLE_INSET = 2.0         # corner hole centre, in from the board edges (measured by the user)
 
 # ---- Box ---------------------------------------------------------------
-WALL, FLOOR, LID_T = 2.4, 2.0, 2.4
+# Wall thicknesses are multiples of a 0.4 mm extrusion line (0.2 mm layers): 2.0 = 5 lines, 1.6 = 4 lines / 8 layers.
+WALL, FLOOR, LID_T = 2.0, 1.6, 2.0
 SIDE_GAP = 2.0           # clearance board <-> side walls
 WIRE_GAP = 8.0           # extra room at the +X end for wires to turn
-POST_D, SCREW_D = 7.0, 3.0   # corner lid posts, M3 self-tapping
+POST_D, SCREW_D = 7.0, 2.6   # corner lid posts (2.2 mm wall around the pilot), M3 self-tapping pilot hole
+LID_HOLE_D = 3.4         # M3 clearance hole in the lid
 TOL = 0.3                # lid lip clearance
 WIRE_HOLE = 8.0          # square wire holes in the +X end wall (use grommets / strain relief)
 WIRE_DY = 7.0            # wire hole offset from the centreline
@@ -110,7 +112,7 @@ def build_lid(comp):
     p = POST_D / 2
     for x in (WALL + p, OUT_LEN - WALL - p):
         for y in (WALL + p, OUT_WID - WALL - p):
-            cyl(comp, x, y, SCREW_D + 0.6, -1, LID_T + 3, CUT, ys)
+            cyl(comp, x, y, LID_HOLE_D, -1, LID_T + 3, CUT, ys)
 
 
 def build_all():

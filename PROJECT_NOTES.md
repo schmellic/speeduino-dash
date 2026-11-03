@@ -92,15 +92,18 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 
 - `enclosure/BridgeBox/BridgeBox.py` (+ `.manifest`): Fusion script, constants at the top (mm). Install by copying the folder into
   Fusion's `API/Scripts` directory, then Utilities > Scripts and Add-ins > BridgeBox > Run. `build_all()` makes a new design with both bodies.
-- Design: 81.8 x 48.8 x 24.6 mm base plus a 2.4 mm lid (laid out beside it, with a locating lip). Four corner standoffs (5 mm tall, 4.5 mm dia)
+- Design: 81.0 x 48.0 x 24.2 mm base plus a 2.0 mm lid (laid out beside it, with a locating lip). Four corner standoffs (5 mm tall, 5.6 mm dia)
   at the board's four mounting holes (all four are 2 mm in from the board edges, confirmed by the user; the bottom-right one only looks hidden
-  behind terminal B in the photo because of the camera angle), each with a 1.8 mm pilot hole for an M2 self-tapping screw. Four M3 lid posts in
-  the box corners. Two 8 mm square wire holes on the +X end wall (12 V in, ECU serial out), 8 mm of spare room at that end for wires to turn.
+  behind terminal B in the photo because of the camera angle), each with a 1.6 mm pilot hole for an M2 self-tapping screw. Four M3 lid posts in
+  the box corners (2.6 mm pilot, 3.4 mm clearance holes in the lid). Two 8 mm square wire holes on the +X end wall (12 V in, ECU serial out), 8 mm of spare room at that end for wires to turn.
   No USB slot, no vents.
 - Status: built; checked by point-containment tests in Fusion (standoffs, pilot holes, wire holes, posts, lid holes) and body volumes, and the
   exported STLs were rendered in matplotlib (Fusion's own viewport screenshots come out washed out under Wine). Not saved, no STL committed,
   not printed.
 - Measured by the user: tallest part is about 12 mm above the board, so `COMP_H = 14` stays (2 mm headroom).
+- Wall thicknesses are tuned for a 0.4 mm nozzle at 0.2 mm layers (multiples of the line width): walls and lid 2.0 mm (5 lines), floor 1.6 mm
+  (8 layers), screw columns have a 2.0-2.2 mm wall around the pilot holes. Print with at least 3-4 perimeters and about 25% gyroid infill;
+  the standoffs and posts come out solid.
 - Confirmed by the user: 5 mm standoffs are enough under the board, and M2 screws suit the corner holes.
 - Still unknown: which direction the terminals' wire entries face. A (ECU serial, left long edge near the C3 end) and B (12 V, at the buck end)
   are at opposite short ends of the board, so one wire hole per end wall aligned with each terminal may suit better than both holes on the
