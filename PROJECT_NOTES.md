@@ -111,6 +111,15 @@ Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V 
 - `docs/speeduino_solder_points.png`: photo of the Speeduino shield marking where to solder D14 (TX3), D15 (RX3) and GND (J6),
   plus the D21 continuity-check pads. Positions are derived from the board layout; confirm with the D21 beep test before soldering.
 
+## Boards in use (2026-11-10)
+
+- Two ESP32-C3 SuperMinis exist. One is mounted on the bridge board and was flashed with `bridge_c3_live` (user-confirmed); it has no
+  OTA, so reflashing it needs its USB-C. The other is the bench C3 and currently runs `bridge_c3_sim`. Don't assume which one is plugged
+  into the computer: check what it prints on `/dev/ttyACM0` (`rpm=... link=1` sweeping = sim; `link=0` = live with no ECU).
+- The live firmware has never talked to the Speeduino, so if the in-car link fails, the dash only shows the "no data" bar and nothing
+  wireless says why. Offered and declined for now: a boot-time Wi-Fi OTA window plus a raw-byte debug readout in the bridge firmware.
+  Revisit if the ECU test fails and the mounted C3 has to be opened up anyway.
+
 ## Bridge enclosure
 
 Fit-and-forget two-part box (base + lid) around the built bridge board (40 x 60 mm perfboard, see Wiring). Decisions (user, 2026-11-03):
