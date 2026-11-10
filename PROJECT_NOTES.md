@@ -1,7 +1,7 @@
 # Speeduino dash: project notes
 
 Wireless dash for a 1961 VW Beetle running a Speeduino (Mega-based v0.4). Two ESP32 nodes
-talk over ESP-NOW; the radio link is verified on the bench (simulated data), nothing else has run on hardware yet.
+talk over ESP-NOW; the radio link is verified on the bench (simulated data) and the round tach draws on the classic ESP32 (`dash_sim`, 2026-11-10).
 
 ## Working across computers (read first)
 
@@ -35,10 +35,12 @@ Speeduino Serial3 --wire--> [ESP32-C3 "bridge"] ~~ESP-NOW~~> [ESP32 "dash"] --SP
 | `display_rx` | serial-print receiver for radio testing |
 | `dash_sim` | dash draws fake data locally, no bridge needed |
 | `dash` | dash receives from the bridge |
+| `tach_test` | round tach bring-up: tries hardware SPI at 1/4/10 MHz and software SPI, solid colour fills (LED blinks announce each) |
+| `pin_test` | holds each tach signal pin high in turn (LED blinks 1-6: RST, CS, DC, SCL, SDA, BL) so a multimeter can check the wires |
 
 Compiled OK: all of the above. Hardware-tested so far: `bridge_c3_sim` on the C3 (native USB, `/dev/ttyACM0`, flags OK) and
 `display_rx` on the classic ESP32 (CH340, `/dev/ttyUSB0`). The ESP-NOW link works: the receiver printed the simulated
-rpm/map/clt/iat/batt values. Not yet tested: the 'no data' stale case, range, the ECU link, any screens.
+rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP32 drives the GC9B72 round tach (needle sweep and digits work), with the info screen not connected. Not yet tested: the 'no data' stale case, range, the ECU link, the info screen.
 
 ## Hardware plan
 
@@ -71,8 +73,8 @@ checks out. Only two serial terminal screws, so there is no dedicated ground wir
 through the chassis, but on the bench the ECU ground must be joined to the board's ground by hand. The solder side is coated in green
 resin, so the wiring can't be inspected by eye. Not yet tested powered or connected to the ECU.
 
-Dash (classic ESP32): SCK 18, MOSI 23, DC 21 shared. Tach: CS 5, RST 22, BL 25. Info: CS 4, RST 27, LED 26.
-3V3 + GND to both screens. Both screens share one SPI bus; untested.
+Dash (classic ESP32): SCL(clock) 18, SDA(data/MOSI) 23, DC 21 shared. The tach's pads are labelled SCL and SDA on the board (not SCK/MOSI): SCL = clock = GPIO18, SDA = data = GPIO23. They were crossed once during bring-up and the screen stayed blank, so check these first if it ever goes dark. Tach: CS 5, RST 22, BL 25. Info: CS 4, RST 27, LED 26.
+3V3 + GND to both screens. The tach is verified working on this wiring. Both screens share one SPI bus; the info screen is untested. With only the tach connected, serial prints harmless warnings at boot (SPI pins 18/23 set up twice, because the info screen's bus object is created anyway).
 
 Power: switched 12 V -> 1 A fuse -> automotive 12V->5V buck (36 V+ input, TVS + caps on input) -> 5 V pins.
 Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V rail. See `SHOPPING_LIST.md`.
@@ -129,14 +131,14 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 1. Realtime byte offsets now match the 61Bug mainController.ini (speeduino 202402; advance is byte 24, TPS byte 25). Still unconfirmed on the wire: whether Serial3 answers the ini's `r` command, and whether it echoes an `r` first (the code tolerates both). The secondary-serial protocol setting in TunerStudio may matter (try msDroid or Generic).
 2. AFR is shown as the `afr` channel (byte 10, scale 0.1 in the ini); it only means something if a wideband is wired in.
 3. "Head temp" is the Speeduino CLT input; needs a CHT sender wired to it and calibrated in TunerStudio.
-4. GC9B72 library on a classic ESP32 (its example is S3), and two screens on one SPI bus.
+4. ~~GC9B72 library on a classic ESP32~~ works (2026-11-10, tach only). Still open: two screens on one SPI bus.
 5. Warning thresholds (head 190/220 C, battery, 5000/5500 rpm shift/redline) are guesses.
 6. Serial3 on the user's Speeduino v0.4.4d: the schematic shows J2 "HC-05 Bluetooth" is Serial0 (D1/D0, shared with USB, 2k/1k divider), NOT Serial3, so don't use it. The Mega is soldered under the shield, so the shield's holes are the Mega's pin positions. From the board photo (USB/power jack at the top = Mega rotated 90 degrees clockwise), the right-hand column of holes carries the Mega's top header; its lowest group of 8 holes, just above the double row, is the communication header: from the bottom up 21,20,19,18,17,16,15,14. So D15 (RX3) is the 2nd hole from the top of that group and D14 (TX3) the top one. Derived from the photo and the standard Mega layout, NOT yet confirmed on the board: check by continuity that the bottom hole of that group beeps to the J5 pad labelled D21. The J6 pads labelled GND sit beside the group. `bridge_c3_live` is flashed; the C3 reports link=0 until the board is connected to the ECU.
 
 ## Next steps
 
 1. ~~Check the radio link~~ done 2026-11-02. Optional: unplug the C3 and confirm the receiver prints `no data`.
-2. When screens arrive: flash `dash_sim`, check both screens and the shared SPI bus.
+2. ~~Round tach on `dash_sim`~~ works (2026-11-10). When the info screen arrives, check it and the shared SPI bus. Optional: judge brightness/colours, test `dash` with the bridge (`bridge_c3_sim` on the C3).
 3. Enclosure for the bridge board is designed (see Bridge enclosure; measure the board and print it). Solder the
    bridge wires to the Speeduino (D14 -> A1, D15 -> A2, J6 GND -> B1; run the D21 continuity check first). Then test in the car with
    `bridge_c3_live` on the C3 and `display_rx` on the classic ESP32 plugged into a laptop (it prints `no data` until real values arrive).
