@@ -18,7 +18,7 @@ constexpr int PIN_TACH_CS = 5,  PIN_TACH_RST = 22, PIN_TACH_BL = 25;
 constexpr int PIN_INFO_CS = 4,  PIN_INFO_RST = 27, PIN_INFO_BL = 26;
 
 // ---- Gauge settings ----------------------------------------------------
-constexpr int RPM_MAX = 7000;
+constexpr int RPM_MAX = 6000;
 constexpr int RPM_SHIFT = 4500;     // ring turns orange here (user)
 constexpr int RPM_REDLINE = 5400;   // Beetle redline (user): digits and ring turn red here
 constexpr int HEAD_WARN_C = 190, HEAD_DANGER_C = 220;
@@ -69,12 +69,12 @@ static bool getTelemetry(Telemetry &t) {
 }
 
 // ---- Tach: numerals on a dark ring that lights green / orange / red ------------------------------------------------------
-// No needle and no frame buffer: the ring is 70 blocks of 100 rpm that are lit or cleared as the revs change, so nothing
+// No needle and no frame buffer: the ring is 60 blocks of 100 rpm that are lit or cleared as the revs change, so nothing
 // is ever erased by a thin shape. Only the blocks that change are redrawn, then the numerals go back on top.
 constexpr int CX = 180, CY = 180;
-constexpr int SEG_RPM = 100, SEG_N = RPM_MAX / SEG_RPM;   // 70 blocks; 100 divides the 5400 redline
-constexpr int RING_IN = 126, RING_OUT = 166;              // lit blocks
-constexpr int BAND_IN = 124, BAND_OUT = 168;              // dark ring behind them
+constexpr int SEG_RPM = 100, SEG_N = RPM_MAX / SEG_RPM;   // 60 blocks; 100 divides the 5400 redline
+constexpr int RING_IN = 116, RING_OUT = 166;              // lit blocks (50 px thick)
+constexpr int BAND_IN = 114, BAND_OUT = 168;              // dark ring behind them
 constexpr uint16_t C_RIM = 0xBDF7, C_BAND = 0x18E3, C_DISC = 0x8C71;
 constexpr uint16_t C_GREEN = 0x4D63, C_ORANGE = 0xF440, C_RED = 0xE0E5, C_REDDIM = 0x5862;
 
@@ -165,12 +165,12 @@ static void drawTachFace() {
     bool major = r % 1000 == 0;
     fillSector(a - (major ? 0.5f : 0.25f), a + (major ? 0.5f : 0.25f), major ? 170 : 172, 176, C_FG);
   }
-  tach->drawCircle(CX, CY, 104, C_DISC);
+  tach->drawCircle(CX, CY, 104, C_DISC);   // centre outline, 2 px, 10 px inside the ring
   tach->drawCircle(CX, CY, 105, C_DISC);
   drawNumerals();
   tach->setFont(u8g2_font_helvB10_tr);
   tach->setTextColor(C_DIM);
-  textCentered("RPM", CX, CY - 54);
+  textCentered("RPM", CX, CY - 52);
 }
 
 static void drawDigits(int rpm) {

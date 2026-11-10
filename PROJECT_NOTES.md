@@ -44,10 +44,13 @@ rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP
 
 ## Tach design and drawing notes (GC9B72, 2026-11-10)
 
-- Design (user choice, modelled on the Audi R8 virtual cockpit, kept clean): numerals 0-7 on a dark ring that lights in 70 blocks of
-  100 rpm, green below 4500, orange 4500-5400, red from 5400 (the Beetle's redline, per the user), with a dim red redline band always
-  visible, fine ticks outside the ring, and a big centre RPM readout (red at the redline) with a small "RPM" label. No needle. The
+- Design (user choice, modelled on the Audi R8 virtual cockpit, kept clean): numerals 0-6 on a dark ring that lights in 60 blocks of
+  100 rpm (dial to 6000 rpm), green below 4500, orange 4500-5400, red from 5400 (the Beetle's redline, per the user), with a dim red redline band always
+  visible, fine ticks outside the ring (every 250 rpm), and a big centre RPM readout (red at the redline) with a small "RPM" label. No needle. The
   tach shows nothing else: head temp, battery and the rest belong on the info screen. With no data it shows a dim bar and clears the ring.
+  Layout chosen with the user from an interactive preview: ring 50 px thick (r 116-166), 10 px gap to the centre, 2 px centre outline
+  (r 104-105), numerals 0-6, green/orange/red scheme. These are constants at the top of the tach section in `src/dash/main.cpp`
+  (`RPM_MAX`, `RING_IN/OUT`, `SEG_RPM`, `RPM_SHIFT`, `RPM_REDLINE`), so a different look is a small edit.
   Mockups were compared in chat (classic dial, arc sweep, retro cream, shift ring, R8 variants); the lit-ring R8 style won.
 - Fonts: U8g2 fonts via `olikraus/U8g2` (lib_deps on `dash` and `dash_sim`): `u8g2_font_logisoso58_tn` for the centre digits,
   `u8g2_font_helvB24_tn` for the numerals, `u8g2_font_helvB10_tr` for the label. U8g2 fonts print transparently, so the digit area is
