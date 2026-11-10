@@ -40,7 +40,7 @@ Speeduino Serial3 --wire--> [ESP32-C3 "bridge"] ~~ESP-NOW~~> [ESP32 "dash"] --SP
 
 Compiled OK: all of the above. Hardware-tested so far: `bridge_c3_sim` on the C3 (native USB, `/dev/ttyACM0`, flags OK) and
 `display_rx` on the classic ESP32 (CH340, `/dev/ttyUSB0`). The ESP-NOW link works: the receiver printed the simulated
-rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP32 drives the GC9B72 round tach (needle sweep and digits work, no leftover trail), with the info screen not connected. Not yet tested: the 'no data' stale case, range, the ECU link, the info screen.
+rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP32 drives the GC9B72 round tach (needle sweep and digits work, no leftover trail), with the info screen not connected. Wireless dash verified 2026-11-10: `bridge_c3_sim` on the C3 (powered separately, away from the computer) drives `dash` on the classic ESP32 over ESP-NOW and the tach ring and digits follow the simulated rpm (the sim sweeps 100-5900 rpm so all three colour zones show; `dash` was flashed with `PLATFORMIO_BUILD_FLAGS="-DINFO_SCREEN=0"` because the info screen is not connected). Not yet tested: the 'no data' stale case on the dash, range, the ECU link, the info screen.
 
 ## Tach design and drawing notes (GC9B72, 2026-11-10)
 

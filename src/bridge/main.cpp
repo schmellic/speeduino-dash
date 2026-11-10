@@ -54,7 +54,7 @@ static bool readSpeeduino(Telemetry &t) {
 
 static void simulate(Telemetry &t) {
   float s = millis() / 1000.0f;
-  t.rpm        = 2500 + 2200 * sinf(s * 0.6f);
+  t.rpm        = 3000 + 2900 * sinf(s * 0.6f);   // 100-5900: green, orange and red on the dash
   t.mapKpa     = 60 + 40 * sinf(s * 0.6f + 0.5f);
   t.cltC       = 88 + 4 * sinf(s * 0.05f);
   t.iatC       = 32;
