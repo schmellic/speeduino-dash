@@ -42,16 +42,23 @@ Compiled OK: all of the above. Hardware-tested so far: `bridge_c3_sim` on the C3
 `display_rx` on the classic ESP32 (CH340, `/dev/ttyUSB0`). The ESP-NOW link works: the receiver printed the simulated
 rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP32 drives the GC9B72 round tach (needle sweep and digits work, no leftover trail), with the info screen not connected. Not yet tested: the 'no data' stale case, range, the ECU link, the info screen.
 
-## Tach drawing notes (GC9B72, 2026-11-10)
+## Tach design and drawing notes (GC9B72, 2026-11-10)
 
-- The needle is erased and redrawn every frame (no frame buffer: 360x360x16 bit is too big for the classic ESP32). The library's
-  `fillTriangle` left stray pixels beyond a thin tip, so the needle is drawn as a convex quad with our own scanline fill (`fillQuad`
-  in `src/dash/main.cpp`) and erased with a constant-width strip (7 px either side, r <= 116, short of the dial numbers at r >= 120).
-  Erasing with a slightly bigger copy of the needle does NOT work: it tapers to the same point and leaves almost no margin at the tip.
-- Draw and erase use the same quantised angle (0.1 degree steps), and the RPM digits are redrawn whenever the needle moves because
-  the needle can cross them.
-- Tried and not needed: dropping the tach SPI speed to 10 MHz, and forcing the driver to resend the address window every write.
-  20 MHz with the stock driver is fine.
+- Design (user choice, modelled on the Audi R8 virtual cockpit, kept clean): numerals 0-7 on a dark ring that lights in 70 blocks of
+  100 rpm, green below 4500, orange 4500-5400, red from 5400 (the Beetle's redline, per the user), with a dim red redline band always
+  visible, fine ticks outside the ring, and a big centre RPM readout (red at the redline) with a small "RPM" label. No needle. The
+  tach shows nothing else: head temp, battery and the rest belong on the info screen. With no data it shows a dim bar and clears the ring.
+  Mockups were compared in chat (classic dial, arc sweep, retro cream, shift ring, R8 variants); the lit-ring R8 style won.
+- Fonts: U8g2 fonts via `olikraus/U8g2` (lib_deps on `dash` and `dash_sim`): `u8g2_font_logisoso58_tn` for the centre digits,
+  `u8g2_font_helvB24_tn` for the numerals, `u8g2_font_helvB10_tr` for the label. U8g2 fonts print transparently, so the digit area is
+  cleared with a rectangle first.
+- There is no frame buffer (360x360x16 bit is too big for the classic ESP32), so only the blocks that change are redrawn.
+  The library's `fillTriangle` leaves stray pixels beyond thin tips, so shapes that get redrawn use our own scanline `fillQuad`.
+  Clearing a block to its exact shape left stray pixels at the gaps, so changed blocks and their neighbours are cleared slightly wider
+  (0.4 degrees, 1 px radially), redrawn, and the numerals are put back on top.
+- The earlier needle design suffered a dotted trail: erasing with a grown copy of the needle leaves almost no margin at the tip
+  (it tapers to the same point). If a needle is ever wanted again, erase with a constant-width strip, not a grown copy.
+- Tried and not needed: tach SPI at 10 MHz, and forcing the driver to resend the address window every write. 20 MHz with the stock driver is fine.
 - `INFO_SCREEN` (default 1) in `src/dash/main.cpp`: set to 0 to leave the info screen alone while it is not connected; it also
   silences the boot warnings about SPI pins 18/23 being set up twice. `dash_sim` currently builds with it 0. Turn it back on (or remove
   the flag) when the ILI9341 is connected, and check the shared SPI bus then.
@@ -147,7 +154,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 2. AFR is shown as the `afr` channel (byte 10, scale 0.1 in the ini); it only means something if a wideband is wired in.
 3. "Head temp" is the Speeduino CLT input; needs a CHT sender wired to it and calibrated in TunerStudio.
 4. ~~GC9B72 library on a classic ESP32~~ works (2026-11-10, tach only). Still open: two screens on one SPI bus.
-5. Warning thresholds (head 190/220 C, battery, 5000/5500 rpm shift/redline) are guesses.
+5. Warning thresholds: redline 5400 rpm and orange from 4500 rpm are set by the user; head 190/220 C and the battery limits are still guesses.
 6. Serial3 on the user's Speeduino v0.4.4d: the schematic shows J2 "HC-05 Bluetooth" is Serial0 (D1/D0, shared with USB, 2k/1k divider), NOT Serial3, so don't use it. The Mega is soldered under the shield, so the shield's holes are the Mega's pin positions. From the board photo (USB/power jack at the top = Mega rotated 90 degrees clockwise), the right-hand column of holes carries the Mega's top header; its lowest group of 8 holes, just above the double row, is the communication header: from the bottom up 21,20,19,18,17,16,15,14. So D15 (RX3) is the 2nd hole from the top of that group and D14 (TX3) the top one. Derived from the photo and the standard Mega layout, NOT yet confirmed on the board: check by continuity that the bottom hole of that group beeps to the J5 pad labelled D21. The J6 pads labelled GND sit beside the group. `bridge_c3_live` is flashed; the C3 reports link=0 until the board is connected to the ECU.
 
 ## Next steps

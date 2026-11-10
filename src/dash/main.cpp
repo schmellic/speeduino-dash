@@ -19,8 +19,8 @@ constexpr int PIN_INFO_CS = 4,  PIN_INFO_RST = 27, PIN_INFO_BL = 26;
 
 // ---- Gauge settings ----------------------------------------------------
 constexpr int RPM_MAX = 7000;
-constexpr int RPM_SHIFT = 5000;     // digits turn orange
-constexpr int RPM_REDLINE = 5500;   // digits turn red, red band on dial
+constexpr int RPM_SHIFT = 4500;     // ring turns orange here (user)
+constexpr int RPM_REDLINE = 5400;   // Beetle redline (user): digits and ring turn red here
 constexpr int HEAD_WARN_C = 190, HEAD_DANGER_C = 220;
 constexpr uint32_t STALE_MS = 500;
 
@@ -68,53 +68,27 @@ static bool getTelemetry(Telemetry &t) {
 #endif
 }
 
-// ---- Tach --------------------------------------------------------------
+// ---- Tach: numerals on a dark ring that lights green / orange / red ------------------------------------------------------
+// No needle and no frame buffer: the ring is 70 blocks of 100 rpm that are lit or cleared as the revs change, so nothing
+// is ever erased by a thin shape. Only the blocks that change are redrawn, then the numerals go back on top.
 constexpr int CX = 180, CY = 180;
+constexpr int SEG_RPM = 100, SEG_N = RPM_MAX / SEG_RPM;   // 70 blocks; 100 divides the 5400 redline
+constexpr int RING_IN = 126, RING_OUT = 166;              // lit blocks
+constexpr int BAND_IN = 124, BAND_OUT = 168;              // dark ring behind them
+constexpr uint16_t C_RIM = 0xBDF7, C_BAND = 0x18E3, C_DISC = 0x8C71;
+constexpr uint16_t C_GREEN = 0x4D63, C_ORANGE = 0xF440, C_RED = 0xE0E5, C_REDDIM = 0x5862;
 
 static float rpmToDeg(float rpm) {
   return 135.0f + constrain(rpm, 0, RPM_MAX) * 270.0f / RPM_MAX;
 }
-static void polar(float deg, float r, int &x, int &y) {
+static void polarF(float deg, float r, float &x, float &y) {
   float a = deg * DEG_TO_RAD;
-  x = CX + lroundf(r * cosf(a));
-  y = CY + lroundf(r * sinf(a));
-}
-static void thickLine(float deg, float r0, float r1, float halfW, uint16_t c) {
-  int x0, y0, x1, y1, px, py;
-  polar(deg, r0, x0, y0);
-  polar(deg, r1, x1, y1);
-  float a = (deg + 90) * DEG_TO_RAD;
-  px = lroundf(halfW * cosf(a));
-  py = lroundf(halfW * sinf(a));
-  tach->fillTriangle(x0 - px, y0 - py, x0 + px, y0 + py, x1 + px, y1 + py, c);
-  tach->fillTriangle(x0 - px, y0 - py, x1 + px, y1 + py, x1 - px, y1 - py, c);
+  x = CX + r * cosf(a);
+  y = CY + r * sinf(a);
 }
 
-static void drawTachFace() {
-  tach->fillScreen(C_BG);
-  tach->drawCircle(CX, CY, 178, C_DIM);
-  for (float d = rpmToDeg(RPM_REDLINE); d <= rpmToDeg(RPM_MAX); d += 0.4f)
-    thickLine(d, 146, 156, 1.5f, C_BAD);
-  for (int rpm = 0; rpm <= RPM_MAX; rpm += 500) {
-    bool major = rpm % 1000 == 0;
-    thickLine(rpmToDeg(rpm), major ? 156 : 164, 174, major ? 2.5f : 1.0f, C_FG);
-  }
-  tach->setTextSize(3);
-  tach->setTextColor(C_FG, C_BG);
-  for (int k = 0; k <= RPM_MAX / 1000; k++) {
-    int x, y;
-    polar(rpmToDeg(k * 1000), 132, x, y);
-    tach->setCursor(x - 9, y - 12);
-    tach->print(k);
-  }
-  tach->setTextSize(2);
-  tach->setTextColor(C_DIM, C_BG);
-  tach->setCursor(CX - 54, CY + 118);
-  tach->print("RPM x1000");
-}
-
-// Fill a convex quad one scanline at a time. The library's fillTriangle left stray pixels beyond the needle's thin tip,
-// which the erase never reached, so the needle and its eraser are both drawn with this instead.
+// Fill a convex quad one scanline at a time. The library's fillTriangle left stray pixels beyond thin tips, so all
+// shapes that get redrawn use this instead.
 static void fillQuad(const float (&x)[4], const float (&y)[4], uint16_t c) {
   float ymin = min(min(y[0], y[1]), min(y[2], y[3]));
   float ymax = max(max(y[0], y[1]), max(y[2], y[3]));
@@ -139,78 +113,120 @@ static void fillQuad(const float (&x)[4], const float (&y)[4], uint16_t c) {
   }
 }
 
-static void polarF(float deg, float r, float &x, float &y) {
-  float a = deg * DEG_TO_RAD;
-  x = CX + r * cosf(a);
-  y = CY + r * sinf(a);
-}
-
-// Kite: tip at r = 110, 10 px wide at the hub, tail at r = 20 behind it.
-static void drawNeedle(float deg, uint16_t c) {
-  float tx, ty, bx, by, px, py;
-  polarF(deg, 110, tx, ty);
-  polarF(deg + 180, 20, bx, by);
-  polarF(deg + 90, 5, px, py);   // offset from the centre, perpendicular to the needle
-  float qx[4] = {tx, px, bx, 2 * CX - px};
-  float qy[4] = {ty, py, by, 2 * CY - py};
+static void fillSector(float a0, float a1, float rIn, float rOut, uint16_t c) {
+  float x0, y0, x1, y1, x2, y2, x3, y3;
+  polarF(a0, rOut, x0, y0);
+  polarF(a1, rOut, x1, y1);
+  polarF(a1, rIn, x2, y2);
+  polarF(a0, rIn, x3, y3);
+  float qx[4] = {x0, x1, x2, x3}, qy[4] = {y0, y1, y2, y3};
   fillQuad(qx, qy, c);
 }
 
-// Erase with a constant-width strip (7 px either side) rather than a grown copy of the needle: a grown copy tapers to the
-// same point and leaves almost no margin at the tip. The strip stays inside r = 117, short of the dial numbers (r >= 120);
-// the hub and digits are redrawn by the caller.
-static void eraseNeedle(float deg) {
-  float x0, y0, x1, y1, px, py;
-  polarF(deg + 180, 28, x0, y0);
-  polarF(deg, 116, x1, y1);
-  polarF(deg + 90, 7, px, py);
-  px -= CX;
-  py -= CY;
-  float qx[4] = {x0 + px, x1 + px, x1 - px, x0 - px};
-  float qy[4] = {y0 + py, y1 + py, y1 - py, y0 - py};
-  fillQuad(qx, qy, C_BG);
+static void drawSegment(int i, uint16_t c) {
+  fillSector(rpmToDeg(i * SEG_RPM) + 0.25f, rpmToDeg((i + 1) * SEG_RPM) - 0.25f, RING_IN, RING_OUT, c);
+}
+static uint16_t segLit(int i) {
+  int r = i * SEG_RPM;
+  return r >= RPM_REDLINE ? C_RED : r >= RPM_SHIFT ? C_ORANGE : C_GREEN;
+}
+
+// Centre a string on (cx, cy) using the current font's bounds.
+static void textCentered(const char *s, int cx, int cy) {
+  int16_t x1, y1;
+  uint16_t w, h;
+  tach->getTextBounds(s, 0, 0, &x1, &y1, &w, &h);
+  tach->setCursor(cx - (x1 + w / 2), cy - (y1 + h / 2));
+  tach->print(s);
+}
+
+static void drawNumerals() {
+  tach->setFont(u8g2_font_helvB24_tn);
+  tach->setTextColor(C_FG);
+  char b[2] = {0, 0};
+  for (int k = 0; k <= RPM_MAX / 1000; k++) {
+    float x, y;
+    polarF(rpmToDeg(k * 1000), (RING_IN + RING_OUT) / 2.0f, x, y);
+    b[0] = '0' + k;
+    textCentered(b, lroundf(x), lroundf(y));
+  }
+}
+
+static void drawTachFace() {
+  tach->fillScreen(C_BG);
+  tach->setUTF8Print(true);
+  tach->drawCircle(CX, CY, 178, C_RIM);
+  tach->drawCircle(CX, CY, 177, C_RIM);
+  tach->fillCircle(CX, CY, BAND_OUT, C_BAND);
+  tach->fillCircle(CX, CY, BAND_IN, C_BG);
+  for (int i = RPM_REDLINE / SEG_RPM; i < SEG_N; i++) drawSegment(i, C_REDDIM);
+  for (int r = 0; r <= RPM_MAX; r += 250) {   // fine ticks outside the ring, never redrawn
+    float a = rpmToDeg(r);
+    bool major = r % 1000 == 0;
+    fillSector(a - (major ? 0.5f : 0.25f), a + (major ? 0.5f : 0.25f), major ? 170 : 172, 176, C_FG);
+  }
+  tach->drawCircle(CX, CY, 104, C_DISC);
+  tach->drawCircle(CX, CY, 105, C_DISC);
+  drawNumerals();
+  tach->setFont(u8g2_font_helvB10_tr);
+  tach->setTextColor(C_DIM);
+  textCentered("RPM", CX, CY - 54);
+}
+
+static void drawDigits(int rpm) {
+  char buf[8];
+  snprintf(buf, sizeof(buf), "%d", rpm);
+  tach->fillRect(CX - 86, CY - 28, 172, 72, C_BG);
+  tach->setFont(u8g2_font_logisoso58_tn);
+  tach->setTextColor(rpm >= RPM_REDLINE ? C_RED : C_FG);
+  textCentered(buf, CX, CY + 8);
+}
+static void drawNoData() {
+  tach->fillRect(CX - 86, CY - 28, 172, 72, C_BG);
+  tach->fillRect(CX - 40, CY + 4, 80, 8, C_DIM);   // a dim bar instead of digits
 }
 
 static float shownRpm = 0;
-static int lastNeedleDeg10 = -1;
-static int lastRpmDigits = -1;
+static int litSegs = 0;
+static int lastDigits = -1;
 static bool tachShowsNoData = true;
 
+// Wider than a block, so no stray edge pixel of a cleared block can survive in the gaps.
+static void clearSegment(int i) {
+  fillSector(rpmToDeg(i * SEG_RPM) - 0.4f, rpmToDeg((i + 1) * SEG_RPM) + 0.4f, RING_IN - 1, RING_OUT + 1, C_BAND);
+}
+
+// Clear every block whose state changed plus its neighbours, then redraw them (and one more block each side, which the
+// clearing spills onto) in their final colours, then put the numerals back on top.
+static void setLitSegments(int want) {
+  int lo = min(want, litSegs), hi = max(want, litSegs);
+  for (int i = max(lo - 1, 0); i <= min(hi, SEG_N - 1); i++) clearSegment(i);
+  for (int i = max(lo - 2, 0); i <= min(hi + 1, SEG_N - 1); i++) {
+    if (i < want) drawSegment(i, segLit(i));
+    else if (i * SEG_RPM >= RPM_REDLINE) drawSegment(i, C_REDDIM);
+  }
+  litSegs = want;
+  drawNumerals();
+}
+
 static void updateTach(const Telemetry &t, bool alive) {
-  tach->setTextSize(5);
   if (!alive) {
     if (!tachShowsNoData) {
-      if (lastNeedleDeg10 >= 0) eraseNeedle(lastNeedleDeg10 / 10.0f);
+      setLitSegments(0);
+      drawNoData();
       tachShowsNoData = true;
-      lastRpmDigits = -1;
-      lastNeedleDeg10 = -1;
+      lastDigits = -1;
     }
-    tach->setTextColor(C_DIM, C_BG);
-    tach->setCursor(CX - 60, CY + 55);
-    tach->print("----  ");
     return;
   }
   tachShowsNoData = false;
   shownRpm += (t.rpm - shownRpm) * 0.35f;
-  float deg = rpmToDeg(shownRpm);
-  int deg10 = lroundf(deg * 10);
-  if (deg10 != lastNeedleDeg10) {
-    if (lastNeedleDeg10 >= 0) eraseNeedle(lastNeedleDeg10 / 10.0f);
-    // draw at the quantised angle, same as the erase above
-    drawNeedle(deg10 / 10.0f, C_WARN);
-    tach->fillCircle(CX, CY, 10, C_FG);
-    lastNeedleDeg10 = deg10;
-    lastRpmDigits = -1;   // the needle can cross the digits, so redraw them
-  }
+  int want = constrain((int)((shownRpm + SEG_RPM / 2) / SEG_RPM), 0, SEG_N);
+  if (want != litSegs) setLitSegments(want);
   int digits = (int)(shownRpm / 10) * 10;
-  if (digits != lastRpmDigits) {
-    lastRpmDigits = digits;
-    uint16_t c = digits >= RPM_REDLINE ? C_BAD : digits >= RPM_SHIFT ? C_WARN : C_FG;
-    char buf[8];
-    snprintf(buf, sizeof(buf), "%4d", digits);
-    tach->setTextColor(c, C_BG);
-    tach->setCursor(CX - 60, CY + 55);
-    tach->print(buf);
+  if (digits != lastDigits) {
+    lastDigits = digits;
+    drawDigits(digits);
   }
 }
 
@@ -281,6 +297,7 @@ void setup() {
   if (!info->begin(20000000)) Serial.println("info init failed");
 #endif
   drawTachFace();
+  drawNoData();
 #if INFO_SCREEN
   drawInfoStatic();
 #endif
