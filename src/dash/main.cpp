@@ -8,6 +8,9 @@
 #ifndef SIM_LOCAL
 #define SIM_LOCAL 0
 #endif
+#ifndef INFO_SCREEN
+#define INFO_SCREEN 1   // 0 = leave the info screen alone (not connected)
+#endif
 
 // ---- Wiring (classic ESP32) -------------------------------------------
 constexpr int PIN_SCK = 18, PIN_MOSI = 23, PIN_DC = 21;
@@ -110,15 +113,62 @@ static void drawTachFace() {
   tach->print("RPM x1000");
 }
 
+// Fill a convex quad one scanline at a time. The library's fillTriangle left stray pixels beyond the needle's thin tip,
+// which the erase never reached, so the needle and its eraser are both drawn with this instead.
+static void fillQuad(const float (&x)[4], const float (&y)[4], uint16_t c) {
+  float ymin = min(min(y[0], y[1]), min(y[2], y[3]));
+  float ymax = max(max(y[0], y[1]), max(y[2], y[3]));
+  for (int row = (int)ceilf(ymin); row <= (int)floorf(ymax); row++) {
+    float lo = 1e9f, hi = -1e9f;
+    for (int i = 0; i < 4; i++) {
+      int j = (i + 1) & 3;
+      if (row < min(y[i], y[j]) || row > max(y[i], y[j])) continue;
+      if (y[i] == y[j]) {
+        lo = min(lo, min(x[i], x[j]));
+        hi = max(hi, max(x[i], x[j]));
+      } else {
+        float xx = x[i] + (row - y[i]) * (x[j] - x[i]) / (y[j] - y[i]);
+        lo = min(lo, xx);
+        hi = max(hi, xx);
+      }
+    }
+    if (hi >= lo) {
+      int xl = lroundf(lo), xr = lroundf(hi);
+      tach->drawFastHLine(xl, row, xr - xl + 1, c);
+    }
+  }
+}
+
+static void polarF(float deg, float r, float &x, float &y) {
+  float a = deg * DEG_TO_RAD;
+  x = CX + r * cosf(a);
+  y = CY + r * sinf(a);
+}
+
+// Kite: tip at r = 110, 10 px wide at the hub, tail at r = 20 behind it.
 static void drawNeedle(float deg, uint16_t c) {
-  int tx, ty, bx, by, px, py;
-  polar(deg, 110, tx, ty);
-  polar(deg + 180, 20, bx, by);
-  float a = (deg + 90) * DEG_TO_RAD;
-  px = lroundf(5 * cosf(a));
-  py = lroundf(5 * sinf(a));
-  tach->fillTriangle(CX + px, CY + py, CX - px, CY - py, tx, ty, c);
-  tach->fillTriangle(CX + px, CY + py, CX - px, CY - py, bx, by, c);
+  float tx, ty, bx, by, px, py;
+  polarF(deg, 110, tx, ty);
+  polarF(deg + 180, 20, bx, by);
+  polarF(deg + 90, 5, px, py);   // offset from the centre, perpendicular to the needle
+  float qx[4] = {tx, px, bx, 2 * CX - px};
+  float qy[4] = {ty, py, by, 2 * CY - py};
+  fillQuad(qx, qy, c);
+}
+
+// Erase with a constant-width strip (7 px either side) rather than a grown copy of the needle: a grown copy tapers to the
+// same point and leaves almost no margin at the tip. The strip stays inside r = 117, short of the dial numbers (r >= 120);
+// the hub and digits are redrawn by the caller.
+static void eraseNeedle(float deg) {
+  float x0, y0, x1, y1, px, py;
+  polarF(deg + 180, 28, x0, y0);
+  polarF(deg, 116, x1, y1);
+  polarF(deg + 90, 7, px, py);
+  px -= CX;
+  py -= CY;
+  float qx[4] = {x0 + px, x1 + px, x1 - px, x0 - px};
+  float qy[4] = {y0 + py, y1 + py, y1 - py, y0 - py};
+  fillQuad(qx, qy, C_BG);
 }
 
 static float shownRpm = 0;
@@ -130,7 +180,7 @@ static void updateTach(const Telemetry &t, bool alive) {
   tach->setTextSize(5);
   if (!alive) {
     if (!tachShowsNoData) {
-      drawNeedle(rpmToDeg(shownRpm), C_BG);
+      if (lastNeedleDeg10 >= 0) eraseNeedle(lastNeedleDeg10 / 10.0f);
       tachShowsNoData = true;
       lastRpmDigits = -1;
       lastNeedleDeg10 = -1;
@@ -145,10 +195,12 @@ static void updateTach(const Telemetry &t, bool alive) {
   float deg = rpmToDeg(shownRpm);
   int deg10 = lroundf(deg * 10);
   if (deg10 != lastNeedleDeg10) {
-    if (lastNeedleDeg10 >= 0) drawNeedle(lastNeedleDeg10 / 10.0f, C_BG);
-    drawNeedle(deg, C_WARN);
+    if (lastNeedleDeg10 >= 0) eraseNeedle(lastNeedleDeg10 / 10.0f);
+    // draw at the quantised angle, same as the erase above
+    drawNeedle(deg10 / 10.0f, C_WARN);
     tach->fillCircle(CX, CY, 10, C_FG);
     lastNeedleDeg10 = deg10;
+    lastRpmDigits = -1;   // the needle can cross the digits, so redraw them
   }
   int digits = (int)(shownRpm / 10) * 10;
   if (digits != lastRpmDigits) {
@@ -225,9 +277,13 @@ void setup() {
   digitalWrite(PIN_INFO_BL, HIGH);
 
   if (!tach->begin(20000000)) Serial.println("tach init failed");
+#if INFO_SCREEN
   if (!info->begin(20000000)) Serial.println("info init failed");
+#endif
   drawTachFace();
+#if INFO_SCREEN
   drawInfoStatic();
+#endif
 
 #if !SIM_LOCAL
   WiFi.mode(WIFI_STA);
@@ -244,5 +300,7 @@ void loop() {
   Telemetry t;
   bool alive = getTelemetry(t);
   updateTach(t, alive);
+#if INFO_SCREEN
   updateInfo(t, alive);
+#endif
 }

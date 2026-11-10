@@ -33,14 +33,29 @@ Speeduino Serial3 --wire--> [ESP32-C3 "bridge"] ~~ESP-NOW~~> [ESP32 "dash"] --SP
 | `bridge_sim`, `bridge_c3_sim` | bridge sends fake data, no ECU needed |
 | `bridge_live`, `bridge_c3_live` | bridge reads the Speeduino |
 | `display_rx` | serial-print receiver for radio testing |
-| `dash_sim` | dash draws fake data locally, no bridge needed |
+| `dash_sim` | dash draws fake data locally, no bridge needed; builds with `-DINFO_SCREEN=0` so it only drives the tach |
 | `dash` | dash receives from the bridge |
 | `tach_test` | round tach bring-up: tries hardware SPI at 1/4/10 MHz and software SPI, solid colour fills (LED blinks announce each) |
 | `pin_test` | holds each tach signal pin high in turn (LED blinks 1-6: RST, CS, DC, SCL, SDA, BL) so a multimeter can check the wires |
 
 Compiled OK: all of the above. Hardware-tested so far: `bridge_c3_sim` on the C3 (native USB, `/dev/ttyACM0`, flags OK) and
 `display_rx` on the classic ESP32 (CH340, `/dev/ttyUSB0`). The ESP-NOW link works: the receiver printed the simulated
-rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP32 drives the GC9B72 round tach (needle sweep and digits work), with the info screen not connected. Not yet tested: the 'no data' stale case, range, the ECU link, the info screen.
+rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP32 drives the GC9B72 round tach (needle sweep and digits work, no leftover trail), with the info screen not connected. Not yet tested: the 'no data' stale case, range, the ECU link, the info screen.
+
+## Tach drawing notes (GC9B72, 2026-11-10)
+
+- The needle is erased and redrawn every frame (no frame buffer: 360x360x16 bit is too big for the classic ESP32). The library's
+  `fillTriangle` left stray pixels beyond a thin tip, so the needle is drawn as a convex quad with our own scanline fill (`fillQuad`
+  in `src/dash/main.cpp`) and erased with a constant-width strip (7 px either side, r <= 116, short of the dial numbers at r >= 120).
+  Erasing with a slightly bigger copy of the needle does NOT work: it tapers to the same point and leaves almost no margin at the tip.
+- Draw and erase use the same quantised angle (0.1 degree steps), and the RPM digits are redrawn whenever the needle moves because
+  the needle can cross them.
+- Tried and not needed: dropping the tach SPI speed to 10 MHz, and forcing the driver to resend the address window every write.
+  20 MHz with the stock driver is fine.
+- `INFO_SCREEN` (default 1) in `src/dash/main.cpp`: set to 0 to leave the info screen alone while it is not connected; it also
+  silences the boot warnings about SPI pins 18/23 being set up twice. `dash_sim` currently builds with it 0. Turn it back on (or remove
+  the flag) when the ILI9341 is connected, and check the shared SPI bus then.
+- Bring-up envs `tach_test` and `pin_test` are kept for diagnosing a new screen or wiring.
 
 ## Hardware plan
 
@@ -74,7 +89,7 @@ through the chassis, but on the bench the ECU ground must be joined to the board
 resin, so the wiring can't be inspected by eye. Not yet tested powered or connected to the ECU.
 
 Dash (classic ESP32): SCL(clock) 18, SDA(data/MOSI) 23, DC 21 shared. The tach's pads are labelled SCL and SDA on the board (not SCK/MOSI): SCL = clock = GPIO18, SDA = data = GPIO23. They were crossed once during bring-up and the screen stayed blank, so check these first if it ever goes dark. Tach: CS 5, RST 22, BL 25. Info: CS 4, RST 27, LED 26.
-3V3 + GND to both screens. The tach is verified working on this wiring. Both screens share one SPI bus; the info screen is untested. With only the tach connected, serial prints harmless warnings at boot (SPI pins 18/23 set up twice, because the info screen's bus object is created anyway).
+3V3 + GND to both screens. The tach is verified working on this wiring. Both screens share one SPI bus; the info screen is untested. With `INFO_SCREEN=1` and only the tach connected, serial prints harmless boot warnings (SPI pins 18/23 set up twice).
 
 Power: switched 12 V -> 1 A fuse -> automotive 12V->5V buck (36 V+ input, TVS + caps on input) -> 5 V pins.
 Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V rail. See `SHOPPING_LIST.md`.
