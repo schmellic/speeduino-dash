@@ -40,7 +40,7 @@ Speeduino Serial3 --wire--> [ESP32-C3 "bridge"] ~~ESP-NOW~~> [ESP32 "dash"] --SP
 
 Compiled OK: all of the above. Hardware-tested so far: `bridge_c3_sim` on the C3 (native USB, `/dev/ttyACM0`, flags OK) and
 `display_rx` on the classic ESP32 (CH340, `/dev/ttyUSB0`). The ESP-NOW link works: the receiver printed the simulated
-rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP32 drives the GC9B72 round tach (needle sweep and digits work, no leftover trail), with the info screen not connected. Wireless dash verified 2026-11-10: `bridge_c3_sim` on the C3 (powered separately, away from the computer) drives `dash` on the classic ESP32 over ESP-NOW and the tach ring and digits follow the simulated rpm (the sim sweeps 100-5900 rpm so all three colour zones show; `dash` was flashed with `PLATFORMIO_BUILD_FLAGS="-DINFO_SCREEN=0"` because the info screen is not connected). Not yet tested: the 'no data' stale case on the dash, range, the ECU link, the info screen.
+rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP32 drives the GC9B72 round tach (needle sweep and digits work, no leftover trail), with the info screen not connected. Wireless dash verified 2026-11-10: `bridge_c3_sim` on the C3 (powered separately, away from the computer) drives `dash` on the classic ESP32 over ESP-NOW and the tach ring and digits follow the simulated rpm (the sim sweeps 100-5900 rpm so all three colour zones show; `dash` was flashed with `PLATFORMIO_BUILD_FLAGS="-DINFO_SCREEN=0"` because the info screen is not connected). The 'no data' case also works (power the C3 off: ring clears and the centre shows the dim bar within about half a second; powering it back on recovers by itself, no reset). Not yet tested: range, the ECU link, the info screen.
 
 ## Tach design and drawing notes (GC9B72, 2026-11-10)
 
@@ -162,7 +162,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 
 ## Next steps
 
-1. ~~Check the radio link~~ done 2026-11-02. Optional: unplug the C3 and confirm the receiver prints `no data`.
+1. ~~Check the radio link~~ done 2026-11-02; the no-data case was confirmed on the dash on 2026-11-10.
 2. ~~Round tach on `dash_sim`~~ works (2026-11-10). When the info screen arrives, check it and the shared SPI bus. Optional: judge brightness/colours, test `dash` with the bridge (`bridge_c3_sim` on the C3).
 3. Enclosure for the bridge board is designed (see Bridge enclosure; measure the board and print it). Solder the
    bridge wires to the Speeduino (D14 -> A1, D15 -> A2, J6 GND -> B1; run the D21 continuity check first). Then test in the car with
