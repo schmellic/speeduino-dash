@@ -199,3 +199,11 @@ update is running, then shuts off so ESP-NOW has the radio). The Wi-Fi password 
 Firmware is about 1.1 MB, 84% of the 1.31 MB OTA slot. The first OTA-capable build had to go on over USB. Upload page confirmed working from a phone, and a full browser update (firmware.bin) completed on 2026-11-12. The laptop's NetworkManager connectivity check pops up a sign-in window showing ping.archlinux.org/nm-check.txt: ignore it and open http://192.168.4.1 yourself. The access point only restarts on power-up, so power-cycle the dash before each attempt.
 Checked 2026-11-12: with the test C3 sending, both screens kept updating before, during and after the access point shut off (it waited for the phone to disconnect first).
 The bridge C3 (mounted in the car) has no OTA yet; it would need the same treatment.
+
+## Dash mount: what the design needs (collected 2026-11-12, not designed yet)
+- Parts to hold: round tach (PCB 59.24 x 67.47 mm, active area 52.9 mm, 10-pin 2.54 mm header, two ~2 mm holes 23.88 mm apart), 2.8" info screen
+  (about 86 x 50 mm outline; measure the active area and mounting holes), and the classic ESP32 dash board (CH340 dev board, USB port must stay reachable for flashing).
+- Both screens share SCK/MOSI/DC, so they want a common wiring rail: 3V3, GND, GPIO18, GPIO23, GPIO21 (see Wiring). Allow room for a small perfboard or a PCB.
+- OTA exists, so USB access is only needed for the first flash or recovery. Power 12 V -> 5 V buck (same type as the bridge).
+- Target: Beetle glovebox area; measure the real opening and depth. PETG for heat. Remember the tach ring is 360 x 360 px on a round 2.1" panel.
+- The firmware, thresholds and layout are settled enough to design around; only the physical mount is open.
