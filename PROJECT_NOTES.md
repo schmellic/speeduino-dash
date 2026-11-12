@@ -187,3 +187,15 @@ head temp | peak head, throttle (with a bar) | MAP, AFR | advance, intake | batt
 on screen, dimmed, if data drops out). Head temp warns at 190 C and goes red at 220 C (`HEAD_WARN_C`, `HEAD_DANGER_C`, still guesses); battery is orange
 below 12.5 V and red below 11.5 V or above 15 V. Lambda and an ECU-link panel were tried and dropped (AFR already shows the mixture).
 Ideas needing bridge changes: injector duty, AFR target, VE, engine status. Verified on hardware with `dash_sim`.
+
+## OTA update of the dash (2026-11-12)
+The dash runs its own Wi-Fi access point for the first 2 minutes after power-on (`SpeeduinoDash`, channel 1; it stays up while a client is connected or an
+update is running, then shuts off so ESP-NOW has the radio). The Wi-Fi password is not in the repo: it lives in `src/dash/secrets.h` (git-ignored; copy
+`secrets.example.h` and set your own, 8+ characters). Without that file the build uses the placeholder `change-me-123`, which would then be the Wi-Fi password.
+**On a new computer, if `src/dash/secrets.h` is missing, ask the user for the dash Wi-Fi password and create the file with it before building the dash.** Two ways to update, no login beyond joining the network:
+- Browser: join the network, open `http://192.168.4.1` in Chrome or Safari (not the captive-portal sign-in sheet, whose file picker often does nothing),
+  choose `.pio/build/dash/firmware.bin`, press Update. A DNS catch-all makes phones treat it as a captive portal.
+- PlatformIO: join the network, then `pio run -e dash_ota -t upload` (ArduinoOTA to 192.168.4.1).
+Firmware is about 1.1 MB, 84% of the 1.31 MB OTA slot. The first OTA-capable build had to go on over USB. Upload page confirmed working from a phone.
+Not yet checked: that ESP-NOW telemetry keeps arriving after the access point shuts off (watch the screens for 3 minutes with the test C3 sending).
+The bridge C3 (mounted in the car) has no OTA yet; it would need the same treatment.

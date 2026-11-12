@@ -1,6 +1,10 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <esp_now.h>
+#include <ArduinoOTA.h>
+#include <WebServer.h>
+#include <DNSServer.h>
+#include <Update.h>
 #include <Arduino_GFX_Library.h>
 #include <Arduino_GC9B72.h>
 #include "Telemetry.h"
@@ -23,6 +27,63 @@ constexpr int RPM_SHIFT = 4500;     // ring turns orange here (user)
 constexpr int RPM_REDLINE = 5400;   // Beetle redline (user): digits and ring turn red here
 constexpr int HEAD_WARN_C = 190, HEAD_DANGER_C = 220;
 constexpr uint32_t STALE_MS = 500;
+
+// ---- OTA ---------------------------------------------------------------
+// No network in the car, so for the first OTA_WINDOW_MS after power-on the dash runs its own access point. Join it from the
+// laptop and run `pio run -e dash_ota -t upload`. The AP then shuts off so it can't get in the way of ESP-NOW.
+constexpr uint32_t OTA_WINDOW_MS = 120000;
+constexpr const char *OTA_SSID = "SpeeduinoDash";
+// Wi-Fi password only; the upload page and PlatformIO upload need no login. Kept out of the repo: put your own in
+// src/dash/secrets.h (git-ignored, see secrets.example.h). Without that file the build falls back to a placeholder.
+#if __has_include("secrets.h")
+#include "secrets.h"
+#else
+#define OTA_PASS "change-me-123"
+#endif
+static bool otaActive = false, otaBusy = false;
+
+// Browser upload at http://192.168.4.1 : pick .pio/build/dash/firmware.bin and press Update.
+static WebServer web(80);
+static DNSServer dns;   // answers every name with the dash, so phones treat the network as a captive portal
+static const char UPLOAD_PAGE[] PROGMEM = R"HTML(<!doctype html><meta name=viewport content="width=device-width,initial-scale=1">
+<body style="font-family:sans-serif;background:#111;color:#eee;max-width:420px;margin:2em auto;padding:0 1em">
+<h2>Speeduino dash update</h2>
+<input type=file id=f><br><br>
+<button onclick="go()" style="padding:.6em 1.2em">Update</button>
+<p id=s></p>
+<p style="color:#999;font-size:.85em">If Choose file does nothing, close this sign-in window and open http://192.168.4.1 in Chrome or Safari.</p>
+<script>
+function go(){var f=document.getElementById('f').files[0],s=document.getElementById('s');
+if(!f){s.textContent='Choose a .bin file first';return}
+var x=new XMLHttpRequest(),d=new FormData();d.append('fw',f);
+x.upload.onprogress=function(e){s.textContent='Uploading '+Math.round(e.loaded*100/e.total)+'%'};
+x.onload=function(){s.textContent=x.responseText};
+x.onerror=function(){s.textContent='Upload failed'};
+x.open('POST','/update');x.send(d)}
+</script>)HTML";
+
+static void webSetup() {
+  web.on("/", HTTP_GET, []() {
+    web.send_P(200, "text/html", UPLOAD_PAGE);
+  });
+  web.on("/update", HTTP_POST, []() {
+    bool ok = !Update.hasError();
+    web.send(200, "text/plain", ok ? "Update done, restarting the dash." : "Update failed. Try again.");
+    if (ok) { delay(500); ESP.restart(); }
+  }, []() {
+    HTTPUpload &u = web.upload();
+    if (u.status == UPLOAD_FILE_START) { otaBusy = true; Update.begin(UPDATE_SIZE_UNKNOWN); }
+    else if (u.status == UPLOAD_FILE_WRITE) Update.write(u.buf, u.currentSize);
+    else if (u.status == UPLOAD_FILE_END) { Update.end(true); otaBusy = false; }
+    else if (u.status == UPLOAD_FILE_ABORTED) { Update.abort(); otaBusy = false; }
+  });
+  web.onNotFound([]() {   // connectivity checks and any other address land on the upload page
+    web.sendHeader("Location", "http://192.168.4.1/", true);
+    web.send(302, "text/plain", "");
+  });
+  web.begin();
+  dns.start(53, "*", WiFi.softAPIP());
+}
 
 // ---- Displays (both share SCK/MOSI/DC, each has its own CS and RST) ----
 Arduino_DataBus *busTach = new Arduino_ESP32SPI(PIN_DC, PIN_TACH_CS, PIN_SCK, PIN_MOSI, GFX_NOT_DEFINED);
@@ -352,14 +413,35 @@ void setup() {
   drawInfoStatic();
 #endif
 
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP(OTA_SSID, OTA_PASS, 1);   // channel 1, same as the bridge's default
+  ArduinoOTA.setHostname("speeduino-dash");
+  ArduinoOTA.onStart([]() { otaBusy = true; });
+  ArduinoOTA.onEnd([]() { otaBusy = false; });
+  ArduinoOTA.onError([](ota_error_t) { otaBusy = false; });
+  ArduinoOTA.begin();
+  webSetup();
+  otaActive = true;
+
 #if !SIM_LOCAL
-  WiFi.mode(WIFI_STA);
   if (esp_now_init() == ESP_OK) esp_now_register_recv_cb(onRecv);
   else Serial.println("ESP-NOW init failed");
 #endif
 }
 
 void loop() {
+  if (otaActive) {
+    ArduinoOTA.handle();
+    dns.processNextRequest();
+    web.handleClient();
+    if (!otaBusy && millis() > OTA_WINDOW_MS && WiFi.softAPgetStationNum() == 0) {
+      ArduinoOTA.end();
+      web.stop();
+      dns.stop();
+      WiFi.softAPdisconnect(true);   // leaves the radio in STA mode for ESP-NOW
+      otaActive = false;
+    }
+  }
   static uint32_t last = 0;
   if (millis() - last < 50) return;   // 20 Hz
   last = millis();
