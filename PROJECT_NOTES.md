@@ -182,6 +182,8 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 
 ## Info screen design (2026-11-12)
 Same design language as the tach: black ground, dark rounded panels (`C_BAND`), rim-grey labels, U8g2 fonts (helvB10 labels, logisoso20 values),
-a status stripe on each panel's left edge (green normal, orange warning, red danger). 2 columns x 4 rows: head temp, intake, battery, MAP,
-throttle (with a bar), AFR, advance, ECU link (packet rate in Hz, LOST in red with no data). Head temp warns at 190 C and goes red at 220 C
-(`HEAD_WARN_C`, `HEAD_DANGER_C`, still guesses); battery is orange below 12.5 V and red below 11.5 V or above 15 V. Verified on hardware with `dash_sim`.
+a status stripe on each panel's left edge (green normal, orange warning, red danger). 2 columns x 4 rows, grouped by purpose:
+head temp | peak head, throttle (with a bar) | MAP, AFR | advance, intake | battery. Peak head is the highest head temp since power-on (kept
+on screen, dimmed, if data drops out). Head temp warns at 190 C and goes red at 220 C (`HEAD_WARN_C`, `HEAD_DANGER_C`, still guesses); battery is orange
+below 12.5 V and red below 11.5 V or above 15 V. Lambda and an ECU-link panel were tried and dropped (AFR already shows the mixture).
+Ideas needing bridge changes: injector duty, AFR target, VE, engine status. Verified on hardware with `dash_sim`.

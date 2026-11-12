@@ -236,7 +236,7 @@ static void updateTach(const Telemetry &t, bool alive) {
 constexpr int PANEL_W = 148, PANEL_H = 50, PANEL_GAP = 6, PANEL_X0 = 8, PANEL_Y0 = 11, CELLS = 8;
 struct Cell { const char *label; char last[8]; char lastUnit[4]; uint16_t lastColor, lastStripe; int lastBar; };
 static Cell cells[CELLS] = {
-  {"HEAD TEMP"}, {"INTAKE"}, {"BATTERY"}, {"MAP"}, {"THROTTLE"}, {"AFR"}, {"ADVANCE"}, {"ECU LINK"},
+  {"HEAD TEMP"}, {"PEAK HEAD"}, {"THROTTLE"}, {"MAP"}, {"AFR"}, {"ADVANCE"}, {"INTAKE"}, {"BATTERY"},
 };
 
 static int panelX(int i) { return PANEL_X0 + (i % 2) * (PANEL_W + PANEL_GAP + 2); }
@@ -298,16 +298,15 @@ static void setCell(int i, const char *text, const char *unit, uint16_t color, u
 
 static void updateInfo(const Telemetry &t, bool alive) {
   char b[8];
-  // packet rate, counted over one second
-  static uint32_t rateStart = 0;
-  static uint8_t lastSeq = 0;
-  static int count = 0, rate = 0;
-  if (t.seq != lastSeq) { lastSeq = t.seq; count++; }
-  if (millis() - rateStart >= 1000) { rate = count; count = 0; rateStart = millis(); }
-
+  static int peakC = -100;   // highest head temp since power-on
   if (!alive) {
-    for (int i = 0; i < CELLS - 1; i++) setCell(i, "--", "", C_DIM, C_DIM);
-    setCell(7, "LOST", "", C_RED, C_RED);
+    for (int i = 0; i < CELLS; i++) if (i != 1) setCell(i, "--", "", C_DIM, C_DIM);   // 1 = peak head, handled below
+    if (peakC > -100) {
+      snprintf(b, sizeof(b), "%d", peakC);
+      setCell(1, b, "C", C_RIM, C_DIM);   // keep the peak visible, dimmed
+    } else {
+      setCell(1, "--", "", C_DIM, C_DIM);
+    }
     return;
   }
   uint16_t st;
@@ -315,26 +314,24 @@ static void updateInfo(const Telemetry &t, bool alive) {
   st = t.cltC >= HEAD_DANGER_C ? C_RED : t.cltC >= HEAD_WARN_C ? C_ORANGE : C_GREEN;
   setCell(0, b, "C", st == C_GREEN ? C_FG : st, st);
   snprintf(b, sizeof(b), "%d", t.iatC);
-  setCell(1, b, "C", C_FG, C_GREEN);
+  setCell(6, b, "C", C_FG, C_GREEN);
   float v = t.battMv / 1000.0f;
   snprintf(b, sizeof(b), "%.1f", v);
   st = (v < 11.5f || v > 15.0f) ? C_RED : v < 12.5f ? C_ORANGE : C_GREEN;
-  setCell(2, b, "V", st == C_GREEN ? C_FG : st, st);
+  setCell(7, b, "V", st == C_GREEN ? C_FG : st, st);
   snprintf(b, sizeof(b), "%u", t.mapKpa);
   setCell(3, b, "kPa", C_FG, C_GREEN);
   int tps = constrain((int)t.tpsPct, 0, 100);
   snprintf(b, sizeof(b), "%d", tps);
-  setCell(4, b, "%", C_FG, C_GREEN, tps / 5 * 5);   // bar in 5% steps so it doesn't redraw on every count
+  setCell(2, b, "%", C_FG, C_GREEN, tps / 5 * 5);   // bar in 5% steps so it doesn't redraw on every count
   snprintf(b, sizeof(b), "%.1f", t.o2Raw / 10.0f);   // check scaling against your ini
-  setCell(5, b, "", C_FG, C_GREEN);
+  setCell(4, b, "", C_FG, C_GREEN);
   snprintf(b, sizeof(b), "%d", t.advanceDeg);
-  setCell(6, b, "deg", C_FG, C_GREEN);
-  if (rate > 0) {
-    snprintf(b, sizeof(b), "%d", rate);
-    setCell(7, b, "Hz", C_FG, C_GREEN);
-  } else {
-    setCell(7, "OK", "", C_FG, C_GREEN);
-  }
+  setCell(5, b, "deg", C_FG, C_GREEN);
+  peakC = max(peakC, (int)t.cltC);
+  snprintf(b, sizeof(b), "%d", peakC);
+  st = peakC >= HEAD_DANGER_C ? C_RED : peakC >= HEAD_WARN_C ? C_ORANGE : C_GREEN;
+  setCell(1, b, "C", st == C_GREEN ? C_FG : st, st);
 }
 
 // ---- Main --------------------------------------------------------------
