@@ -197,5 +197,5 @@ update is running, then shuts off so ESP-NOW has the radio). The Wi-Fi password 
   choose `.pio/build/dash/firmware.bin`, press Update. A DNS catch-all makes phones treat it as a captive portal.
 - PlatformIO: join the network, then `pio run -e dash_ota -t upload` (ArduinoOTA to 192.168.4.1).
 Firmware is about 1.1 MB, 84% of the 1.31 MB OTA slot. The first OTA-capable build had to go on over USB. Upload page confirmed working from a phone.
-Not yet checked: that ESP-NOW telemetry keeps arriving after the access point shuts off (watch the screens for 3 minutes with the test C3 sending).
+Checked 2026-11-12: with the test C3 sending, both screens kept updating before, during and after the access point shut off (it waited for the phone to disconnect first).
 The bridge C3 (mounted in the car) has no OTA yet; it would need the same treatment.
