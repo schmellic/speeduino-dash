@@ -40,7 +40,7 @@ Speeduino Serial3 --wire--> [ESP32-C3 "bridge"] ~~ESP-NOW~~> [ESP32 "dash"] --SP
 
 Compiled OK: all of the above. Hardware-tested so far: `bridge_c3_sim` on the C3 (native USB, `/dev/ttyACM0`, flags OK) and
 `display_rx` on the classic ESP32 (CH340, `/dev/ttyUSB0`). The ESP-NOW link works: the receiver printed the simulated
-rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP32 drives the GC9B72 round tach (needle sweep and digits work, no leftover trail), with the info screen not connected. Wireless dash verified 2026-11-10: `bridge_c3_sim` on the C3 (powered separately, away from the computer) drives `dash` on the classic ESP32 over ESP-NOW and the tach ring and digits follow the simulated rpm (the sim sweeps 100-5900 rpm so all three colour zones show; `dash` was flashed with `PLATFORMIO_BUILD_FLAGS="-DINFO_SCREEN=0"` because the info screen is not connected). The 'no data' case also works (power the C3 off: ring clears and the centre shows the dim bar within about half a second; powering it back on recovers by itself, no reset). Not yet tested: range, the ECU link, the info screen.
+rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP32 drives the GC9B72 round tach (needle sweep and digits work, no leftover trail), with the info screen not connected. Wireless dash verified 2026-11-10: `bridge_c3_sim` on the C3 (powered separately, away from the computer) drives `dash` on the classic ESP32 over ESP-NOW and the tach ring and digits follow the simulated rpm (the sim sweeps 100-5900 rpm so all three colour zones show; `dash` was flashed with `PLATFORMIO_BUILD_FLAGS="-DINFO_SCREEN=0"` because the info screen is not connected). The 'no data' case also works (power the C3 off: ring clears and the centre shows the dim bar within about half a second; powering it back on recovers by itself, no reset). Info screen verified 2026-11-12: `dash_sim` (both screens, shared SCK/MOSI/DC on a breadboard) drives the round tach and the 2x3 info grid together with no problems on the shared SPI bus. Not yet tested: range, the ECU link, `dash` with both screens over the wireless link.
 
 ## Tach design and drawing notes (GC9B72, 2026-11-10)
 
@@ -99,7 +99,7 @@ through the chassis, but on the bench the ECU ground must be joined to the board
 resin, so the wiring can't be inspected by eye. Not yet tested powered or connected to the ECU.
 
 Dash (classic ESP32): SCL(clock) 18, SDA(data/MOSI) 23, DC 21 shared. The tach's pads are labelled SCL and SDA on the board (not SCK/MOSI): SCL = clock = GPIO18, SDA = data = GPIO23. They were crossed once during bring-up and the screen stayed blank, so check these first if it ever goes dark. Tach: CS 5, RST 22, BL 25. Info: CS 4, RST 27, LED 26.
-3V3 + GND to both screens. The tach is verified working on this wiring. Both screens share one SPI bus; the info screen is untested. With `INFO_SCREEN=1` and only the tach connected, serial prints harmless boot warnings (SPI pins 18/23 set up twice).
+3V3 + GND to both screens. The tach is verified working on this wiring. Both screens share one SPI bus; the info screen is verified working on the same bus (2026-11-12). With `INFO_SCREEN=1` and only the tach connected, serial prints harmless boot warnings (SPI pins 18/23 set up twice).
 
 Power: switched 12 V -> 1 A fuse -> automotive 12V->5V buck (36 V+ input, TVS + caps on input) -> 5 V pins.
 Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V rail. See `SHOPPING_LIST.md`.
@@ -172,7 +172,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 ## Next steps
 
 1. ~~Check the radio link~~ done 2026-11-02; the no-data case was confirmed on the dash on 2026-11-10.
-2. ~~Round tach on `dash_sim`~~ works (2026-11-10). When the info screen arrives, check it and the shared SPI bus. Optional: judge brightness/colours, test `dash` with the bridge (`bridge_c3_sim` on the C3).
+2. ~~Round tach on `dash_sim`~~ works (2026-11-10). Info screen and shared SPI bus checked and working (2026-11-12). Optional: judge brightness/colours, test `dash` with the bridge (`bridge_c3_sim` on the C3).
 3. Enclosure for the bridge board is designed (see Bridge enclosure; measure the board and print it). Solder the
    bridge wires to the Speeduino (D14 -> A1, D15 -> A2, J6 GND -> B1; run the D21 continuity check first). Then test in the car with
    `bridge_c3_live` on the C3 and `display_rx` on the classic ESP32 plugged into a laptop (it prints `no data` until real values arrive).
