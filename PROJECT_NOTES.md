@@ -205,5 +205,5 @@ The bridge C3 (mounted in the car) has no OTA yet; it would need the same treatm
   (about 86 x 50 mm outline; measure the active area and mounting holes), and the classic ESP32 dash board (CH340 dev board, USB port must stay reachable for flashing).
 - Both screens share SCK/MOSI/DC, so they want a common wiring rail: 3V3, GND, GPIO18, GPIO23, GPIO21 (see Wiring). Allow room for a small perfboard or a PCB.
 - OTA exists, so USB access is only needed for the first flash or recovery. Power 12 V -> 5 V buck (same type as the bridge).
-- Target: Beetle glovebox area; measure the real opening and depth. PETG for heat. Remember the tach ring is 360 x 360 px on a round 2.1" panel.
+- Location not decided (2026-11-12): glovebox area, or under the dash. Under-dash would need a bracket instead of a flush mount; measure the real opening and depth. PETG for heat. Remember the tach ring is 360 x 360 px on a round 2.1" panel.
 - The firmware, thresholds and layout are settled enough to design around; only the physical mount is open.
