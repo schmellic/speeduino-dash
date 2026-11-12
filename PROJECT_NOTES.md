@@ -73,7 +73,7 @@ rpm/map/clt/iat/batt values. Also hardware-tested: `dash_sim` on the classic ESP
   Active area 52.9 mm, PCB 59.24 x 67.47 mm, 10-pin 2.54 mm header, two ~2 mm holes 23.88 mm apart.
   Driver library: https://github.com/MaliosDark/Arduino_GC9B72 (Arduino_GFX based, 4 commits, untested by us).
   Needs 3.3 V, BL pin must be driven HIGH. Ask the seller for sample code and datasheet.
-- Info screen: 2.8" ILI9341 240x320 SPI, non-touch, 3.3 V logic, about 86 x 50 mm.
+- Info screen: 2.8" ILI9341 240x320 SPI, non-touch, 3.3 V logic, about 86 x 50 mm. Needs `ips=true` (colour inversion) in the `Arduino_ILI9341` constructor or black and white swap.
 - Backup tach if the GC9B72 fails: GC9A01 1.28" round (well supported, about 32 mm active).
 - Rejected: Waveshare ESP32-S3-Touch-LCD-2.1 (cost, unclear mounting, parallel RGB), Amazon BUAGOUWZ 2.1" (no driver info),
   4" 480x480 Guition panel with a round bezel (size/depth unknown, would need S3 rewrite).
@@ -179,3 +179,9 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
    TunerStudio needs Secondary Serial IO enabled at 115200, burned, then power-cycled. Then verify the ECU byte offsets and try `dash`.
 4. Measure the bridge board height, update `BridgeBox.py` if needed, export STLs and print the box (PETG). Close the lid only after the in-car test.
 5. Measure the glovebox and the real screens, then design the 3D-printed mount.
+
+## Info screen design (2026-11-12)
+Same design language as the tach: black ground, dark rounded panels (`C_BAND`), rim-grey labels, U8g2 fonts (helvB10 labels, logisoso20 values),
+a status stripe on each panel's left edge (green normal, orange warning, red danger). 2 columns x 4 rows: head temp, intake, battery, MAP,
+throttle (with a bar), AFR, advance, ECU link (packet rate in Hz, LOST in red with no data). Head temp warns at 190 C and goes red at 220 C
+(`HEAD_WARN_C`, `HEAD_DANGER_C`, still guesses); battery is orange below 12.5 V and red below 11.5 V or above 15 V. Verified on hardware with `dash_sim`.

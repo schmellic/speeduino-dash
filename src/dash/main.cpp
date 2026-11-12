@@ -28,7 +28,7 @@ constexpr uint32_t STALE_MS = 500;
 Arduino_DataBus *busTach = new Arduino_ESP32SPI(PIN_DC, PIN_TACH_CS, PIN_SCK, PIN_MOSI, GFX_NOT_DEFINED);
 Arduino_GFX *tach = new Arduino_GC9B72(busTach, PIN_TACH_RST, 0, false, 360, 360);
 Arduino_DataBus *busInfo = new Arduino_ESP32SPI(PIN_DC, PIN_INFO_CS, PIN_SCK, PIN_MOSI, GFX_NOT_DEFINED);
-Arduino_GFX *info = new Arduino_ILI9341(busInfo, PIN_INFO_RST, 1);   // landscape 320x240
+Arduino_GFX *info = new Arduino_ILI9341(busInfo, PIN_INFO_RST, 1, true);   // landscape 320x240
 
 constexpr uint16_t C_BG = RGB565_BLACK, C_FG = RGB565_WHITE, C_DIM = RGB565_DARKGREY;
 constexpr uint16_t C_WARN = RGB565_ORANGE, C_BAD = RGB565_RED, C_OK = RGB565_GREEN;
@@ -230,58 +230,111 @@ static void updateTach(const Telemetry &t, bool alive) {
   }
 }
 
-// ---- Info screen (2 columns x 3 rows, 160x80 cells) --------------------
-struct Cell { const char *label; char last[8]; uint16_t lastColor; };
-static Cell cells[6] = {
-  {"HEAD TEMP"}, {"INTAKE"}, {"BATTERY"}, {"MAP"}, {"AFR"}, {"ADVANCE"},
+// ---- Info screen (same look as the tach: black ground, dark panels, rim-grey labels, green/orange/red status) ----------
+// 2 columns x 4 rows of rounded panels. Each has a status stripe down the left edge, a small label, and a value with a
+// small unit after it. The throttle panel also has a bar.
+constexpr int PANEL_W = 148, PANEL_H = 50, PANEL_GAP = 6, PANEL_X0 = 8, PANEL_Y0 = 11, CELLS = 8;
+struct Cell { const char *label; char last[8]; char lastUnit[4]; uint16_t lastColor, lastStripe; int lastBar; };
+static Cell cells[CELLS] = {
+  {"HEAD TEMP"}, {"INTAKE"}, {"BATTERY"}, {"MAP"}, {"THROTTLE"}, {"AFR"}, {"ADVANCE"}, {"ECU LINK"},
 };
+
+static int panelX(int i) { return PANEL_X0 + (i % 2) * (PANEL_W + PANEL_GAP + 2); }
+static int panelY(int i) { return PANEL_Y0 + (i / 2) * (PANEL_H + PANEL_GAP); }
+
+static void drawStripe(int i, uint16_t c) {
+  info->fillRect(panelX(i) + 5, panelY(i) + 10, 4, PANEL_H - 20, c);
+}
 
 static void drawInfoStatic() {
   info->fillScreen(C_BG);
-  info->drawFastVLine(160, 0, 240, C_DIM);
-  info->drawFastHLine(0, 80, 320, C_DIM);
-  info->drawFastHLine(0, 160, 320, C_DIM);
-  info->setTextSize(2);
-  info->setTextColor(C_DIM, C_BG);
-  for (int i = 0; i < 6; i++) {
-    info->setCursor((i % 2) * 160 + 10, (i / 2) * 80 + 8);
+  info->setUTF8Print(true);
+  info->setFont(u8g2_font_helvB10_tr);
+  info->setTextColor(C_RIM);
+  for (int i = 0; i < CELLS; i++) {
+    info->fillRoundRect(panelX(i), panelY(i), PANEL_W, PANEL_H, 8, C_BAND);
+    drawStripe(i, C_DIM);
+    info->setCursor(panelX(i) + 18, panelY(i) + 17);
     info->print(cells[i].label);
     cells[i].last[0] = 0;
+    cells[i].lastUnit[0] = 0;
+    cells[i].lastBar = -2;
   }
 }
 
-static void setCell(int i, const char *text, uint16_t color) {
-  if (!strcmp(cells[i].last, text) && cells[i].lastColor == color) return;
-  strncpy(cells[i].last, text, sizeof(cells[i].last) - 1);
-  cells[i].last[sizeof(cells[i].last) - 1] = 0;
-  cells[i].lastColor = color;
-  char buf[8];
-  snprintf(buf, sizeof(buf), "%-6s", text);   // pad so old digits are overwritten
-  info->setTextSize(4);
-  info->setTextColor(color, C_BG);
-  info->setCursor((i % 2) * 160 + 10, (i / 2) * 80 + 34);
-  info->print(buf);
+static void setCell(int i, const char *text, const char *unit, uint16_t color, uint16_t stripe, int bar = -1) {
+  Cell &c = cells[i];
+  if (!strcmp(c.last, text) && !strcmp(c.lastUnit, unit) && c.lastColor == color && c.lastStripe == stripe &&
+      c.lastBar == bar) return;
+  strncpy(c.last, text, sizeof(c.last) - 1);
+  c.last[sizeof(c.last) - 1] = 0;
+  strncpy(c.lastUnit, unit, sizeof(c.lastUnit) - 1);
+  c.lastUnit[sizeof(c.lastUnit) - 1] = 0;
+  c.lastColor = color;
+  c.lastStripe = stripe;
+  c.lastBar = bar;
+
+  int px = panelX(i), py = panelY(i);
+  int x = px + 18, base = py + PANEL_H - 8;
+  info->fillRect(px + 14, py + 21, PANEL_W - 20, PANEL_H - 25, C_BAND);   // value area only
+  drawStripe(i, stripe);
+  int16_t x1, y1;
+  uint16_t w, h;
+  info->setFont(u8g2_font_logisoso20_tr);
+  info->setTextColor(color);
+  info->getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  info->setCursor(x, base);
+  info->print(text);
+  info->setFont(u8g2_font_helvB10_tr);
+  info->setTextColor(C_RIM);
+  info->setCursor(x + w + 4, base);
+  info->print(unit);
+  if (bar >= 0) {
+    int bx = px + 92, bw = PANEL_W - 92 - 10;
+    info->fillRoundRect(bx, base - 9, bw, 8, 2, C_DIM);
+    if (bar > 0) info->fillRoundRect(bx, base - 9, max(3, bw * bar / 100), 8, 2, color);
+  }
 }
 
 static void updateInfo(const Telemetry &t, bool alive) {
   char b[8];
+  // packet rate, counted over one second
+  static uint32_t rateStart = 0;
+  static uint8_t lastSeq = 0;
+  static int count = 0, rate = 0;
+  if (t.seq != lastSeq) { lastSeq = t.seq; count++; }
+  if (millis() - rateStart >= 1000) { rate = count; count = 0; rateStart = millis(); }
+
   if (!alive) {
-    for (int i = 0; i < 6; i++) setCell(i, "--", C_DIM);
+    for (int i = 0; i < CELLS - 1; i++) setCell(i, "--", "", C_DIM, C_DIM);
+    setCell(7, "LOST", "", C_RED, C_RED);
     return;
   }
-  snprintf(b, sizeof(b), "%dC", t.cltC);
-  setCell(0, b, t.cltC >= HEAD_DANGER_C ? C_BAD : t.cltC >= HEAD_WARN_C ? C_WARN : C_FG);
-  snprintf(b, sizeof(b), "%dC", t.iatC);
-  setCell(1, b, C_FG);
+  uint16_t st;
+  snprintf(b, sizeof(b), "%d", t.cltC);
+  st = t.cltC >= HEAD_DANGER_C ? C_RED : t.cltC >= HEAD_WARN_C ? C_ORANGE : C_GREEN;
+  setCell(0, b, "C", st == C_GREEN ? C_FG : st, st);
+  snprintf(b, sizeof(b), "%d", t.iatC);
+  setCell(1, b, "C", C_FG, C_GREEN);
   float v = t.battMv / 1000.0f;
-  snprintf(b, sizeof(b), "%.1fV", v);
-  setCell(2, b, (v < 11.5f || v > 15.0f) ? C_BAD : v < 12.5f ? C_WARN : C_FG);
-  snprintf(b, sizeof(b), "%ukPa", t.mapKpa);
-  setCell(3, b, C_FG);
+  snprintf(b, sizeof(b), "%.1f", v);
+  st = (v < 11.5f || v > 15.0f) ? C_RED : v < 12.5f ? C_ORANGE : C_GREEN;
+  setCell(2, b, "V", st == C_GREEN ? C_FG : st, st);
+  snprintf(b, sizeof(b), "%u", t.mapKpa);
+  setCell(3, b, "kPa", C_FG, C_GREEN);
+  int tps = constrain((int)t.tpsPct, 0, 100);
+  snprintf(b, sizeof(b), "%d", tps);
+  setCell(4, b, "%", C_FG, C_GREEN, tps / 5 * 5);   // bar in 5% steps so it doesn't redraw on every count
   snprintf(b, sizeof(b), "%.1f", t.o2Raw / 10.0f);   // check scaling against your ini
-  setCell(4, b, C_FG);
+  setCell(5, b, "", C_FG, C_GREEN);
   snprintf(b, sizeof(b), "%d", t.advanceDeg);
-  setCell(5, b, C_FG);
+  setCell(6, b, "deg", C_FG, C_GREEN);
+  if (rate > 0) {
+    snprintf(b, sizeof(b), "%d", rate);
+    setCell(7, b, "Hz", C_FG, C_GREEN);
+  } else {
+    setCell(7, "OK", "", C_FG, C_GREEN);
+  }
 }
 
 // ---- Main --------------------------------------------------------------
