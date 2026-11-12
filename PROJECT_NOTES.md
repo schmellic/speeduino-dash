@@ -196,6 +196,6 @@ update is running, then shuts off so ESP-NOW has the radio). The Wi-Fi password 
 - Browser: join the network, open `http://192.168.4.1` in Chrome or Safari (not the captive-portal sign-in sheet, whose file picker often does nothing),
   choose `.pio/build/dash/firmware.bin`, press Update. A DNS catch-all makes phones treat it as a captive portal.
 - PlatformIO: join the network, then `pio run -e dash_ota -t upload` (ArduinoOTA to 192.168.4.1).
-Firmware is about 1.1 MB, 84% of the 1.31 MB OTA slot. The first OTA-capable build had to go on over USB. Upload page confirmed working from a phone.
+Firmware is about 1.1 MB, 84% of the 1.31 MB OTA slot. The first OTA-capable build had to go on over USB. Upload page confirmed working from a phone, and a full browser update (firmware.bin) completed on 2026-11-12. The laptop's NetworkManager connectivity check pops up a sign-in window showing ping.archlinux.org/nm-check.txt: ignore it and open http://192.168.4.1 yourself. The access point only restarts on power-up, so power-cycle the dash before each attempt.
 Checked 2026-11-12: with the test C3 sending, both screens kept updating before, during and after the access point shut off (it waited for the phone to disconnect first).
 The bridge C3 (mounted in the car) has no OTA yet; it would need the same treatment.
