@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 790" font-family="DejaVu Sans, sans-serif">
+<rect width="1000" height="790" fill="#fff"/>
+<text x="500" y="32" font-size="22" font-weight="bold" text-anchor="middle">ESP32 dash board (30-pin DevKit): where to solder</text>
+<text x="500" y="54" font-size="13" text-anchor="middle" fill="#444">Board seen from above, USB at the bottom. Each coloured pin gets a wire to the header pin shown (TACH n or INFO n, as numbered on the labels).</text>
+<rect x="380" y="96" width="150" height="624" rx="8" fill="#2b3a4a" stroke="#111"/>
+<rect x="405" y="100" width="100" height="34" fill="#9aa5b1" stroke="#111"/>
+<text x="455.0" y="122" font-size="11" text-anchor="middle" fill="#111">antenna</text>
+<rect x="429.0" y="696" width="52" height="26" rx="3" fill="#bbb" stroke="#111"/>
+<text x="455.0" y="713" font-size="11" text-anchor="middle" fill="#111">USB</text>
+<circle cx="380" cy="150" r="4" fill="#777"/>
+<text x="392" y="154" font-size="12" fill="#9aa5b1" text-anchor="start">EN</text>
+<circle cx="380" cy="186" r="4" fill="#777"/>
+<text x="392" y="190" font-size="12" fill="#9aa5b1" text-anchor="start">VP</text>
+<circle cx="380" cy="222" r="4" fill="#777"/>
+<text x="392" y="226" font-size="12" fill="#9aa5b1" text-anchor="start">VN</text>
+<circle cx="380" cy="258" r="4" fill="#777"/>
+<text x="392" y="262" font-size="12" fill="#9aa5b1" text-anchor="start">D34</text>
+<circle cx="380" cy="294" r="4" fill="#777"/>
+<text x="392" y="298" font-size="12" fill="#9aa5b1" text-anchor="start">D35</text>
+<circle cx="380" cy="330" r="4" fill="#777"/>
+<text x="392" y="334" font-size="12" fill="#9aa5b1" text-anchor="start">D32</text>
+<circle cx="380" cy="366" r="4" fill="#777"/>
+<text x="392" y="370" font-size="12" fill="#9aa5b1" text-anchor="start">D33</text>
+<circle cx="380" cy="402" r="7" fill="#148F77" stroke="#fff" stroke-width="1.5"/>
+<text x="392" y="406" font-size="13" font-weight="bold" fill="#fff" text-anchor="start">D25</text>
+<line x1="380" y1="402" x2="290" y2="402" stroke="#148F77" stroke-width="3"/>
+<rect x="140" y="390.0" width="150" height="24" rx="6" fill="#fff" stroke="#148F77" stroke-width="2.5"/>
+<text x="215.0" y="406.0" font-size="13" font-weight="bold" text-anchor="middle">TACH 8  BL</text>
+<circle cx="380" cy="438" r="7" fill="#148F77" stroke="#fff" stroke-width="1.5"/>
+<text x="392" y="442" font-size="13" font-weight="bold" fill="#fff" text-anchor="start">D26</text>
+<line x1="380" y1="438" x2="290" y2="438" stroke="#148F77" stroke-width="3"/>
+<rect x="140" y="426.0" width="150" height="24" rx="6" fill="#fff" stroke="#148F77" stroke-width="2.5"/>
+<text x="215.0" y="442.0" font-size="13" font-weight="bold" text-anchor="middle">INFO 8  LED</text>
+<circle cx="380" cy="474" r="7" fill="#B7950B" stroke="#fff" stroke-width="1.5"/>
+<text x="392" y="478" font-size="13" font-weight="bold" fill="#fff" text-anchor="start">D27</text>
+<line x1="380" y1="474" x2="290" y2="474" stroke="#B7950B" stroke-width="3"/>
+<rect x="140" y="462.0" width="150" height="24" rx="6" fill="#fff" stroke="#B7950B" stroke-width="2.5"/>
+<text x="215.0" y="478.0" font-size="13" font-weight="bold" text-anchor="middle">INFO 4  RESET</text>
+<circle cx="380" cy="510" r="4" fill="#777"/>
+<text x="392" y="514" font-size="12" fill="#9aa5b1" text-anchor="start">D14</text>
+<circle cx="380" cy="546" r="4" fill="#777"/>
+<text x="392" y="550" font-size="12" fill="#9aa5b1" text-anchor="start">D12</text>
+<circle cx="380" cy="582" r="4" fill="#777"/>
+<text x="392" y="586" font-size="12" fill="#9aa5b1" text-anchor="start">D13</text>
+<circle cx="380" cy="618" r="4" fill="#777"/>
+<text x="392" y="622" font-size="12" fill="#9aa5b1" text-anchor="start">GND</text>
+<circle cx="380" cy="654" r="4" fill="#777"/>
+<text x="392" y="658" font-size="12" fill="#9aa5b1" text-anchor="start">VIN</text>
+<circle cx="530" cy="150" r="7" fill="#1E8449" stroke="#fff" stroke-width="1.5"/>
+<text x="518" y="154" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D23</text>
+<line x1="530" y1="150" x2="620" y2="150" stroke="#1E8449" stroke-width="3"/>
+<rect x="620" y="131.0" width="150" height="38" rx="6" fill="#fff" stroke="#1E8449" stroke-width="2.5"/>
+<text x="695.0" y="147.0" font-size="13" font-weight="bold" text-anchor="middle">TACH 4  SDA</text>
+<text x="695.0" y="161.0" font-size="13" font-weight="bold" text-anchor="middle">INFO 6  SDI</text>
+<circle cx="530" cy="186" r="7" fill="#B7950B" stroke="#fff" stroke-width="1.5"/>
+<text x="518" y="190" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D22</text>
+<line x1="530" y1="186" x2="620" y2="186" stroke="#B7950B" stroke-width="3"/>
+<rect x="620" y="174.0" width="150" height="24" rx="6" fill="#fff" stroke="#B7950B" stroke-width="2.5"/>
+<text x="695.0" y="190.0" font-size="13" font-weight="bold" text-anchor="middle">TACH 5  RST</text>
+<circle cx="530" cy="222" r="4" fill="#777"/>
+<text x="518" y="226" font-size="12" fill="#9aa5b1" text-anchor="end">TX0</text>
+<circle cx="530" cy="258" r="4" fill="#777"/>
+<text x="518" y="262" font-size="12" fill="#9aa5b1" text-anchor="end">RX0</text>
+<circle cx="530" cy="294" r="7" fill="#7D3C98" stroke="#fff" stroke-width="1.5"/>
+<text x="518" y="298" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D21</text>
+<line x1="530" y1="294" x2="620" y2="294" stroke="#7D3C98" stroke-width="3"/>
+<rect x="620" y="275.0" width="150" height="38" rx="6" fill="#fff" stroke="#7D3C98" stroke-width="2.5"/>
+<text x="695.0" y="291.0" font-size="13" font-weight="bold" text-anchor="middle">TACH 6  DC</text>
+<text x="695.0" y="305.0" font-size="13" font-weight="bold" text-anchor="middle">INFO 5  DC</text>
+<circle cx="530" cy="330" r="4" fill="#777"/>
+<text x="518" y="334" font-size="12" fill="#9aa5b1" text-anchor="end">D19</text>
+<circle cx="530" cy="366" r="7" fill="#2471A3" stroke="#fff" stroke-width="1.5"/>
+<text x="518" y="370" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D18</text>
+<line x1="530" y1="366" x2="620" y2="366" stroke="#2471A3" stroke-width="3"/>
+<rect x="620" y="347.0" width="150" height="38" rx="6" fill="#fff" stroke="#2471A3" stroke-width="2.5"/>
+<text x="695.0" y="363.0" font-size="13" font-weight="bold" text-anchor="middle">TACH 3  SCL</text>
+<text x="695.0" y="377.0" font-size="13" font-weight="bold" text-anchor="middle">INFO 7  SCK</text>
+<circle cx="530" cy="402" r="7" fill="#CA6F1E" stroke="#fff" stroke-width="1.5"/>
+<text x="518" y="406" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D5</text>
+<line x1="530" y1="402" x2="620" y2="402" stroke="#CA6F1E" stroke-width="3"/>
+<rect x="620" y="390.0" width="150" height="24" rx="6" fill="#fff" stroke="#CA6F1E" stroke-width="2.5"/>
+<text x="695.0" y="406.0" font-size="13" font-weight="bold" text-anchor="middle">TACH 7  CS</text>
+<circle cx="530" cy="438" r="4" fill="#777"/>
+<text x="518" y="442" font-size="12" fill="#9aa5b1" text-anchor="end">TX2</text>
+<circle cx="530" cy="474" r="4" fill="#777"/>
+<text x="518" y="478" font-size="12" fill="#9aa5b1" text-anchor="end">RX2</text>
+<circle cx="530" cy="510" r="7" fill="#CA6F1E" stroke="#fff" stroke-width="1.5"/>
+<text x="518" y="514" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D4</text>
+<line x1="530" y1="510" x2="620" y2="510" stroke="#CA6F1E" stroke-width="3"/>
+<rect x="620" y="498.0" width="150" height="24" rx="6" fill="#fff" stroke="#CA6F1E" stroke-width="2.5"/>
+<text x="695.0" y="514.0" font-size="13" font-weight="bold" text-anchor="middle">INFO 3  CS</text>
+<circle cx="530" cy="546" r="4" fill="#777"/>
+<text x="518" y="550" font-size="12" fill="#9aa5b1" text-anchor="end">D2</text>
+<circle cx="530" cy="582" r="4" fill="#777"/>
+<text x="518" y="586" font-size="12" fill="#9aa5b1" text-anchor="end">D15</text>
+<circle cx="530" cy="618" r="7" fill="#222222" stroke="#fff" stroke-width="1.5"/>
+<text x="518" y="622" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">GND</text>
+<line x1="530" y1="618" x2="620" y2="618" stroke="#222222" stroke-width="3"/>
+<rect x="620" y="599.0" width="150" height="38" rx="6" fill="#fff" stroke="#222222" stroke-width="2.5"/>
+<text x="695.0" y="615.0" font-size="13" font-weight="bold" text-anchor="middle">TACH 2  GND</text>
+<text x="695.0" y="629.0" font-size="13" font-weight="bold" text-anchor="middle">INFO 2  GND</text>
+<circle cx="530" cy="654" r="7" fill="#C0392B" stroke="#fff" stroke-width="1.5"/>
+<text x="518" y="658" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">3V3</text>
+<line x1="530" y1="654" x2="620" y2="654" stroke="#C0392B" stroke-width="3"/>
+<rect x="620" y="635.0" width="150" height="38" rx="6" fill="#fff" stroke="#C0392B" stroke-width="2.5"/>
+<text x="695.0" y="651.0" font-size="13" font-weight="bold" text-anchor="middle">TACH 1  VCC</text>
+<text x="695.0" y="665.0" font-size="13" font-weight="bold" text-anchor="middle">INFO 1  VCC</text>
+<text x="500" y="760" font-size="13" text-anchor="middle" fill="#444">GND and 3V3 each go to both headers (pin 2 and pin 1). Grey pins are not used. Left pins: D25, D26, D27 only.</text>
+</svg>
