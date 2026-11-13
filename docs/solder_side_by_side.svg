@@ -1,23 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 820" font-family="DejaVu Sans, sans-serif">
 <rect width="1000" height="820" fill="#fff"/>
-<text x="500" y="32" font-size="22" font-weight="bold" text-anchor="middle">Headers beside the ESP32: shared wires jump between headers</text>
-<text x="500" y="54" font-size="13" text-anchor="middle" fill="#444">Top view, USB at the bottom. Pin 1 of both headers is level with D23. Shared signals jump from tach to info.</text>
-<path d="M280 654 L300 654 L300 150 L580 150" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M280 618 L312 618 L312 186 L580 186" fill="none" stroke="#222222" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M280 366 L324 366 L324 222 L580 222" fill="none" stroke="#2471A3" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M280 150 L336 150 L336 258 L580 258" fill="none" stroke="#1E8449" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M280 186 L348 186 L348 294 L580 294" fill="none" stroke="#B7950B" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M280 294 L360 294 L360 330 L580 330" fill="none" stroke="#7D3C98" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M280 402 L372 402 L372 366 L580 366" fill="none" stroke="#CA6F1E" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M140 402 L108 402 L108 720 L384 720 L384 402 L580 402" fill="none" stroke="#148F77" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="500" y="32" font-size="22" font-weight="bold" text-anchor="middle">Info header nearest the ESP32, tach beyond it</text>
+<text x="500" y="54" font-size="13" text-anchor="middle" fill="#444">Top view, USB at the bottom. Pin 1 of both headers is level with D23. Shared signals jump from info to tach.</text>
+<path d="M280 654 L330 654 L330 150 L580 150" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 618 L342 618 L342 186 L580 186" fill="none" stroke="#222222" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 510 L354 510 L354 222 L580 222" fill="none" stroke="#CA6F1E" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M140 474 L108 474 L108 720 L366 720 L366 258 L580 258" fill="none" stroke="#B7950B" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 294 L378 294 L378 294 L580 294" fill="none" stroke="#7D3C98" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 150 L390 150 L390 330 L580 330" fill="none" stroke="#1E8449" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 366 L402 366 L402 366 L580 366" fill="none" stroke="#2471A3" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M140 438 L100 438 L100 730 L414 730 L414 402 L580 402" fill="none" stroke="#148F77" stroke-width="2.5" stroke-linejoin="round"/>
 <path d="M580 150 L640 150 L640 150 L800 150" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linejoin="round"/>
 <path d="M580 186 L656 186 L656 186 L800 186" fill="none" stroke="#222222" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M280 510 L454 510 L454 240 L672 240 L672 222 L800 222" fill="none" stroke="#CA6F1E" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M140 474 L100 474 L100 730 L466 730 L466 276 L688 276 L688 258 L800 258" fill="none" stroke="#B7950B" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M580 330 L704 330 L704 294 L800 294" fill="none" stroke="#7D3C98" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M580 258 L720 258 L720 330 L800 330" fill="none" stroke="#1E8449" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M580 222 L736 222 L736 366 L800 366" fill="none" stroke="#2471A3" stroke-width="2.5" stroke-linejoin="round"/>
-<path d="M140 438 L92 438 L92 740 L514 740 L514 420 L752 420 L752 402 L800 402" fill="none" stroke="#148F77" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M580 366 L672 366 L672 222 L800 222" fill="none" stroke="#2471A3" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M580 330 L688 330 L688 258 L800 258" fill="none" stroke="#1E8449" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 186 L296 186 L296 312 L704 312 L704 294 L800 294" fill="none" stroke="#B7950B" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M580 294 L720 294 L720 330 L800 330" fill="none" stroke="#7D3C98" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 402 L306 402 L306 384 L736 384 L736 366 L800 366" fill="none" stroke="#CA6F1E" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M140 402 L92 402 L92 740 L311 740 L311 420 L752 420 L752 402 L800 402" fill="none" stroke="#148F77" stroke-width="2.5" stroke-linejoin="round"/>
 <rect x="140" y="96" width="140" height="624" rx="8" fill="#2b3a4a" stroke="#111"/>
 <rect x="165" y="100" width="90" height="34" fill="#9aa5b1" stroke="#111"/>
 <text x="210.0" y="122" font-size="11" text-anchor="middle">antenna</text>
@@ -83,7 +83,7 @@
 <text x="268" y="622" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">GND</text>
 <circle cx="280" cy="654" r="7" fill="#C0392B" stroke="#fff" stroke-width="1.5"/>
 <text x="268" y="658" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">3V3</text>
-<text x="580" y="110" font-size="15" font-weight="bold" text-anchor="middle">TACH header</text>
+<text x="580" y="110" font-size="15" font-weight="bold" text-anchor="middle">INFO header</text>
 <rect x="563" y="132" width="34" height="284" rx="5" fill="#eee" stroke="#333"/>
 <circle cx="580" cy="150" r="10" fill="#C0392B" stroke="#333"/>
 <text x="580" y="154" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">1</text>
@@ -91,25 +91,25 @@
 <circle cx="580" cy="186" r="10" fill="#222222" stroke="#333"/>
 <text x="580" y="190" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">2</text>
 <text x="556" y="191" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">GND</text>
-<circle cx="580" cy="222" r="10" fill="#2471A3" stroke="#333"/>
+<circle cx="580" cy="222" r="10" fill="#CA6F1E" stroke="#333"/>
 <text x="580" y="226" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">3</text>
-<text x="556" y="227" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">SCL</text>
-<circle cx="580" cy="258" r="10" fill="#1E8449" stroke="#333"/>
+<text x="556" y="227" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">CS</text>
+<circle cx="580" cy="258" r="10" fill="#B7950B" stroke="#333"/>
 <text x="580" y="262" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">4</text>
-<text x="556" y="263" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">SDA</text>
-<circle cx="580" cy="294" r="10" fill="#B7950B" stroke="#333"/>
+<text x="556" y="263" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">RESET</text>
+<circle cx="580" cy="294" r="10" fill="#7D3C98" stroke="#333"/>
 <text x="580" y="298" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">5</text>
-<text x="556" y="299" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">RST</text>
-<circle cx="580" cy="330" r="10" fill="#7D3C98" stroke="#333"/>
+<text x="556" y="299" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">DC</text>
+<circle cx="580" cy="330" r="10" fill="#1E8449" stroke="#333"/>
 <text x="580" y="334" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">6</text>
-<text x="556" y="335" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">DC</text>
-<circle cx="580" cy="366" r="10" fill="#CA6F1E" stroke="#333"/>
+<text x="556" y="335" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">SDI</text>
+<circle cx="580" cy="366" r="10" fill="#2471A3" stroke="#333"/>
 <text x="580" y="370" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">7</text>
-<text x="556" y="371" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">CS</text>
+<text x="556" y="371" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">SCK</text>
 <circle cx="580" cy="402" r="10" fill="#148F77" stroke="#333"/>
 <text x="580" y="406" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">8</text>
-<text x="556" y="407" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">BL</text>
-<text x="800" y="110" font-size="15" font-weight="bold" text-anchor="middle">INFO header</text>
+<text x="556" y="407" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">LED</text>
+<text x="800" y="110" font-size="15" font-weight="bold" text-anchor="middle">TACH header</text>
 <rect x="783" y="132" width="34" height="284" rx="5" fill="#eee" stroke="#333"/>
 <circle cx="800" cy="150" r="10" fill="#C0392B" stroke="#333"/>
 <text x="800" y="154" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">1</text>
@@ -117,23 +117,23 @@
 <circle cx="800" cy="186" r="10" fill="#222222" stroke="#333"/>
 <text x="800" y="190" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">2</text>
 <text x="824" y="191" font-size="13" font-weight="bold">GND</text>
-<circle cx="800" cy="222" r="10" fill="#CA6F1E" stroke="#333"/>
+<circle cx="800" cy="222" r="10" fill="#2471A3" stroke="#333"/>
 <text x="800" y="226" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">3</text>
-<text x="824" y="227" font-size="13" font-weight="bold">CS</text>
-<circle cx="800" cy="258" r="10" fill="#B7950B" stroke="#333"/>
+<text x="824" y="227" font-size="13" font-weight="bold">SCL</text>
+<circle cx="800" cy="258" r="10" fill="#1E8449" stroke="#333"/>
 <text x="800" y="262" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">4</text>
-<text x="824" y="263" font-size="13" font-weight="bold">RESET</text>
-<circle cx="800" cy="294" r="10" fill="#7D3C98" stroke="#333"/>
+<text x="824" y="263" font-size="13" font-weight="bold">SDA</text>
+<circle cx="800" cy="294" r="10" fill="#B7950B" stroke="#333"/>
 <text x="800" y="298" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">5</text>
-<text x="824" y="299" font-size="13" font-weight="bold">DC</text>
-<circle cx="800" cy="330" r="10" fill="#1E8449" stroke="#333"/>
+<text x="824" y="299" font-size="13" font-weight="bold">RST</text>
+<circle cx="800" cy="330" r="10" fill="#7D3C98" stroke="#333"/>
 <text x="800" y="334" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">6</text>
-<text x="824" y="335" font-size="13" font-weight="bold">SDI</text>
-<circle cx="800" cy="366" r="10" fill="#2471A3" stroke="#333"/>
+<text x="824" y="335" font-size="13" font-weight="bold">DC</text>
+<circle cx="800" cy="366" r="10" fill="#CA6F1E" stroke="#333"/>
 <text x="800" y="370" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">7</text>
-<text x="824" y="371" font-size="13" font-weight="bold">SCK</text>
+<text x="824" y="371" font-size="13" font-weight="bold">CS</text>
 <circle cx="800" cy="402" r="10" fill="#148F77" stroke="#333"/>
 <text x="800" y="406" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">8</text>
-<text x="824" y="407" font-size="13" font-weight="bold">LED</text>
+<text x="824" y="407" font-size="13" font-weight="bold">BL</text>
 <text x="500" y="804" font-size="13" text-anchor="middle" fill="#444">The three wires from the left-hand pins (D25, D26, D27) run under the ESP32 or round its USB end to reach the headers.</text>
 </svg>
