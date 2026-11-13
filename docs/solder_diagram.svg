@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" font-family="DejaVu Sans, sans-serif">
+<rect width="1000" height="700" fill="#fff"/>
+<text x="500" y="34" font-size="22" font-weight="bold" text-anchor="middle">Dash perfboard: solder diagram</text>
+<text x="500" y="58" font-size="13" text-anchor="middle" fill="#444">Solder each ESP32 pin to the header pin(s) it is joined to. 16 wires in total. Shared pins go to both headers.</text>
+<text x="195" y="118" font-size="16" font-weight="bold" text-anchor="middle">TACH header</text><rect x="150" y="140" width="90" height="340" rx="6" fill="#eee" stroke="#333"/><circle cx="195" cy="170" r="11" fill="#d4af37" stroke="#333"/><text x="195" y="174" font-size="11" text-anchor="middle">1</text><circle cx="195" cy="212" r="11" fill="#d4af37" stroke="#333"/><text x="195" y="216" font-size="11" text-anchor="middle">2</text><circle cx="195" cy="254" r="11" fill="#d4af37" stroke="#333"/><text x="195" y="258" font-size="11" text-anchor="middle">3</text><circle cx="195" cy="296" r="11" fill="#d4af37" stroke="#333"/><text x="195" y="300" font-size="11" text-anchor="middle">4</text><circle cx="195" cy="338" r="11" fill="#d4af37" stroke="#333"/><text x="195" y="342" font-size="11" text-anchor="middle">5</text><circle cx="195" cy="380" r="11" fill="#d4af37" stroke="#333"/><text x="195" y="384" font-size="11" text-anchor="middle">6</text><circle cx="195" cy="422" r="11" fill="#d4af37" stroke="#333"/><text x="195" y="426" font-size="11" text-anchor="middle">7</text><circle cx="195" cy="464" r="11" fill="#d4af37" stroke="#333"/><text x="195" y="468" font-size="11" text-anchor="middle">8</text>
+<text x="805" y="118" font-size="16" font-weight="bold" text-anchor="middle">INFO header</text><rect x="760" y="140" width="90" height="340" rx="6" fill="#eee" stroke="#333"/><circle cx="805" cy="170" r="11" fill="#d4af37" stroke="#333"/><text x="805" y="174" font-size="11" text-anchor="middle">1</text><circle cx="805" cy="212" r="11" fill="#d4af37" stroke="#333"/><text x="805" y="216" font-size="11" text-anchor="middle">2</text><circle cx="805" cy="254" r="11" fill="#d4af37" stroke="#333"/><text x="805" y="258" font-size="11" text-anchor="middle">3</text><circle cx="805" cy="296" r="11" fill="#d4af37" stroke="#333"/><text x="805" y="300" font-size="11" text-anchor="middle">4</text><circle cx="805" cy="338" r="11" fill="#d4af37" stroke="#333"/><text x="805" y="342" font-size="11" text-anchor="middle">5</text><circle cx="805" cy="380" r="11" fill="#d4af37" stroke="#333"/><text x="805" y="384" font-size="11" text-anchor="middle">6</text><circle cx="805" cy="422" r="11" fill="#d4af37" stroke="#333"/><text x="805" y="426" font-size="11" text-anchor="middle">7</text><circle cx="805" cy="464" r="11" fill="#d4af37" stroke="#333"/><text x="805" y="468" font-size="11" text-anchor="middle">8</text>
+<text x="136" y="175" font-size="15" font-weight="bold" text-anchor="end">VCC</text>
+<text x="136" y="217" font-size="15" font-weight="bold" text-anchor="end">GND</text>
+<text x="136" y="259" font-size="15" font-weight="bold" text-anchor="end">SCL</text>
+<text x="136" y="301" font-size="15" font-weight="bold" text-anchor="end">SDA</text>
+<text x="136" y="343" font-size="15" font-weight="bold" text-anchor="end">RST</text>
+<text x="136" y="385" font-size="15" font-weight="bold" text-anchor="end">DC</text>
+<text x="136" y="427" font-size="15" font-weight="bold" text-anchor="end">CS</text>
+<text x="136" y="469" font-size="15" font-weight="bold" text-anchor="end">BL</text>
+<text x="864" y="175" font-size="15" font-weight="bold">VCC</text>
+<text x="864" y="217" font-size="15" font-weight="bold">GND</text>
+<text x="864" y="259" font-size="15" font-weight="bold">CS</text>
+<text x="864" y="301" font-size="15" font-weight="bold">RESET</text>
+<text x="864" y="343" font-size="15" font-weight="bold">DC</text>
+<text x="864" y="385" font-size="15" font-weight="bold">SDI</text>
+<text x="864" y="427" font-size="15" font-weight="bold">SCK</text>
+<text x="864" y="469" font-size="15" font-weight="bold">LED</text>
+<text x="500" y="96" font-size="16" font-weight="bold" text-anchor="middle">ESP32 dash board</text>
+<rect x="455" y="118" width="90" height="466" rx="6" fill="#e8f0fa" stroke="#333"/>
+<path d="M240 170 C350 170 345 140 455 140" fill="none" stroke="#C0392B" stroke-width="3"/>
+<path d="M240 212 C350 212 345 182 455 182" fill="none" stroke="#222222" stroke-width="3"/>
+<path d="M240 254 C350 254 345 224 455 224" fill="none" stroke="#2471A3" stroke-width="3"/>
+<path d="M240 296 C350 296 345 266 455 266" fill="none" stroke="#1E8449" stroke-width="3"/>
+<path d="M240 338 C350 338 345 308 455 308" fill="none" stroke="#B7950B" stroke-width="3"/>
+<path d="M240 380 C350 380 345 350 455 350" fill="none" stroke="#7D3C98" stroke-width="3"/>
+<path d="M240 422 C350 422 345 392 455 392" fill="none" stroke="#CA6F1E" stroke-width="3"/>
+<path d="M240 464 C350 464 345 434 455 434" fill="none" stroke="#148F77" stroke-width="3"/>
+<path d="M760 170 C650 170 655 140 545 140" fill="none" stroke="#C0392B" stroke-width="3"/>
+<path d="M760 212 C650 212 655 182 545 182" fill="none" stroke="#222222" stroke-width="3"/>
+<path d="M760 254 C650 254 655 476 545 476" fill="none" stroke="#CA6F1E" stroke-width="3"/>
+<path d="M760 296 C650 296 655 518 545 518" fill="none" stroke="#B7950B" stroke-width="3"/>
+<path d="M760 338 C650 338 655 350 545 350" fill="none" stroke="#7D3C98" stroke-width="3"/>
+<path d="M760 380 C650 380 655 266 545 266" fill="none" stroke="#1E8449" stroke-width="3"/>
+<path d="M760 422 C650 422 655 224 545 224" fill="none" stroke="#2471A3" stroke-width="3"/>
+<path d="M760 464 C650 464 655 560 545 560" fill="none" stroke="#148F77" stroke-width="3"/>
+<circle cx="455" cy="140" r="5" fill="#C0392B"/>
+<circle cx="545" cy="140" r="5" fill="#C0392B"/>
+<text x="500" y="145" font-size="14" font-weight="bold" text-anchor="middle">3V3</text>
+<circle cx="455" cy="182" r="5" fill="#222222"/>
+<circle cx="545" cy="182" r="5" fill="#222222"/>
+<text x="500" y="187" font-size="14" font-weight="bold" text-anchor="middle">GND</text>
+<circle cx="455" cy="224" r="5" fill="#2471A3"/>
+<circle cx="545" cy="224" r="5" fill="#2471A3"/>
+<text x="500" y="229" font-size="14" font-weight="bold" text-anchor="middle">GPIO18</text>
+<circle cx="455" cy="266" r="5" fill="#1E8449"/>
+<circle cx="545" cy="266" r="5" fill="#1E8449"/>
+<text x="500" y="271" font-size="14" font-weight="bold" text-anchor="middle">GPIO23</text>
+<circle cx="455" cy="308" r="5" fill="#B7950B"/>
+<text x="500" y="313" font-size="14" font-weight="bold" text-anchor="middle">GPIO22</text>
+<circle cx="455" cy="350" r="5" fill="#7D3C98"/>
+<circle cx="545" cy="350" r="5" fill="#7D3C98"/>
+<text x="500" y="355" font-size="14" font-weight="bold" text-anchor="middle">GPIO21</text>
+<circle cx="455" cy="392" r="5" fill="#CA6F1E"/>
+<text x="500" y="397" font-size="14" font-weight="bold" text-anchor="middle">GPIO5</text>
+<circle cx="455" cy="434" r="5" fill="#148F77"/>
+<text x="500" y="439" font-size="14" font-weight="bold" text-anchor="middle">GPIO25</text>
+<circle cx="545" cy="476" r="5" fill="#CA6F1E"/>
+<text x="500" y="481" font-size="14" font-weight="bold" text-anchor="middle">GPIO4</text>
+<circle cx="545" cy="518" r="5" fill="#B7950B"/>
+<text x="500" y="523" font-size="14" font-weight="bold" text-anchor="middle">GPIO27</text>
+<circle cx="545" cy="560" r="5" fill="#148F77"/>
+<text x="500" y="565" font-size="14" font-weight="bold" text-anchor="middle">GPIO26</text>
+<text x="500" y="672" font-size="13" text-anchor="middle" fill="#444">Shared (go to both headers): 3V3, GND, GPIO18 clock, GPIO23 data, GPIO21 DC. Own wires: GPIO5, 22, 25 tach; GPIO4, 27, 26 info.</text>
+<text x="500" y="692" font-size="13" text-anchor="middle" fill="#444">Colours match the signal: red 3V3, black GND, blue clock, green data, purple DC, orange CS, yellow RST, teal backlight.</text>
+</svg>
