@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 820" font-family="DejaVu Sans, sans-serif">
+<rect width="1000" height="820" fill="#fff"/>
+<text x="500" y="32" font-size="22" font-weight="bold" text-anchor="middle">Wiring with the headers beside the ESP32</text>
+<text x="500" y="54" font-size="13" text-anchor="middle" fill="#444">Top view, USB at the bottom. Both headers run parallel to the ESP32 pins, pin 1 level with D23. Wires are on the underside.</text>
+<path d="M280 654 L300 654 L300 150 L580 150" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 618 L312 618 L312 186 L580 186" fill="none" stroke="#222222" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 366 L324 366 L324 222 L580 222" fill="none" stroke="#2471A3" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 150 L336 150 L336 258 L580 258" fill="none" stroke="#1E8449" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 186 L348 186 L348 294 L580 294" fill="none" stroke="#B7950B" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 294 L360 294 L360 330 L580 330" fill="none" stroke="#7D3C98" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 402 L372 402 L372 366 L580 366" fill="none" stroke="#CA6F1E" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M140 402 L108 402 L108 720 L384 720 L384 402 L580 402" fill="none" stroke="#148F77" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 654 L430 654 L430 168 L640 168 L640 150 L800 150" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 618 L442 618 L442 204 L656 204 L656 186 L800 186" fill="none" stroke="#222222" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 510 L454 510 L454 240 L672 240 L672 222 L800 222" fill="none" stroke="#CA6F1E" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M140 474 L100 474 L100 730 L466 730 L466 276 L688 276 L688 258 L800 258" fill="none" stroke="#B7950B" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 294 L478 294 L478 312 L704 312 L704 294 L800 294" fill="none" stroke="#7D3C98" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 150 L490 150 L490 348 L720 348 L720 330 L800 330" fill="none" stroke="#1E8449" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M280 366 L502 366 L502 384 L736 384 L736 366 L800 366" fill="none" stroke="#2471A3" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M140 438 L92 438 L92 740 L514 740 L514 420 L752 420 L752 402 L800 402" fill="none" stroke="#148F77" stroke-width="2.5" stroke-linejoin="round"/>
+<rect x="140" y="96" width="140" height="624" rx="8" fill="#2b3a4a" stroke="#111"/>
+<rect x="165" y="100" width="90" height="34" fill="#9aa5b1" stroke="#111"/>
+<text x="210.0" y="122" font-size="11" text-anchor="middle">antenna</text>
+<rect x="184.0" y="696" width="52" height="26" rx="3" fill="#bbb" stroke="#111"/>
+<text x="210.0" y="713" font-size="11" text-anchor="middle">USB</text>
+<circle cx="140" cy="150" r="4" fill="#777"/>
+<text x="152" y="154" font-size="12" fill="#9aa5b1" text-anchor="start">EN</text>
+<circle cx="140" cy="186" r="4" fill="#777"/>
+<text x="152" y="190" font-size="12" fill="#9aa5b1" text-anchor="start">VP</text>
+<circle cx="140" cy="222" r="4" fill="#777"/>
+<text x="152" y="226" font-size="12" fill="#9aa5b1" text-anchor="start">VN</text>
+<circle cx="140" cy="258" r="4" fill="#777"/>
+<text x="152" y="262" font-size="12" fill="#9aa5b1" text-anchor="start">D34</text>
+<circle cx="140" cy="294" r="4" fill="#777"/>
+<text x="152" y="298" font-size="12" fill="#9aa5b1" text-anchor="start">D35</text>
+<circle cx="140" cy="330" r="4" fill="#777"/>
+<text x="152" y="334" font-size="12" fill="#9aa5b1" text-anchor="start">D32</text>
+<circle cx="140" cy="366" r="4" fill="#777"/>
+<text x="152" y="370" font-size="12" fill="#9aa5b1" text-anchor="start">D33</text>
+<circle cx="140" cy="402" r="7" fill="#148F77" stroke="#fff" stroke-width="1.5"/>
+<text x="152" y="406" font-size="13" font-weight="bold" fill="#fff" text-anchor="start">D25</text>
+<circle cx="140" cy="438" r="7" fill="#148F77" stroke="#fff" stroke-width="1.5"/>
+<text x="152" y="442" font-size="13" font-weight="bold" fill="#fff" text-anchor="start">D26</text>
+<circle cx="140" cy="474" r="7" fill="#B7950B" stroke="#fff" stroke-width="1.5"/>
+<text x="152" y="478" font-size="13" font-weight="bold" fill="#fff" text-anchor="start">D27</text>
+<circle cx="140" cy="510" r="4" fill="#777"/>
+<text x="152" y="514" font-size="12" fill="#9aa5b1" text-anchor="start">D14</text>
+<circle cx="140" cy="546" r="4" fill="#777"/>
+<text x="152" y="550" font-size="12" fill="#9aa5b1" text-anchor="start">D12</text>
+<circle cx="140" cy="582" r="4" fill="#777"/>
+<text x="152" y="586" font-size="12" fill="#9aa5b1" text-anchor="start">D13</text>
+<circle cx="140" cy="618" r="4" fill="#777"/>
+<text x="152" y="622" font-size="12" fill="#9aa5b1" text-anchor="start">GND</text>
+<circle cx="140" cy="654" r="4" fill="#777"/>
+<text x="152" y="658" font-size="12" fill="#9aa5b1" text-anchor="start">VIN</text>
+<circle cx="280" cy="150" r="7" fill="#1E8449" stroke="#fff" stroke-width="1.5"/>
+<text x="268" y="154" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D23</text>
+<circle cx="280" cy="186" r="7" fill="#B7950B" stroke="#fff" stroke-width="1.5"/>
+<text x="268" y="190" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D22</text>
+<circle cx="280" cy="222" r="4" fill="#777"/>
+<text x="268" y="226" font-size="12" fill="#9aa5b1" text-anchor="end">TX0</text>
+<circle cx="280" cy="258" r="4" fill="#777"/>
+<text x="268" y="262" font-size="12" fill="#9aa5b1" text-anchor="end">RX0</text>
+<circle cx="280" cy="294" r="7" fill="#7D3C98" stroke="#fff" stroke-width="1.5"/>
+<text x="268" y="298" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D21</text>
+<circle cx="280" cy="330" r="4" fill="#777"/>
+<text x="268" y="334" font-size="12" fill="#9aa5b1" text-anchor="end">D19</text>
+<circle cx="280" cy="366" r="7" fill="#2471A3" stroke="#fff" stroke-width="1.5"/>
+<text x="268" y="370" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D18</text>
+<circle cx="280" cy="402" r="7" fill="#CA6F1E" stroke="#fff" stroke-width="1.5"/>
+<text x="268" y="406" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D5</text>
+<circle cx="280" cy="438" r="4" fill="#777"/>
+<text x="268" y="442" font-size="12" fill="#9aa5b1" text-anchor="end">TX2</text>
+<circle cx="280" cy="474" r="4" fill="#777"/>
+<text x="268" y="478" font-size="12" fill="#9aa5b1" text-anchor="end">RX2</text>
+<circle cx="280" cy="510" r="7" fill="#CA6F1E" stroke="#fff" stroke-width="1.5"/>
+<text x="268" y="514" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">D4</text>
+<circle cx="280" cy="546" r="4" fill="#777"/>
+<text x="268" y="550" font-size="12" fill="#9aa5b1" text-anchor="end">D2</text>
+<circle cx="280" cy="582" r="4" fill="#777"/>
+<text x="268" y="586" font-size="12" fill="#9aa5b1" text-anchor="end">D15</text>
+<circle cx="280" cy="618" r="7" fill="#222222" stroke="#fff" stroke-width="1.5"/>
+<text x="268" y="622" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">GND</text>
+<circle cx="280" cy="654" r="7" fill="#C0392B" stroke="#fff" stroke-width="1.5"/>
+<text x="268" y="658" font-size="13" font-weight="bold" fill="#fff" text-anchor="end">3V3</text>
+<text x="580" y="110" font-size="15" font-weight="bold" text-anchor="middle">TACH header</text>
+<rect x="563" y="132" width="34" height="284" rx="5" fill="#eee" stroke="#333"/>
+<circle cx="580" cy="150" r="10" fill="#C0392B" stroke="#333"/>
+<text x="580" y="154" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">1</text>
+<text x="556" y="155" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">VCC</text>
+<circle cx="580" cy="186" r="10" fill="#222222" stroke="#333"/>
+<text x="580" y="190" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">2</text>
+<text x="556" y="191" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">GND</text>
+<circle cx="580" cy="222" r="10" fill="#2471A3" stroke="#333"/>
+<text x="580" y="226" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">3</text>
+<text x="556" y="227" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">SCL</text>
+<circle cx="580" cy="258" r="10" fill="#1E8449" stroke="#333"/>
+<text x="580" y="262" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">4</text>
+<text x="556" y="263" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">SDA</text>
+<circle cx="580" cy="294" r="10" fill="#B7950B" stroke="#333"/>
+<text x="580" y="298" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">5</text>
+<text x="556" y="299" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">RST</text>
+<circle cx="580" cy="330" r="10" fill="#7D3C98" stroke="#333"/>
+<text x="580" y="334" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">6</text>
+<text x="556" y="335" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">DC</text>
+<circle cx="580" cy="366" r="10" fill="#CA6F1E" stroke="#333"/>
+<text x="580" y="370" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">7</text>
+<text x="556" y="371" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">CS</text>
+<circle cx="580" cy="402" r="10" fill="#148F77" stroke="#333"/>
+<text x="580" y="406" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">8</text>
+<text x="556" y="407" font-size="13" font-weight="bold" text-anchor="end" stroke="#fff" stroke-width="4" paint-order="stroke">BL</text>
+<text x="800" y="110" font-size="15" font-weight="bold" text-anchor="middle">INFO header</text>
+<rect x="783" y="132" width="34" height="284" rx="5" fill="#eee" stroke="#333"/>
+<circle cx="800" cy="150" r="10" fill="#C0392B" stroke="#333"/>
+<text x="800" y="154" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">1</text>
+<text x="824" y="155" font-size="13" font-weight="bold">VCC</text>
+<circle cx="800" cy="186" r="10" fill="#222222" stroke="#333"/>
+<text x="800" y="190" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">2</text>
+<text x="824" y="191" font-size="13" font-weight="bold">GND</text>
+<circle cx="800" cy="222" r="10" fill="#CA6F1E" stroke="#333"/>
+<text x="800" y="226" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">3</text>
+<text x="824" y="227" font-size="13" font-weight="bold">CS</text>
+<circle cx="800" cy="258" r="10" fill="#B7950B" stroke="#333"/>
+<text x="800" y="262" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">4</text>
+<text x="824" y="263" font-size="13" font-weight="bold">RESET</text>
+<circle cx="800" cy="294" r="10" fill="#7D3C98" stroke="#333"/>
+<text x="800" y="298" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">5</text>
+<text x="824" y="299" font-size="13" font-weight="bold">DC</text>
+<circle cx="800" cy="330" r="10" fill="#1E8449" stroke="#333"/>
+<text x="800" y="334" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">6</text>
+<text x="824" y="335" font-size="13" font-weight="bold">SDI</text>
+<circle cx="800" cy="366" r="10" fill="#2471A3" stroke="#333"/>
+<text x="800" y="370" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">7</text>
+<text x="824" y="371" font-size="13" font-weight="bold">SCK</text>
+<circle cx="800" cy="402" r="10" fill="#148F77" stroke="#333"/>
+<text x="800" y="406" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">8</text>
+<text x="824" y="407" font-size="13" font-weight="bold">LED</text>
+<text x="500" y="804" font-size="13" text-anchor="middle" fill="#444">The three wires from the left-hand pins (D25, D26, D27) run under the ESP32 or round its USB end to reach the headers.</text>
+</svg>
