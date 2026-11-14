@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1060" font-family="DejaVu Sans, sans-serif">
-<rect width="1000" height="1060" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1080" font-family="DejaVu Sans, sans-serif">
+<rect width="1000" height="1080" fill="#fff"/>
 <text x="500" y="32" font-size="22" font-weight="bold" text-anchor="middle">Screens and fuel sender wiring</text>
 <text x="500" y="54" font-size="13" text-anchor="middle" fill="#444">Top view, USB at the bottom. Pin 1 of both headers is level with D23. Shared signals jump from info to tach.</text>
 <path d="M280 654 L330 654 L330 150 L580 150" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linejoin="round"/>
@@ -137,7 +137,6 @@
 <text x="824" y="407" font-size="13" font-weight="bold">BL</text>
 <text x="330" y="778" font-size="13" fill="#444">The three wires from the left-hand pins (D25, D26, D27) run under the ESP32</text>
 <text x="330" y="796" font-size="13" fill="#444">or round its USB end to reach the headers.</text>
-<path d="M140 618 L44 618 L44 1030 L290 1030" fill="none" stroke="#222222" stroke-width="2.5" stroke-linejoin="round"/>
 <path d="M140 258 L60 258 L60 940 L290 940" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round"/>
 <path d="M140 258 L60 258 L60 940 L290 940" fill="none" stroke="#D81B60" stroke-width="2.5" stroke-linejoin="round"/>
 <path d="M280 654 L290 654 L290 850" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round"/>
@@ -148,7 +147,7 @@
 <path d="M230 940 L230 962" fill="none" stroke="#D81B60" stroke-width="2.5" stroke-linejoin="round"/>
 <path d="M230 972 L230 1030" fill="none" stroke="#222222" stroke-width="2.5" stroke-linejoin="round"/>
 <line x1="216" y1="962" x2="244" y2="962" stroke="#222" stroke-width="3"/><line x1="216" y1="972" x2="244" y2="972" stroke="#222" stroke-width="3"/>
-<circle cx="140" cy="258" r="6" fill="#D81B60" stroke="#333"/><circle cx="140" cy="618" r="6" fill="#222222" stroke="#333"/>
+<circle cx="140" cy="258" r="6" fill="#D81B60" stroke="#333"/>
 <circle cx="290" cy="940" r="4" fill="#222"/><circle cx="230" cy="940" r="4" fill="#222"/><circle cx="290" cy="1030" r="4" fill="#222"/><circle cx="230" cy="1030" r="4" fill="#222"/>
 <rect x="278" y="850" width="24" height="44" rx="3" fill="#fff" stroke="#222" stroke-width="2"/>
 <rect x="278" y="970" width="24" height="44" rx="3" fill="#fff" stroke="#222" stroke-width="2"/><path d="M270 1008 L310 976" stroke="#222" stroke-width="2" fill="none"/><path d="M310 976 L302 976 M310 976 L309 984" stroke="#222" stroke-width="2" fill="none"/>
@@ -157,12 +156,14 @@
 <text x="318" y="1015" font-size="12" fill="#444">its metal case is the other end, earthed through the tank</text>
 <text x="208" y="969" font-size="12" text-anchor="end" fill="#222">100 nF (optional)</text>
 <text x="66" y="250" font-size="12" text-anchor="start" fill="#D81B60" font-weight="bold">D34</text>
-<text x="52" y="642" font-size="12" text-anchor="start" fill="#222" font-weight="bold">GND</text>
 <text x="298" y="830" font-size="12" text-anchor="start" fill="#C0392B" font-weight="bold">3V3 pin (right row, second wire on this pin)</text>
-<text x="296" y="1050" font-size="12" text-anchor="start" fill="#222" font-weight="bold">Bottom line = car body earth. The ESP32 GND (left row) must be bonded to it</text>
+<text x="316" y="1048" font-size="12" text-anchor="start" fill="#222" font-weight="bold">Car body earth (the buck converter already ties the ESP32 GND to it, no extra wire)</text>
 <text x="420" y="872" font-size="15" text-anchor="start" fill="#222" font-weight="bold">Fuel sender (add when the sender is fitted)</text>
 <text x="420" y="898" font-size="13" text-anchor="start" fill="#222">The 68 &#937; resistor and the sender form a divider on the 3V3 pin.</text>
 <text x="420" y="918" font-size="13" text-anchor="start" fill="#222">D34 reads about 1.8 V when empty (80 &#937;) and 0.4 V full (10 &#937;).</text>
 <text x="420" y="938" font-size="13" text-anchor="start" fill="#222">The 100 nF capacitor is optional: only add it if the reading is noisy.</text>
 <text x="420" y="958" font-size="13" text-anchor="start" fill="#444">Not joined: the 3V3 wire crosses the three wires under the ESP32.</text>
+<path d="M230 1030 L290 1030" fill="none" stroke="#222222" stroke-width="2.5"/>
+<path d="M290 1030 L290 1040" stroke="#222" stroke-width="2.5"/>
+<path d="M274 1040 L306 1040 M280 1047 L300 1047 M286 1054 L294 1054" stroke="#222" stroke-width="2.5" fill="none"/>
 </svg>
