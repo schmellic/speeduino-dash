@@ -221,3 +221,7 @@ Compiles (2026-11-14: `bridge_c3_sim`, `bridge_c3_live`, `dash`, `dash_sim` all 
 - Sender: JOPEX 113919049D (coolairvw.co.uk), resistive, 80 ohm empty, 10 ohm full. The user's tank has the opening and the sender will sit very close to the dash ESP32.
 - Plan: dash ESP32 GPIO34 (ADC1, input-only; ADC2 pins don't work with Wi-Fi on). 3V3 -> ~68 ohm -> GPIO34 node -> sender -> GND, 100 nF at the pin (about 1.8 V empty, 0.4 V full, ~40 mA max). The 3V3 pin is on the right-hand pin row, D34 and the left GND are on the left row.
 - Software to do: averaged ADC read, calibration table (fill in known steps, e.g. 5 L), slow filter, a new info panel (the 2x4 grid is full, so one cell must make room). Wiring is drawn at the bottom of `docs/solder_side_by_side.svg` (the generator script was lost with the scratchpad; the SVG is edited directly). The 100 nF capacitor is optional (user asked; the sender will be right next to the ESP32).
+
+## Possible oil pressure sensor (undecided, 2026-11-14)
+- Not needed through the ECU. Best place is a spare ADC pin on the bridge C3 (GPIO0-3 free; the sensor is on the engine next to it), carried to the dash as a new `Telemetry` field. Sensor type undecided: a stock VW oil sender is only a warning-light switch; a pressure sender is resistive or 0.5-4.5 V (needs a divider for the C3's 3.3 V).
+- Decision (user): if the bridge needs changing in future, continue the ESP-NOW update work on branch `bridge-espnow-update` (bench-test on the spare C3, one USB flash of the bridge) rather than pulling the bridge for USB each time.
