@@ -1,3 +1,4 @@
 .pio/
 .vscode/
 src/dash/secrets.h
+include/bridge_key.h

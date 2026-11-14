@@ -8,6 +8,7 @@
 #include <Arduino_GFX_Library.h>
 #include <Arduino_GC9B72.h>
 #include "Telemetry.h"
+#include "BridgeUpdate.h"
 
 #ifndef SIM_LOCAL
 #define SIM_LOCAL 0
@@ -49,18 +50,146 @@ static const char UPLOAD_PAGE[] PROGMEM = R"HTML(<!doctype html><meta name=viewp
 <body style="font-family:sans-serif;background:#111;color:#eee;max-width:420px;margin:2em auto;padding:0 1em">
 <h2>Speeduino dash update</h2>
 <input type=file id=f><br><br>
-<button onclick="go()" style="padding:.6em 1.2em">Update</button>
+<button onclick="go('f','/update')" style="padding:.6em 1.2em">Update dash</button>
+<h2>Bridge update</h2>
+<input type=file id=g><br><br>
+<button onclick="go('g','/bridge')" style="padding:.6em 1.2em">Update bridge</button>
 <p id=s></p>
-<p style="color:#999;font-size:.85em">If Choose file does nothing, close this sign-in window and open http://192.168.4.1 in Chrome or Safari.</p>
+<p style="color:#999;font-size:.85em">The bridge is updated over ESP-NOW and must be powered and heard by the dash. The dash screens freeze while it runs (about 30 seconds). If Choose file does nothing, close this sign-in window and open http://192.168.4.1 in Chrome or Safari.</p>
 <script>
-function go(){var f=document.getElementById('f').files[0],s=document.getElementById('s');
+function go(id,url){var f=document.getElementById(id).files[0],s=document.getElementById('s');
 if(!f){s.textContent='Choose a .bin file first';return}
 var x=new XMLHttpRequest(),d=new FormData();d.append('fw',f);
 x.upload.onprogress=function(e){s.textContent='Uploading '+Math.round(e.loaded*100/e.total)+'%'};
 x.onload=function(){s.textContent=x.responseText};
 x.onerror=function(){s.textContent='Upload failed'};
-x.open('POST','/update');x.send(d)}
+x.open('POST',url);x.send(d)}
 </script>)HTML";
+
+#if BRIDGE_UPDATE
+// ---- Bridge update relay: the browser upload is forwarded to the bridge over ESP-NOW (protocol in BridgeUpdate.h) ----
+static uint8_t bridgeMac[6];            // learned from the telemetry packets
+static volatile bool bridgeKnown = false;
+static volatile uint32_t repSeq = 0, repNext = 0;   // repSeq counts replies from the bridge
+static volatile uint8_t repType = 0, repStatus = 0;
+static uint8_t repNonce[upd::NONCE_LEN];
+
+static void bridgeReply(const uint8_t *d, int n) {
+  if (d[1] == upd::NONCE && n == 2 + (int)upd::NONCE_LEN) {
+    memcpy(repNonce, d + 2, upd::NONCE_LEN);
+    repType = upd::NONCE;
+  } else if (d[1] == upd::ACK && n == 7) {
+    uint32_t next;
+    memcpy(&next, d + 3, 4);
+    repStatus = d[2];
+    repNext = next;
+    repType = upd::ACK;
+  } else {
+    return;
+  }
+  repSeq = repSeq + 1;
+}
+
+// Sends one message and waits for the bridge's answer; returns its type (NONCE or ACK), 0 if none came.
+static uint8_t exchange(const uint8_t *msg, size_t len, uint32_t waitMs, int tries) {
+  for (int i = 0; i < tries; i++) {
+    uint32_t seq = repSeq;
+    esp_now_send(bridgeMac, msg, len);
+    uint32_t t0 = millis();
+    while (repSeq == seq && millis() - t0 < waitMs) delay(1);
+    if (repSeq != seq) return repType;
+  }
+  return 0;
+}
+
+static const char *statusText(uint8_t s) {
+  switch (s) {
+    case upd::BAD_AUTH: return "bridge rejected the key (different bridge_key.h?)";
+    case upd::BEGIN_FAIL: return "bridge could not start the update";
+    case upd::WRITE_FAIL: return "bridge could not write the image";
+    case upd::REFUSED: return "bridge says the engine is running";
+    case upd::BAD_HASH: return "image failed the check on the bridge";
+    case upd::NOT_STARTED: return "bridge lost the update (restarted?)";
+    default: return "unknown bridge error";
+  }
+}
+
+static struct {
+  String err;
+  uint32_t off = 0;
+  upd::Sha sha;
+  uint8_t nonce[upd::NONCE_LEN];
+} bu;
+
+static void bridgeUpload() {
+  HTTPUpload &u = web.upload();
+  if (u.status == UPLOAD_FILE_START) {
+    otaBusy = true;
+    bu.err = "";
+    bu.off = 0;
+    if (!bridgeKnown) { bu.err = "no signal from the bridge yet, check it has power"; return; }
+    if (!esp_now_is_peer_exist(bridgeMac)) {
+      esp_now_peer_info_t p = {};
+      memcpy(p.peer_addr, bridgeMac, 6);
+      p.channel = 0;
+      p.ifidx = WIFI_IF_STA;
+      p.encrypt = false;
+      esp_now_add_peer(&p);
+    }
+    const uint8_t hello[2] = {upd::MAGIC, upd::HELLO};
+    uint8_t r = exchange(hello, sizeof(hello), 300, 5);
+    if (r == upd::ACK) { bu.err = statusText(repStatus); return; }
+    if (r != upd::NONCE) { bu.err = "bridge did not answer"; return; }
+    memcpy(bu.nonce, repNonce, sizeof(bu.nonce));
+    uint8_t begin[2 + upd::MAC_LEN] = {upd::MAGIC, upd::BEGIN};
+    upd::beginMac(bu.nonce, begin + 2);
+    r = exchange(begin, sizeof(begin), 300, 5);
+    if (r != upd::ACK) bu.err = "bridge did not answer";
+    else if (repStatus != upd::OK) bu.err = statusText(repStatus);
+    else bu.sha.start();
+  } else if (u.status == UPLOAD_FILE_WRITE) {
+    for (size_t pos = 0; pos < u.currentSize && bu.err.isEmpty(); pos += upd::CHUNK) {
+      size_t n = min(upd::CHUNK, u.currentSize - pos);
+      uint8_t msg[6 + upd::CHUNK] = {upd::MAGIC, upd::DATA};
+      memcpy(msg + 2, &bu.off, 4);
+      memcpy(msg + 6, u.buf + pos, n);
+      bool done = false;
+      for (int tries = 0; tries < 8 && !done; tries++) {
+        if (exchange(msg, 6 + n, 100, 1) != upd::ACK) continue;
+        if (repStatus != upd::OK) { bu.err = statusText(repStatus); break; }
+        done = (repNext == bu.off + n);   // anything else is a stale ack: send it again
+      }
+      if (!done && bu.err.isEmpty()) bu.err = "lost contact with the bridge";
+      if (done) { bu.sha.add(msg + 6, n); bu.off += n; }
+    }
+  } else if (u.status == UPLOAD_FILE_END) {
+    if (bu.err.isEmpty()) {
+      uint8_t hash[32], end[6 + upd::MAC_LEN] = {upd::MAGIC, upd::END};
+      bu.sha.finish(hash);
+      memcpy(end + 2, &bu.off, 4);
+      upd::endMac(bu.nonce, bu.off, hash, end + 6);
+      if (exchange(end, sizeof(end), 4000, 1) != upd::ACK) bu.err = "no confirmation from the bridge, check it restarted";
+      else if (repStatus != upd::OK) bu.err = statusText(repStatus);
+    }
+    otaBusy = false;
+  } else if (u.status == UPLOAD_FILE_ABORTED) {
+    const uint8_t abortMsg[2] = {upd::MAGIC, upd::ABORT};
+    esp_now_send(bridgeMac, abortMsg, sizeof(abortMsg));
+    bu.sha.stop();
+    otaBusy = false;
+  }
+  if (!bu.err.isEmpty() && u.status != UPLOAD_FILE_ABORTED && bridgeKnown && u.status != UPLOAD_FILE_START) {
+    // failed part-way: tell the bridge to drop the half image (it also gives up on its own after 5 s)
+    static uint32_t lastAbort = 0;
+    if (millis() - lastAbort > 1000) {
+      lastAbort = millis();
+      const uint8_t abortMsg[2] = {upd::MAGIC, upd::ABORT};
+      esp_now_send(bridgeMac, abortMsg, sizeof(abortMsg));
+    }
+    bu.sha.stop();
+  }
+}
+#endif
 
 static void webSetup() {
   web.on("/", HTTP_GET, []() {
@@ -76,6 +205,17 @@ static void webSetup() {
     else if (u.status == UPLOAD_FILE_WRITE) Update.write(u.buf, u.currentSize);
     else if (u.status == UPLOAD_FILE_END) { Update.end(true); otaBusy = false; }
     else if (u.status == UPLOAD_FILE_ABORTED) { Update.abort(); otaBusy = false; }
+  });
+  web.on("/bridge", HTTP_POST, []() {
+#if BRIDGE_UPDATE
+    web.send(200, "text/plain", bu.err.isEmpty() ? "Bridge updated, it is restarting." : "Bridge update failed: " + bu.err);
+#else
+    web.send(200, "text/plain", "This build has no bridge key (include/bridge_key.h).");
+#endif
+  }, []() {
+#if BRIDGE_UPDATE
+    bridgeUpload();
+#endif
   });
   web.onNotFound([]() {   // connectivity checks and any other address land on the upload page
     web.sendHeader("Location", "http://192.168.4.1/", true);
@@ -98,15 +238,24 @@ constexpr uint16_t C_WARN = RGB565_ORANGE, C_BAD = RGB565_RED, C_OK = RGB565_GRE
 static volatile Telemetry latest = {};
 static volatile uint32_t lastRxMs = 0;
 
-static void handlePacket(const uint8_t *data, int len) {
-  if (len != sizeof(Telemetry)) return;
-  memcpy((void *)&latest, data, sizeof(Telemetry));
-  lastRxMs = millis();
+static void handlePacket(const uint8_t *data, int len, const uint8_t *src) {
+  if (len == sizeof(Telemetry)) {
+    memcpy((void *)&latest, data, sizeof(Telemetry));
+    lastRxMs = millis();
+#if BRIDGE_UPDATE
+    memcpy(bridgeMac, src, 6);
+    bridgeKnown = true;
+#endif
+    return;
+  }
+#if BRIDGE_UPDATE
+  if (len >= 2 && data[0] == upd::MAGIC) bridgeReply(data, len);   // answers during a bridge update
+#endif
 }
 #if ESP_ARDUINO_VERSION_MAJOR >= 3
-static void onRecv(const esp_now_recv_info_t *, const uint8_t *d, int n) { handlePacket(d, n); }
+static void onRecv(const esp_now_recv_info_t *i, const uint8_t *d, int n) { handlePacket(d, n, i->src_addr); }
 #else
-static void onRecv(const uint8_t *, const uint8_t *d, int n) { handlePacket(d, n); }
+static void onRecv(const uint8_t *mac, const uint8_t *d, int n) { handlePacket(d, n, mac); }
 #endif
 
 static bool getTelemetry(Telemetry &t) {

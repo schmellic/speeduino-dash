@@ -207,3 +207,17 @@ The bridge C3 (mounted in the car) has no OTA yet; it would need the same treatm
 - OTA exists, so USB access is only needed for the first flash or recovery. Power 12 V -> 5 V buck (same type as the bridge).
 - Location not decided (2026-11-12): glovebox area, or under the dash. Under-dash would need a bracket instead of a flush mount; measure the real opening and depth. PETG for heat. Remember the tach ring is 360 x 360 px on a round 2.1" panel.
 - The firmware, thresholds and layout are settled enough to design around; only the physical mount is open.
+
+## Bridge update over ESP-NOW (WIP, branch `bridge-espnow-update`, 2026-11-14)
+
+Written but NOT compiled, flashed or tested (the compile was interrupted twice). Do not merge to main until `bridge_c3_sim`, `bridge_c3_live`, `dash` and `dash_sim` build and a bench update has worked.
+- Design: the dash upload page (http://192.168.4.1) gets a second "Update bridge" box. The dash relays the .bin to the bridge over ESP-NOW, stop-and-wait, 192-byte chunks, unicast to the bridge MAC learned from its telemetry. Protocol and comments: `include/BridgeUpdate.h`; bridge side in `src/bridge/main.cpp` (`updatePoll`); dash side in `src/dash/main.cpp` (`bridgeUpload`).
+- Security: HMAC-SHA256 with a 16-byte key from `include/bridge_key.h` (git-ignored; `bridge_key.example.h` is committed). The bridge sends a fresh nonce per attempt; the final END message carries an HMAC over nonce + size + SHA-256 of the image, and the bridge only switches image if it matches. No time window on the bridge. The bridge refuses while the engine is running (link ok and rpm > 300). Without `bridge_key.h` both ends build with the feature off.
+- The key file is NOT in the repo: on another computer, ask the user for it (or generate a new one, then the bridge must be re-flashed over USB with that key and the dash rebuilt with the same one).
+- The bridge currently in the car has no receiver, so the first firmware with this code needs ONE USB flash (the user must take the bridge out of its enclosure). Bench it on the spare C3 first. A broken new image would also need USB again (no automatic rollback).
+- While an update runs, the bridge stops broadcasting and the dash screens freeze (about 30 s).
+
+## Fuel level sender (planned, not built)
+- Sender: JOPEX 113919049D (coolairvw.co.uk), resistive, 80 ohm empty, 10 ohm full. The user's tank has the opening and the sender will sit very close to the dash ESP32.
+- Plan: dash ESP32 GPIO34 (ADC1, input-only; ADC2 pins don't work with Wi-Fi on). 3V3 -> ~68 ohm -> GPIO34 node -> sender -> GND, 100 nF at the pin (about 1.8 V empty, 0.4 V full, ~40 mA max). The 3V3 pin is on the right-hand pin row, D34 and the left GND are on the left row.
+- Software to do: averaged ADC read, calibration table (fill in known steps, e.g. 5 L), slow filter, a new info panel (the 2x4 grid is full, so one cell must make room). Not yet added to the wiring diagram `docs/solder_side_by_side.svg` (the user asked for it; the generator script was lost with the scratchpad, so edit the SVG directly or redraw it).
