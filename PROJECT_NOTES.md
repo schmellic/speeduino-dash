@@ -219,7 +219,7 @@ Compiles (2026-11-14: `bridge_c3_sim`, `bridge_c3_live`, `dash`, `dash_sim` all 
 
 ## Fuel level sender (planned, not built)
 - Sender: JOPEX 113919049D (coolairvw.co.uk), resistive, 80 ohm empty, 10 ohm full. The user's tank has the opening and the sender will sit very close to the dash ESP32.
-- Plan: dash ESP32 GPIO34 (ADC1, input-only; ADC2 pins don't work with Wi-Fi on). 3V3 -> ~68 ohm -> GPIO34 node -> sender -> GND, 100 nF at the pin (about 1.8 V empty, 0.4 V full, ~40 mA max). The 3V3 pin is on the right-hand pin row, D34 and the left GND are on the left row.
+- Plan: dash ESP32 GPIO34 (ADC1, input-only; ADC2 pins don't work with Wi-Fi on). 3V3 -> 47 ohm (1/4 W; the user has 22, 47 and 100 ohm) -> GPIO34 node -> sender -> GND, 100 nF at the pin (about 2.1 V empty, 0.6 V full, ~58 mA max). The 3V3 pin is on the right-hand pin row, D34 and the left GND are on the left row.
 - Software to do: averaged ADC read, calibration table (fill in known steps, e.g. 5 L), slow filter, a new info panel (the 2x4 grid is full, so one cell must make room). Wiring is drawn at the bottom of `docs/solder_side_by_side.svg` (the generator script was lost with the scratchpad; the SVG is edited directly). The 100 nF capacitor is optional (user asked; the sender will be right next to the ESP32).
 
 ## Possible oil pressure sensor (undecided, 2026-11-14)

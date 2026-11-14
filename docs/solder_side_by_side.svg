@@ -151,7 +151,7 @@
 <circle cx="290" cy="940" r="4" fill="#222"/><circle cx="230" cy="940" r="4" fill="#222"/><circle cx="290" cy="1030" r="4" fill="#222"/><circle cx="230" cy="1030" r="4" fill="#222"/>
 <rect x="278" y="850" width="24" height="44" rx="3" fill="#fff" stroke="#222" stroke-width="2"/>
 <rect x="278" y="970" width="24" height="44" rx="3" fill="#fff" stroke="#222" stroke-width="2"/><path d="M270 1008 L310 976" stroke="#222" stroke-width="2" fill="none"/><path d="M310 976 L302 976 M310 976 L309 984" stroke="#222" stroke-width="2" fill="none"/>
-<text x="312" y="877" font-size="13" text-anchor="start" fill="#222">68 &#937; resistor</text>
+<text x="312" y="877" font-size="13" text-anchor="start" fill="#222">47 &#937; resistor (1/4 W)</text>
 <text x="318" y="997" font-size="13" text-anchor="start" fill="#222">Fuel sender, one terminal (10-80 &#937;)</text>
 <text x="318" y="1015" font-size="12" fill="#444">its metal case is the other end, earthed through the tank</text>
 <text x="208" y="969" font-size="12" text-anchor="end" fill="#222">100 nF (optional)</text>
@@ -159,8 +159,8 @@
 <text x="298" y="830" font-size="12" text-anchor="start" fill="#C0392B" font-weight="bold">3V3 pin (right row, second wire on this pin)</text>
 <text x="316" y="1048" font-size="12" text-anchor="start" fill="#222" font-weight="bold">Car body earth (the buck converter already ties the ESP32 GND to it, no extra wire)</text>
 <text x="420" y="872" font-size="15" text-anchor="start" fill="#222" font-weight="bold">Fuel sender (add when the sender is fitted)</text>
-<text x="420" y="898" font-size="13" text-anchor="start" fill="#222">The 68 &#937; resistor and the sender form a divider on the 3V3 pin.</text>
-<text x="420" y="918" font-size="13" text-anchor="start" fill="#222">D34 reads about 1.8 V when empty (80 &#937;) and 0.4 V full (10 &#937;).</text>
+<text x="420" y="898" font-size="13" text-anchor="start" fill="#222">The 47 &#937; resistor (1/4 W) and the sender form a divider on the 3V3 pin.</text>
+<text x="420" y="918" font-size="13" text-anchor="start" fill="#222">D34 reads about 2.1 V when empty (80 &#937;) and 0.6 V full (10 &#937;).</text>
 <text x="420" y="938" font-size="13" text-anchor="start" fill="#222">The 100 nF capacitor is optional: only add it if the reading is noisy.</text>
 <text x="420" y="958" font-size="13" text-anchor="start" fill="#444">Not joined: the 3V3 wire crosses the three wires under the ESP32.</text>
 <path d="M230 1030 L290 1030" fill="none" stroke="#222222" stroke-width="2.5"/>
