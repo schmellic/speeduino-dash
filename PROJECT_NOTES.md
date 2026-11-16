@@ -92,7 +92,7 @@ Bridge board (built 2026-11-02): 40x60 mm perfboard with the C3, the 12V->5V buc
 (one beside the buck, one top-left). With USB-C facing right the C3 pins read: top row 21,20,10,9,8,7,6,5; bottom row 0,1,2,3,4,3V3,GND,5V.
 Terminals (photo, component side, board upright with USB-C facing right): the one beside the buck is the 12 V input, right screw 12 V+, left screw 12 V-.
 Resistors: R1 (vertical, beside the C3, near the top-left terminal) is the 1k; R2 (horizontal, under the C3's bottom pins) is the 2k.
-Top-left terminal (board's viewpoint, confirmed by continuity): A1 (upper) = C3 RX, reads 1k to GPIO4, so it goes to Speeduino TX3 (pin 14); A2 (lower) = C3 TX, wired to GPIO5, so it goes to Speeduino RX3 (pin 15).
+Top-left terminal (board's viewpoint, confirmed by continuity): the upper screw (labelled TX3 in; formerly A1) = C3 RX, reads 1k to GPIO4, so it goes to Speeduino TX3 (pin 14); the lower screw (RX3 out; formerly A2) = C3 TX, wired to GPIO5, so it goes to Speeduino RX3 (pin 15).
 The user continuity-checked the board (resistor values, GPIO4 divider, GPIO5 line, buck 5V/GND to the C3, no shorts) and reports it all
 checks out. Only two serial terminal screws, so there is no dedicated ground wire to the Speeduino: in the car the grounds are shared
 through the chassis, but on the bench the ECU ground must be joined to the board's ground by hand. The solder side is coated in green
@@ -106,7 +106,7 @@ Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V 
 
 ## Reference images (`docs/`)
 
-- `docs/wiring.svg`: wiring between the Speeduino v0.4.4d, the bridge board (terminals A1/A2, B1/B2, R1 1k, R2 2k, C3, buck) and the 12 V feed.
+- `docs/wiring.svg`: wiring between the Speeduino v0.4.4d, the bridge board (terminals TX3 in / RX3 out / 12 V - / 12 V +, R1 1k, R2 2k, C3, buck) and the 12 V feed.
 - `docs/bridge_board_labelled.jpg`: photo of the built bridge board with the terminals labelled by function (Speeduino TX3 pin 14, Speeduino RX3 pin 15, 12 V -, 12 V +; these were A1, A2, B1, B2 before 2026-11-16), R1/R2 and the C3 pins.
 - `docs/speeduino_solder_points.png`: photo of the Speeduino shield marking where to solder D14 (TX3), D15 (RX3) and GND (J6),
   plus the D21 continuity-check pads. Positions are derived from the board layout; confirm with the D21 beep test before soldering.
@@ -174,7 +174,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 1. ~~Check the radio link~~ done 2026-11-02; the no-data case was confirmed on the dash on 2026-11-10.
 2. ~~Round tach on `dash_sim`~~ works (2026-11-10). Info screen and shared SPI bus checked and working (2026-11-12). Optional: judge brightness/colours, test `dash` with the bridge (`bridge_c3_sim` on the C3).
 3. Enclosure for the bridge board is designed (see Bridge enclosure; measure the board and print it). Solder the
-   bridge wires to the Speeduino (D14 -> A1, D15 -> A2, J6 GND -> B1; run the D21 continuity check first). Then test in the car with
+   bridge wires to the Speeduino (D14 -> TX3 in screw, D15 -> RX3 out screw, J6 GND -> 12 V - screw; run the D21 continuity check first). Then test in the car with
    `bridge_c3_live` on the C3 and `display_rx` on the classic ESP32 plugged into a laptop (it prints `no data` until real values arrive).
    TunerStudio needs Secondary Serial IO enabled at 115200, burned, then power-cycled. Then verify the ECU byte offsets and try `dash`.
 4. Measure the bridge board height, update `BridgeBox.py` if needed, export STLs and print the box (PETG). Close the lid only after the in-car test.
