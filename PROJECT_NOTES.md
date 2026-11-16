@@ -107,7 +107,7 @@ Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V 
 ## Reference images (`docs/`)
 
 - `docs/wiring.svg`: wiring between the Speeduino v0.4.4d, the bridge board (terminals A1/A2, B1/B2, R1 1k, R2 2k, C3, buck) and the 12 V feed.
-- `docs/bridge_board_labelled.jpg`: photo of the built bridge board with A1/A2, B1/B2, R1/R2 and the C3 pins labelled.
+- `docs/bridge_board_labelled.jpg`: photo of the built bridge board with the terminals labelled by function (Speeduino TX3 pin 14, Speeduino RX3 pin 15, 12 V -, 12 V +; these were A1, A2, B1, B2 before 2026-11-16), R1/R2 and the C3 pins.
 - `docs/speeduino_solder_points.png`: photo of the Speeduino shield marking where to solder D14 (TX3), D15 (RX3) and GND (J6),
   plus the D21 continuity-check pads. Positions are derived from the board layout; confirm with the D21 beep test before soldering.
 
