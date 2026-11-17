@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="680" height="470" viewBox="0 0 680 470" role="img">
 <title>Wiring between the Speeduino v0.4.4d and the bridge PCB</title>
-<desc>Speeduino D14 (TX3) goes to bridge terminal A1 (RX), through a 1k resistor to ESP32-C3 GPIO4 with a 2k resistor to ground. Bridge terminal A2 (TX) goes to GPIO5 and on to Speeduino D15 (RX3). Speeduino J6 GND goes to bridge B1 (12V minus). A fused switched 12 V feed goes to B2 (12V plus), through the buck converter to the C3 5V pin.</desc>
+<desc>Speeduino D14 (TX3) goes to the bridge terminal labelled TX3 in (C3 RX), through a 1k resistor to ESP32-C3 GPIO4 with a 2k resistor to ground. The terminal labelled Speeduino RX3 (C3 TX) goes to GPIO5 and on to Speeduino D15 (RX3). Speeduino J6 GND goes to the 12 V minus terminal (GND). A fused switched 12 V feed goes to the 12 V plus terminal, through the buck converter to the C3 5V pin.</desc>
 <style>
 text{font-family:Helvetica,Arial,sans-serif}
 .ts{font-size:12px;fill:#5F5E5A}.th{font-size:14px;font-weight:500;fill:#2C2C2A}
@@ -45,13 +45,17 @@ text{font-family:Helvetica,Arial,sans-serif}
 
 <rect class="box" x="320" y="88" width="80" height="124" rx="4" stroke-width="0.5"/>
 <line x1="320" y1="150" x2="400" y2="150" stroke="#888780" stroke-width="0.5"/>
-<text class="th" x="360" y="110" text-anchor="middle" dominant-baseline="central">A1 · RX</text>
-<text class="th" x="360" y="190" text-anchor="middle" dominant-baseline="central">A2 · TX</text>
+<text class="th" x="360" y="102" text-anchor="middle" dominant-baseline="central">TX3 in</text>
+<text class="ts" x="360" y="120" text-anchor="middle" dominant-baseline="central">to C3 RX</text>
+<text class="th" x="360" y="182" text-anchor="middle" dominant-baseline="central">RX3 out</text>
+<text class="ts" x="360" y="200" text-anchor="middle" dominant-baseline="central">from C3 TX</text>
 
 <rect class="box" x="320" y="270" width="80" height="120" rx="4" stroke-width="0.5"/>
 <line x1="320" y1="330" x2="400" y2="330" stroke="#888780" stroke-width="0.5"/>
-<text class="th" x="360" y="292" text-anchor="middle" dominant-baseline="central">B1 · 12V−</text>
-<text class="th" x="360" y="368" text-anchor="middle" dominant-baseline="central">B2 · 12V+</text>
+<text class="th" x="360" y="284" text-anchor="middle" dominant-baseline="central">12 V −</text>
+<text class="ts" x="360" y="302" text-anchor="middle" dominant-baseline="central">GND</text>
+<text class="th" x="360" y="360" text-anchor="middle" dominant-baseline="central">12 V +</text>
+<text class="ts" x="360" y="378" text-anchor="middle" dominant-baseline="central">input</text>
 
 <path d="M400 110H425" fill="none" style="stroke:#1D9E75;stroke-width:2"/>
 <rect class="box" x="425" y="100" width="60" height="20" rx="4" stroke-width="0.5"/>

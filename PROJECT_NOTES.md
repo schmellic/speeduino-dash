@@ -92,7 +92,7 @@ Bridge board (built 2026-11-02): 40x60 mm perfboard with the C3, the 12V->5V buc
 (one beside the buck, one top-left). With USB-C facing right the C3 pins read: top row 21,20,10,9,8,7,6,5; bottom row 0,1,2,3,4,3V3,GND,5V.
 Terminals (photo, component side, board upright with USB-C facing right): the one beside the buck is the 12 V input, right screw 12 V+, left screw 12 V-.
 Resistors: R1 (vertical, beside the C3, near the top-left terminal) is the 1k; R2 (horizontal, under the C3's bottom pins) is the 2k.
-Top-left terminal (board's viewpoint, confirmed by continuity): A1 (upper) = C3 RX, reads 1k to GPIO4, so it goes to Speeduino TX3 (pin 14); A2 (lower) = C3 TX, wired to GPIO5, so it goes to Speeduino RX3 (pin 15).
+Top-left terminal (board's viewpoint, confirmed by continuity): the upper screw (labelled TX3 in; formerly A1) = C3 RX, reads 1k to GPIO4, so it goes to Speeduino TX3 (pin 14); the lower screw (RX3 out; formerly A2) = C3 TX, wired to GPIO5, so it goes to Speeduino RX3 (pin 15).
 The user continuity-checked the board (resistor values, GPIO4 divider, GPIO5 line, buck 5V/GND to the C3, no shorts) and reports it all
 checks out. Only two serial terminal screws, so there is no dedicated ground wire to the Speeduino: in the car the grounds are shared
 through the chassis, but on the bench the ECU ground must be joined to the board's ground by hand. The solder side is coated in green
@@ -106,8 +106,8 @@ Dash node needs its own 5 V feed. Do not power the ESP32 from the Speeduino 5 V 
 
 ## Reference images (`docs/`)
 
-- `docs/wiring.svg`: wiring between the Speeduino v0.4.4d, the bridge board (terminals A1/A2, B1/B2, R1 1k, R2 2k, C3, buck) and the 12 V feed.
-- `docs/bridge_board_labelled.jpg`: photo of the built bridge board with A1/A2, B1/B2, R1/R2 and the C3 pins labelled.
+- `docs/wiring.svg`: wiring between the Speeduino v0.4.4d, the bridge board (terminals TX3 in / RX3 out / 12 V - / 12 V +, R1 1k, R2 2k, C3, buck) and the 12 V feed.
+- `docs/bridge_board_labelled.jpg`: photo of the built bridge board with the terminals labelled by function (Speeduino TX3 pin 14, Speeduino RX3 pin 15, 12 V -, 12 V +; these were A1, A2, B1, B2 before 2026-11-16), R1/R2 and the C3 pins.
 - `docs/speeduino_solder_points.png`: photo of the Speeduino shield marking where to solder D14 (TX3), D15 (RX3) and GND (J6),
   plus the D21 continuity-check pads. Positions are derived from the board layout; confirm with the D21 beep test before soldering.
 
@@ -174,7 +174,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 1. ~~Check the radio link~~ done 2026-11-02; the no-data case was confirmed on the dash on 2026-11-10.
 2. ~~Round tach on `dash_sim`~~ works (2026-11-10). Info screen and shared SPI bus checked and working (2026-11-12). Optional: judge brightness/colours, test `dash` with the bridge (`bridge_c3_sim` on the C3).
 3. Enclosure for the bridge board is designed (see Bridge enclosure; measure the board and print it). Solder the
-   bridge wires to the Speeduino (D14 -> A1, D15 -> A2, J6 GND -> B1; run the D21 continuity check first). Then test in the car with
+   bridge wires to the Speeduino (D14 -> TX3 in screw, D15 -> RX3 out screw, J6 GND -> 12 V - screw; run the D21 continuity check first). Then test in the car with
    `bridge_c3_live` on the C3 and `display_rx` on the classic ESP32 plugged into a laptop (it prints `no data` until real values arrive).
    TunerStudio needs Secondary Serial IO enabled at 115200, burned, then power-cycled. Then verify the ECU byte offsets and try `dash`.
 4. Measure the bridge board height, update `BridgeBox.py` if needed, export STLs and print the box (PETG). Close the lid only after the in-car test.
@@ -208,6 +208,27 @@ The bridge C3 (mounted in the car) has no OTA yet; it would need the same treatm
 - Location not decided (2026-11-12): glovebox area, or under the dash. Under-dash would need a bracket instead of a flush mount; measure the real opening and depth. PETG for heat. Remember the tach ring is 360 x 360 px on a round 2.1" panel.
 - The firmware, thresholds and layout are settled enough to design around; only the physical mount is open.
 
+## Bridge update over ESP-NOW (WIP, branch `bridge-espnow-update`, 2026-11-14)
+
+Compiles (2026-11-14: `bridge_c3_sim`, `bridge_c3_live`, `dash`, `dash_sim` all build; bridge image about 975 KB = 74% of the slot, dash 84%) but NOT flashed or tested. Do not merge to main until a bench update has worked. The bridge image is much bigger than first guessed (about 975 KB), so expect a minute or so per update.
+- Design: the dash upload page (http://192.168.4.1) gets a second "Update bridge" box. The dash relays the .bin to the bridge over ESP-NOW, stop-and-wait, 192-byte chunks, unicast to the bridge MAC learned from its telemetry. Protocol and comments: `include/BridgeUpdate.h`; bridge side in `src/bridge/main.cpp` (`updatePoll`); dash side in `src/dash/main.cpp` (`bridgeUpload`).
+- Security: HMAC-SHA256 with a 16-byte key from `include/bridge_key.h` (git-ignored; `bridge_key.example.h` is committed). The bridge sends a fresh nonce per attempt; the final END message carries an HMAC over nonce + size + SHA-256 of the image, and the bridge only switches image if it matches. No time window on the bridge. The bridge refuses while the engine is running (link ok and rpm > 300). Without `bridge_key.h` both ends build with the feature off.
+- The key file is NOT in the repo: on another computer, ask the user for it (or generate a new one, then the bridge must be re-flashed over USB with that key and the dash rebuilt with the same one).
+- The bridge currently in the car has no receiver, so the first firmware with this code needs ONE USB flash (the user must take the bridge out of its enclosure). Bench it on the spare C3 first. A broken new image would also need USB again (no automatic rollback).
+- While an update runs, the bridge stops broadcasting and the dash screens freeze (about 30 s).
+
+## Fuel level sender (planned, not built)
+- Sender: JOPEX 113919049D (coolairvw.co.uk), resistive, 80 ohm empty, 10 ohm full. The user's tank has the opening and the sender will sit very close to the dash ESP32.
+- Plan: dash ESP32 GPIO34 (ADC1, input-only; ADC2 pins don't work with Wi-Fi on). 3V3 -> 47 ohm (1/4 W; the user has 22, 47 and 100 ohm) -> GPIO34 node -> sender -> GND, 100 nF at the pin (about 2.1 V empty, 0.6 V full, ~58 mA max). The 3V3 pin is on the right-hand pin row, D34 and the left GND are on the left row.
+- Software to do: averaged ADC read, calibration table (fill in known steps, e.g. 5 L), slow filter, a new info panel (the 2x4 grid is full, so one cell must make room). Wiring is drawn at the bottom of `docs/solder_side_by_side.svg` (the generator script was lost with the scratchpad; the SVG is edited directly). The 100 nF capacitor is optional (user asked; the sender will be right next to the ESP32).
+
+## Possible oil pressure sensor (undecided, 2026-11-14)
+- Not needed through the ECU. Best place is a spare ADC pin on the bridge C3 (GPIO0-3 free; the sensor is on the engine next to it), carried to the dash as a new `Telemetry` field. Sensor type undecided: a stock VW oil sender is only a warning-light switch; a pressure sender is resistive or 0.5-4.5 V (needs a divider for the C3's 3.3 V).
+- Decision (user): if the bridge needs changing in future, continue the ESP-NOW update work on branch `bridge-espnow-update` (bench-test on the spare C3, one USB flash of the bridge) rather than pulling the bridge for USB each time.
+- Fuel sender wiring (user, 2026-11-14): the sender has ONE terminal (to the resistor/D34 junction); its case is the return through the tank and body. No separate ESP32 GND wire to it is needed because the dash buck converter is not isolated, so the ESP32 GND is already body earth.
+
+- Dash board photo (2026-11-16): `docs/dash_board_labelled.jpg` shows the built dash perfboard (ESP32 HW-394 USB-C DevKit, two 8-pin headers right of the ESP32 with pin 1 level with D23, INFO header nearest, TACH beyond, buck converter, 3-way screw terminal, a resistor). This confirms the header layout assumed in `docs/solder_side_by_side.svg`. The board's silk labels TX2/RX2 as D17/D16.
+- Dash board terminal (user, 2026-11-16): the 3-way screw terminal carries 12 V in, GND and the fuel sender wire (left to right with USB at the bottom: sender, GND, 12 V). The blue resistor beside it is the 47 ohm fuel divider resistor.
 ## Info screen order, AFR warning, fuel panel (2026-11-17)
 Supersedes the cell order and the peak head panel in "Info screen design (2026-11-12)".
 - Order (warnings first, 2 columns x 4 rows): row 1 HEAD TEMP | AFR, row 2 FUEL | BATTERY, row 3 THROTTLE | MAP, row 4 ADVANCE | INTAKE. PEAK HEAD was removed at the user's request. Cell indices are the `C_HEAD ... C_IAT` enum in `updateInfo`.
