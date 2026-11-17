@@ -27,7 +27,8 @@ constexpr int RPM_SHIFT = 4500;     // ring turns orange here (user)
 constexpr int RPM_REDLINE = 5400;   // Beetle redline (user): digits and ring turn red here
 constexpr int HEAD_WARN_C = 190, HEAD_DANGER_C = 220;
 constexpr uint32_t STALE_MS = 500;
-constexpr float AFR_WARN = 15.5f, AFR_DANGER = 16.0f;   // lean warning, only counted at or above AFR_LOAD_TPS throttle
+constexpr float AFR_DEV_WARN = 1.0f, AFR_DEV_DANGER = 1.5f;   // lean warning: AFR above the tune's own target by this much,
+                                                              // only counted at or above AFR_LOAD_TPS throttle
 constexpr int AFR_LOAD_TPS = 15;
 
 // ---- OTA ---------------------------------------------------------------
@@ -122,7 +123,8 @@ static bool getTelemetry(Telemetry &t) {
   t.battMv = 13800 + 600 * sinf(s * 0.2f);
   t.tpsPct = 25 + 25 * sinf(s * 0.5f + 0.5f);
   t.advanceDeg = 20 + 8 * sinf(s * 0.5f);
-  t.o2Raw = 147;
+  t.afrTarget = 147;
+  t.o2Raw = 147 + 25 * max(0.0f, sinf(s * 0.3f));   // drifts lean now and then so the warning colours show
   t.linkOk = 1;
   return true;
 #else
@@ -374,12 +376,14 @@ static void updateInfo(const Telemetry &t, bool alive) {
   st = t.cltC >= HEAD_DANGER_C ? C_RED : t.cltC >= HEAD_WARN_C ? C_ORANGE : C_GREEN;
   setCell(C_HEAD, b, "C", st == C_GREEN ? C_FG : st, st);
 
-  // Lean warning only under load (closed throttle on the overrun is legitimately lean), and only once it has lasted
+  // Lean warning is relative to the tune's AFR target (about 14.7 at cruise but about 12.3 at full load, so a fixed number
+  // would be far too late at high load). Only under load (the overrun is legitimately lean), and only once it has lasted
   // a second so a single lean reading doesn't flash the panel.
   int tps = constrain((int)t.tpsPct, 0, 100);
   float afr = t.o2Raw / 10.0f;   // check scaling against your ini
   static uint32_t leanSince = 0;
-  bool lean = tps >= AFR_LOAD_TPS && afr >= AFR_WARN;
+  float dev = afr - t.afrTarget / 10.0f;
+  bool lean = tps >= AFR_LOAD_TPS && t.afrTarget > 0 && dev >= AFR_DEV_WARN;
   if (!lean) leanSince = 0;
   else if (!leanSince) leanSince = millis();
   bool leanHeld = lean && millis() - leanSince >= 1000;
@@ -387,7 +391,7 @@ static void updateInfo(const Telemetry &t, bool alive) {
     setCell(C_AFR, "--", "", C_DIM, C_DIM);   // no reading from the wideband
   } else {
     snprintf(b, sizeof(b), "%.1f", afr);
-    st = leanHeld ? (afr >= AFR_DANGER ? C_RED : C_ORANGE) : C_GREEN;
+    st = leanHeld ? (dev >= AFR_DEV_DANGER ? C_RED : C_ORANGE) : C_GREEN;
     setCell(C_AFR, b, "", st == C_GREEN ? C_FG : st, st);
   }
 

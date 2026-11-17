@@ -46,6 +46,7 @@ static bool readSpeeduino(Telemetry &t) {
   t.cltC       = (int16_t)d[7] - 40;
   t.battMv     = d[9] * 100;
   t.o2Raw      = d[10];
+  t.afrTarget  = d[21];
   t.rpm        = d[14] | (d[15] << 8);
   t.advanceDeg = (int8_t)d[24];
   t.tpsPct     = d[25] / 2;
@@ -62,6 +63,7 @@ static void simulate(Telemetry &t) {
   t.tpsPct     = 25 + 25 * sinf(s * 0.6f + 0.5f);
   t.advanceDeg = 20 + 8 * sinf(s * 0.6f);
   t.o2Raw      = 147;
+  t.afrTarget  = 147;
 }
 
 void setup() {
