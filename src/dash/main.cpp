@@ -5,6 +5,7 @@
 #include <WebServer.h>
 #include <DNSServer.h>
 #include <Update.h>
+#include <Preferences.h>
 #include <Arduino_GFX_Library.h>
 #include <Arduino_GC9B72.h>
 #include "Telemetry.h"
@@ -58,6 +59,7 @@ static const char UPLOAD_PAGE[] PROGMEM = R"HTML(<!doctype html><meta name=viewp
 <input type=file id=g><br><br>
 <button onclick="go('g','/bridge')" style="padding:.6em 1.2em">Update bridge</button>
 <p id=s></p>
+<p><a href=/fuel style="color:#8cf">Fuel calibration</a></p>
 <p style="color:#999;font-size:.85em">The bridge is updated over ESP-NOW and must be powered and heard by the dash. The dash screens freeze while it runs (about 30 seconds). If Choose file does nothing, close this sign-in window and open http://192.168.4.1 in Chrome or Safari.</p>
 <script>
 function go(id,url){var f=document.getElementById(id).files[0],s=document.getElementById('s');
@@ -194,6 +196,142 @@ static void bridgeUpload() {
 }
 #endif
 
+
+// ---- Fuel level: sender on GPIO34, divider 3V3 - 47 ohm - D34 - sender - GND (sender: about 8 ohm full, 80 ohm empty) ----
+// Litres come from a table of (ohms, litres) points. Until real points are recorded on the /fuel page a default curve
+// is used (a guess from the stock dial) and the panel shows "~" before the number. Recorded points are kept in flash.
+constexpr int PIN_FUEL = 34;                         // ADC1, so it still works with Wi-Fi on
+constexpr float FUEL_R_FIXED = 47.0f;                // ohms, the divider resistor to 3V3
+constexpr float FUEL_LOW_L = 10.0f, FUEL_RESERVE_L = 5.0f;   // orange at or below LOW, red at or below RESERVE
+struct FuelPt { float ohms, litres; };
+static const FuelPt FUEL_DEFAULT[] = {{80, 0}, {75, 5}, {30, 20}, {8, 40}};
+constexpr int FUEL_MAX_USER = 12;
+static FuelPt fuelUser[FUEL_MAX_USER];
+static int nFuelUser = 0;
+static FuelPt fuelTbl[FUEL_MAX_USER + 4];   // defaults not covered by a recorded point, plus the recorded ones, high ohms first
+static int nFuelTbl = 0;
+static Preferences fuelPrefs;
+static float fuelMv = -1;                    // slowly filtered voltage at D34, -1 until the first reading
+
+static void fuelRebuild() {
+  nFuelTbl = 0;
+  for (const FuelPt &d : FUEL_DEFAULT) {
+    bool covered = false;
+    for (int i = 0; i < nFuelUser; i++) if (fabsf(fuelUser[i].ohms - d.ohms) < 4.0f) covered = true;
+    if (!covered) fuelTbl[nFuelTbl++] = d;
+  }
+  for (int i = 0; i < nFuelUser; i++) fuelTbl[nFuelTbl++] = fuelUser[i];
+  for (int i = 1; i < nFuelTbl; i++) {   // insertion sort, high ohms (empty) first
+    FuelPt k = fuelTbl[i];
+    int j = i - 1;
+    while (j >= 0 && fuelTbl[j].ohms < k.ohms) { fuelTbl[j + 1] = fuelTbl[j]; j--; }
+    fuelTbl[j + 1] = k;
+  }
+}
+static void fuelSave() {
+  if (nFuelUser) fuelPrefs.putBytes("pts", fuelUser, nFuelUser * sizeof(FuelPt));
+  else fuelPrefs.remove("pts");
+}
+static void fuelInit() {
+  analogSetPinAttenuation(PIN_FUEL, ADC_11db);
+  fuelPrefs.begin("fuel", false);
+  size_t n = fuelPrefs.getBytesLength("pts") / sizeof(FuelPt);
+  if (n > FUEL_MAX_USER) n = FUEL_MAX_USER;
+  if (n) fuelPrefs.getBytes("pts", fuelUser, n * sizeof(FuelPt));
+  nFuelUser = n;
+  fuelRebuild();
+}
+
+static void fuelSample() {
+#if SIM_LOCAL
+  float r = 44 + 36 * sinf(millis() / 1000.0f * 0.05f);   // sweeps empty to full so the colours can be seen
+  fuelMv = 3300.0f * r / (FUEL_R_FIXED + r);
+#else
+  uint32_t sum = 0;
+  for (int i = 0; i < 16; i++) sum += analogReadMilliVolts(PIN_FUEL);
+  float mv = sum / 16.0f;
+  fuelMv = fuelMv < 0 ? mv : fuelMv + (mv - fuelMv) * 0.01f;   // about 5 s time constant at 20 Hz, for the slosh
+#endif
+}
+// Sender resistance in ohms, or NAN if the reading makes no sense (wire off, shorted, nothing connected).
+static float fuelOhms() {
+  float v = fuelMv / 1000.0f;
+  if (fuelMv < 0 || v > 3.15f || v < 0.03f) return NAN;
+  float r = FUEL_R_FIXED * v / (3.3f - v);
+  return (r < 3.0f || r > 110.0f) ? NAN : r;
+}
+static float fuelLitres(float ohms) {
+  if (ohms >= fuelTbl[0].ohms) return fuelTbl[0].litres;
+  for (int i = 1; i < nFuelTbl; i++) {
+    if (ohms >= fuelTbl[i].ohms) {
+      const FuelPt &a = fuelTbl[i - 1], &b = fuelTbl[i];
+      return b.litres + (a.litres - b.litres) * (ohms - b.ohms) / (a.ohms - b.ohms);
+    }
+  }
+  return fuelTbl[nFuelTbl - 1].litres;
+}
+static float fuelCapacity() {
+  float m = 1;
+  for (int i = 0; i < nFuelTbl; i++) m = max(m, fuelTbl[i].litres);
+  return m;
+}
+
+static const char FUEL_PAGE[] PROGMEM = R"HTML(<!doctype html><meta name=viewport content="width=device-width,initial-scale=1">
+<body style="font-family:sans-serif;background:#111;color:#eee;max-width:420px;margin:2em auto;padding:0 1em">
+<h2>Fuel calibration</h2>
+<p>Sender: <b id=o>--</b> &#937; &nbsp; reads <b id=l>--</b> L <span id=c></span></p>
+<p>Litres in the tank now: <input id=q type=number step=0.5 min=0 max=60 style="width:5em"> <button onclick="rec()">Record this point</button></p>
+<p id=m></p>
+<p>Recorded points (ohms, litres): <span id=p>none</span></p>
+<p><button onclick="rst()">Reset to the default curve</button></p>
+<p style="color:#999;font-size:.85em">Wait about 15 seconds after the fuel settles so the reading steadies, then record. Do the 5 L reserve point first, then full and a few in between. Points close to the same ohms replace each other.</p>
+<p><a href=/ style="color:#8cf">Back</a></p>
+<script>
+function g(i){return document.getElementById(i)}
+function st(){fetch('/fuel/status').then(function(r){return r.json()}).then(function(d){
+g('o').textContent=d.ok?d.ohms.toFixed(1):'--';g('l').textContent=d.ok?d.litres.toFixed(1):'--';
+g('c').textContent=d.user.length?'':'(default curve, approximate)';
+g('p').textContent=d.user.length?d.user.map(function(x){return x[0].toFixed(1)+' / '+x[1].toFixed(1)}).join(',  '):'none'})}
+function post(u,b){fetch(u,{method:'POST',body:new URLSearchParams(b)}).then(function(r){return r.text()}).then(function(t){g('m').textContent=t;st()})}
+function rec(){var q=g('q').value;if(q===''){g('m').textContent='Enter the litres first';return}post('/fuel/add',{l:q})}
+function rst(){post('/fuel/reset',{})}
+setInterval(st,1000);st();
+</script>)HTML";
+
+static void fuelRoutes() {
+  web.on("/fuel", HTTP_GET, []() { web.send_P(200, "text/html", FUEL_PAGE); });
+  web.on("/fuel/status", HTTP_GET, []() {
+    float o = fuelOhms();
+    String j = "{\"ok\":";
+    j += isnan(o) ? "false" : "true";
+    if (!isnan(o)) j += ",\"ohms\":" + String(o, 1) + ",\"litres\":" + String(fuelLitres(o), 1);
+    j += ",\"user\":[";
+    for (int i = 0; i < nFuelUser; i++) j += String(i ? "," : "") + "[" + String(fuelUser[i].ohms, 1) + "," + String(fuelUser[i].litres, 1) + "]";
+    web.send(200, "application/json", j + "]}");
+  });
+  web.on("/fuel/add", HTTP_POST, []() {
+    float o = fuelOhms(), l = web.arg("l").toFloat();
+    if (isnan(o)) { web.send(200, "text/plain", "No sensible reading from the sender, check the wiring."); return; }
+    if (l < 0 || l > 60) { web.send(200, "text/plain", "Litres must be between 0 and 60."); return; }
+    int at = -1;
+    for (int i = 0; i < nFuelUser; i++) if (fabsf(fuelUser[i].ohms - o) < 1.5f) at = i;
+    if (at < 0 && nFuelUser >= FUEL_MAX_USER) { web.send(200, "text/plain", "Table is full, reset it first."); return; }
+    if (at < 0) at = nFuelUser++;
+    fuelUser[at] = {o, l};
+    fuelSave();
+    fuelRebuild();
+    web.send(200, "text/plain", "Recorded " + String(l, 1) + " L at " + String(o, 1) + " ohm.");
+  });
+  web.on("/fuel/reset", HTTP_POST, []() {
+    nFuelUser = 0;
+    fuelSave();
+    fuelRebuild();
+    web.send(200, "text/plain", "Back to the default curve.");
+  });
+}
+
+static void updateFuelCell();
+
 static void webSetup() {
   web.on("/", HTTP_GET, []() {
     web.send_P(200, "text/html", UPLOAD_PAGE);
@@ -220,6 +358,7 @@ static void webSetup() {
     bridgeUpload();
 #endif
   });
+  fuelRoutes();
   web.onNotFound([]() {   // connectivity checks and any other address land on the upload page
     web.sendHeader("Location", "http://192.168.4.1/", true);
     web.send(302, "text/plain", "");
@@ -513,9 +652,25 @@ static void setCell(int i, const char *text, const char *unit, uint16_t color, u
 // Warnings first (top two rows: head temp, AFR, fuel, battery), then information (throttle, MAP, advance, intake).
 enum { C_HEAD, C_AFR, C_FUEL, C_BATT, C_TPS, C_MAP, C_ADV, C_IAT };
 
+static void updateFuelCell() {
+  float ohms = fuelOhms();
+  if (isnan(ohms)) { setCell(C_FUEL, "--", "", C_DIM, C_DIM); return; }
+  float l = fuelLitres(ohms);
+  static int level = 0;   // 0 green, 1 orange, 2 red; stays one litre longer so it doesn't flicker at the edges
+  if (l <= FUEL_RESERVE_L || (level == 2 && l <= FUEL_RESERVE_L + 1)) level = 2;
+  else if (l <= FUEL_LOW_L || (level == 1 && l <= FUEL_LOW_L + 1)) level = 1;
+  else level = 0;
+  uint16_t st = level == 2 ? C_RED : level == 1 ? C_ORANGE : C_GREEN;
+  char b[8];
+  snprintf(b, sizeof(b), nFuelUser ? "%d" : "~%d", (int)lroundf(l));   // "~" while it is still the default curve
+  int bar = constrain((int)lroundf(100 * l / fuelCapacity()), 0, 100) / 5 * 5;
+  setCell(C_FUEL, b, "L", st == C_GREEN ? C_FG : st, st, bar);
+}
+
 static void updateInfo(const Telemetry &t, bool alive) {
   char b[8];
-  setCell(C_FUEL, "--", "", C_DIM, C_DIM);   // no fuel sender fitted yet
+  fuelSample();
+  updateFuelCell();
   if (!alive) {
     for (int i = 0; i < CELLS; i++) if (i != C_FUEL) setCell(i, "--", "", C_DIM, C_DIM);
     return;
@@ -562,6 +717,7 @@ static void updateInfo(const Telemetry &t, bool alive) {
 // ---- Main --------------------------------------------------------------
 void setup() {
   Serial.begin(115200);
+  fuelInit();
   pinMode(PIN_TACH_BL, OUTPUT);
   pinMode(PIN_INFO_BL, OUTPUT);
   digitalWrite(PIN_TACH_BL, HIGH);   // GC9B72 stays black unless BL is high
