@@ -11,6 +11,7 @@ struct __attribute__((packed)) Telemetry {
   uint8_t  tpsPct;
   int8_t   advanceDeg;
   uint8_t  o2Raw;      // Speeduino O2 channel (AFR x10 on most setups)
+  uint8_t  afrTarget;  // Speeduino afrTarget channel (AFR x10): what the tune is aiming for right now
   uint8_t  linkOk;     // 1 = bridge is getting valid data from the ECU
   uint8_t  seq;
 };

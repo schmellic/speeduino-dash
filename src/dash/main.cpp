@@ -28,6 +28,9 @@ constexpr int RPM_SHIFT = 4500;     // ring turns orange here (user)
 constexpr int RPM_REDLINE = 5400;   // Beetle redline (user): digits and ring turn red here
 constexpr int HEAD_WARN_C = 190, HEAD_DANGER_C = 220;
 constexpr uint32_t STALE_MS = 500;
+constexpr float AFR_DEV_WARN = 1.0f, AFR_DEV_DANGER = 1.5f;   // lean warning: AFR above the tune's own target by this much,
+                                                              // only counted at or above AFR_LOAD_TPS throttle
+constexpr int AFR_LOAD_TPS = 15;
 
 // ---- OTA ---------------------------------------------------------------
 // No network in the car, so for the first OTA_WINDOW_MS after power-on the dash runs its own access point. Join it from the
@@ -269,7 +272,8 @@ static bool getTelemetry(Telemetry &t) {
   t.battMv = 13800 + 600 * sinf(s * 0.2f);
   t.tpsPct = 25 + 25 * sinf(s * 0.5f + 0.5f);
   t.advanceDeg = 20 + 8 * sinf(s * 0.5f);
-  t.o2Raw = 147;
+  t.afrTarget = 147;
+  t.o2Raw = 147 + 25 * max(0.0f, sinf(s * 0.3f));   // drifts lean now and then so the warning colours show
   t.linkOk = 1;
   return true;
 #else
@@ -446,7 +450,7 @@ static void updateTach(const Telemetry &t, bool alive) {
 constexpr int PANEL_W = 148, PANEL_H = 50, PANEL_GAP = 6, PANEL_X0 = 8, PANEL_Y0 = 11, CELLS = 8;
 struct Cell { const char *label; char last[8]; char lastUnit[4]; uint16_t lastColor, lastStripe; int lastBar; };
 static Cell cells[CELLS] = {
-  {"HEAD TEMP"}, {"PEAK HEAD"}, {"THROTTLE"}, {"MAP"}, {"AFR"}, {"ADVANCE"}, {"INTAKE"}, {"BATTERY"},
+  {"HEAD TEMP"}, {"AFR"}, {"FUEL"}, {"BATTERY"}, {"THROTTLE"}, {"MAP"}, {"ADVANCE"}, {"INTAKE"},
 };
 
 static int panelX(int i) { return PANEL_X0 + (i % 2) * (PANEL_W + PANEL_GAP + 2); }
@@ -506,42 +510,53 @@ static void setCell(int i, const char *text, const char *unit, uint16_t color, u
   }
 }
 
+// Warnings first (top two rows: head temp, AFR, fuel, battery), then information (throttle, MAP, advance, intake).
+enum { C_HEAD, C_AFR, C_FUEL, C_BATT, C_TPS, C_MAP, C_ADV, C_IAT };
+
 static void updateInfo(const Telemetry &t, bool alive) {
   char b[8];
-  static int peakC = -100;   // highest head temp since power-on
+  setCell(C_FUEL, "--", "", C_DIM, C_DIM);   // no fuel sender fitted yet
   if (!alive) {
-    for (int i = 0; i < CELLS; i++) if (i != 1) setCell(i, "--", "", C_DIM, C_DIM);   // 1 = peak head, handled below
-    if (peakC > -100) {
-      snprintf(b, sizeof(b), "%d", peakC);
-      setCell(1, b, "C", C_RIM, C_DIM);   // keep the peak visible, dimmed
-    } else {
-      setCell(1, "--", "", C_DIM, C_DIM);
-    }
+    for (int i = 0; i < CELLS; i++) if (i != C_FUEL) setCell(i, "--", "", C_DIM, C_DIM);
     return;
   }
   uint16_t st;
   snprintf(b, sizeof(b), "%d", t.cltC);
   st = t.cltC >= HEAD_DANGER_C ? C_RED : t.cltC >= HEAD_WARN_C ? C_ORANGE : C_GREEN;
-  setCell(0, b, "C", st == C_GREEN ? C_FG : st, st);
-  snprintf(b, sizeof(b), "%d", t.iatC);
-  setCell(6, b, "C", C_FG, C_GREEN);
+  setCell(C_HEAD, b, "C", st == C_GREEN ? C_FG : st, st);
+
+  // Lean warning is relative to the tune's AFR target (about 14.7 at cruise but about 12.3 at full load, so a fixed number
+  // would be far too late at high load). Only under load (the overrun is legitimately lean), and only once it has lasted
+  // a second so a single lean reading doesn't flash the panel.
+  int tps = constrain((int)t.tpsPct, 0, 100);
+  float afr = t.o2Raw / 10.0f;   // check scaling against your ini
+  static uint32_t leanSince = 0;
+  float dev = afr - t.afrTarget / 10.0f;
+  bool lean = tps >= AFR_LOAD_TPS && t.afrTarget > 0 && dev >= AFR_DEV_WARN;
+  if (!lean) leanSince = 0;
+  else if (!leanSince) leanSince = millis();
+  bool leanHeld = lean && millis() - leanSince >= 1000;
+  if (t.o2Raw == 0) {
+    setCell(C_AFR, "--", "", C_DIM, C_DIM);   // no reading from the wideband
+  } else {
+    snprintf(b, sizeof(b), "%.1f", afr);
+    st = leanHeld ? (dev >= AFR_DEV_DANGER ? C_RED : C_ORANGE) : C_GREEN;
+    setCell(C_AFR, b, "", st == C_GREEN ? C_FG : st, st);
+  }
+
   float v = t.battMv / 1000.0f;
   snprintf(b, sizeof(b), "%.1f", v);
   st = (v < 11.5f || v > 15.0f) ? C_RED : v < 12.5f ? C_ORANGE : C_GREEN;
-  setCell(7, b, "V", st == C_GREEN ? C_FG : st, st);
-  snprintf(b, sizeof(b), "%u", t.mapKpa);
-  setCell(3, b, "kPa", C_FG, C_GREEN);
-  int tps = constrain((int)t.tpsPct, 0, 100);
+  setCell(C_BATT, b, "V", st == C_GREEN ? C_FG : st, st);
+
   snprintf(b, sizeof(b), "%d", tps);
-  setCell(2, b, "%", C_FG, C_GREEN, tps / 5 * 5);   // bar in 5% steps so it doesn't redraw on every count
-  snprintf(b, sizeof(b), "%.1f", t.o2Raw / 10.0f);   // check scaling against your ini
-  setCell(4, b, "", C_FG, C_GREEN);
+  setCell(C_TPS, b, "%", C_FG, C_GREEN, tps / 5 * 5);   // bar in 5% steps so it doesn't redraw on every count
+  snprintf(b, sizeof(b), "%u", t.mapKpa);
+  setCell(C_MAP, b, "kPa", C_FG, C_GREEN);
   snprintf(b, sizeof(b), "%d", t.advanceDeg);
-  setCell(5, b, "deg", C_FG, C_GREEN);
-  peakC = max(peakC, (int)t.cltC);
-  snprintf(b, sizeof(b), "%d", peakC);
-  st = peakC >= HEAD_DANGER_C ? C_RED : peakC >= HEAD_WARN_C ? C_ORANGE : C_GREEN;
-  setCell(1, b, "C", st == C_GREEN ? C_FG : st, st);
+  setCell(C_ADV, b, "deg", C_FG, C_GREEN);
+  snprintf(b, sizeof(b), "%d", t.iatC);
+  setCell(C_IAT, b, "C", C_FG, C_GREEN);
 }
 
 // ---- Main --------------------------------------------------------------
