@@ -201,7 +201,8 @@ static void bridgeUpload() {
 // Litres come from a table of (ohms, litres) points. Until real points are recorded on the /fuel page a default curve
 // is used (a guess from the stock dial) and the panel shows "~" before the number. Recorded points are kept in flash.
 constexpr int PIN_FUEL = 34;                         // ADC1, so it still works with Wi-Fi on
-constexpr float FUEL_R_FIXED = 47.0f;                // ohms, the divider resistor to 3V3
+constexpr float FUEL_R_FIXED = 47.0f;                // ohms, the divider resistor to 3V3 (measured 47)
+constexpr float FUEL_ADC_OFFSET_MV = 23.0f;          // this ESP32 reads about 23 mV high at D34 (bench check, 0.58 V and 1.66 V)
 constexpr float FUEL_LOW_L = 10.0f, FUEL_RESERVE_L = 5.0f;   // orange at or below LOW, red at or below RESERVE
 struct FuelPt { float ohms, litres; };
 static const FuelPt FUEL_DEFAULT[] = {{80, 0}, {75, 5}, {30, 20}, {8, 40}};
@@ -249,7 +250,7 @@ static void fuelSample() {
 #else
   uint32_t sum = 0;
   for (int i = 0; i < 16; i++) sum += analogReadMilliVolts(PIN_FUEL);
-  float mv = sum / 16.0f;
+  float mv = sum / 16.0f - FUEL_ADC_OFFSET_MV;
   fuelMv = fuelMv < 0 ? mv : fuelMv + (mv - fuelMv) * 0.01f;   // about 5 s time constant at 20 Hz, for the slosh
 #endif
 }
