@@ -12,7 +12,7 @@
 #if CONFIG_IDF_TARGET_ESP32C3
 #define SpeeduinoSerial Serial1   // C3 has no Serial2
 constexpr int SPEEDUINO_RX = 4;
-constexpr int SPEEDUINO_TX = 5;
+constexpr int SPEEDUINO_TX = 21;   // the TX wire on the built bridge board is soldered to GPIO21, not GPIO5 (moving it to 5 is optional)
 #else
 #define SpeeduinoSerial Serial2
 constexpr int SPEEDUINO_RX = 16;
@@ -40,6 +40,11 @@ static bool readSpeeduino(Telemetry &t) {
     if (SpeeduinoSerial.available()) buf[n++] = SpeeduinoSerial.read();
     else delay(1);   // don't spin flat out while the ECU is quiet: the C3 has one core and the radio needs its share
   }
+#ifdef BRIDGE_DEBUG   // temporary: show the raw reply
+  Serial.printf("raw n=%u:", (unsigned)n);
+  for (size_t i = 0; i < n; i++) Serial.printf(" %02X", buf[i]);
+  Serial.println();
+#endif
   // Some firmware echoes 'r' before the data; skip it if the length says so.
   const uint8_t *d = buf;
   if (n == REALTIME_LEN + 1 && buf[0] == 'r') d = buf + 1;
@@ -193,6 +198,31 @@ void setup() {
   Serial.begin(115200);
 #if !SIMULATE
   SpeeduinoSerial.begin(SPEEDUINO_BAUD, SERIAL_8N1, SPEEDUINO_RX, SPEEDUINO_TX);
+#endif
+#ifdef BRIDGE_BAUDSCAN   // temporary: try common baud rates, show what the ECU sends back
+  delay(3000);
+  const uint32_t bauds[] = {9600, 19200, 38400, 57600, 115200, 230400, 250000, 460800, 500000};
+  for (;;) {
+    for (uint32_t b : bauds) {
+      SpeeduinoSerial.updateBaudRate(b);
+      delay(50);
+      while (SpeeduinoSerial.available()) SpeeduinoSerial.read();
+#ifdef BRIDGE_ASCAN   // fixed-list protocol: a single 'A' asks for the realtime block
+      const uint8_t req[] = {'A'};
+#else
+      const uint8_t req[] = {'r', 0x00, 0x30, 0x00, 0x00, (uint8_t)REALTIME_LEN, 0x00};
+#endif
+      SpeeduinoSerial.write(req, sizeof(req));
+      uint8_t rb[40];
+      size_t rn = 0;
+      uint32_t t0 = millis();
+      while (rn < sizeof(rb) && millis() - t0 < 150) { if (SpeeduinoSerial.available()) rb[rn++] = SpeeduinoSerial.read(); else delay(1); }
+      Serial.printf("baud %u n=%u:", (unsigned)b, (unsigned)rn);
+      for (size_t i = 0; i < rn && i < 20; i++) Serial.printf(" %02X", rb[i]);
+      Serial.println();
+    }
+    Serial.println("---");
+  }
 #endif
   WiFi.mode(WIFI_STA);
   if (esp_now_init() != ESP_OK) {
