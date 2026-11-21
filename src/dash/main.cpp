@@ -380,11 +380,14 @@ constexpr uint16_t C_WARN = RGB565_ORANGE, C_BAD = RGB565_RED, C_OK = RGB565_GRE
 // ---- Telemetry in ------------------------------------------------------
 static volatile Telemetry latest = {};
 static volatile uint32_t lastRxMs = 0;
+static volatile uint32_t rxGood = 0, rxOther = 0, rxLastLen = 0;   // packet counters for the serial status line
 
 static void handlePacket(const uint8_t *data, int len, const uint8_t *src) {
+  if (len != sizeof(Telemetry)) { rxOther = rxOther + 1; rxLastLen = len; }
   if (len == sizeof(Telemetry)) {
     memcpy((void *)&latest, data, sizeof(Telemetry));
     lastRxMs = millis();
+    rxGood = rxGood + 1;
 #if BRIDGE_UPDATE
     memcpy(bridgeMac, src, 6);
     bridgeKnown = true;
@@ -751,6 +754,14 @@ void setup() {
 }
 
 void loop() {
+  static uint32_t lastStatus = 0;
+  if (millis() - lastStatus >= 1000) {   // one line a second for diagnosing the link from a laptop
+    lastStatus = millis();
+    Telemetry t;
+    memcpy(&t, (const void *)&latest, sizeof(t));
+    Serial.printf("rx good=%u other=%u(len %u) age=%ums link=%u rpm=%u map=%u clt=%d afr=%u\n", (unsigned)rxGood, (unsigned)rxOther,
+                  (unsigned)rxLastLen, (unsigned)(millis() - lastRxMs), t.linkOk, t.rpm, t.mapKpa, t.cltC, t.o2Raw);
+  }
   if (otaActive) {
     ArduinoOTA.handle();
     dns.processNextRequest();

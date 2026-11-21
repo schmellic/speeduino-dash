@@ -28,7 +28,8 @@ static uint8_t seq = 0;
 // Offsets taken from [OutputChannels] in the 61Bug mainController.ini (speeduino 202402).
 // Request is the ini's ochGetCommand: 'r', canId, 0x30, offset (2 bytes), length (2 bytes).
 static bool readSpeeduino(Telemetry &t) {
-  while (SpeeduinoSerial.available()) SpeeduinoSerial.read();
+  // Clear stale bytes, but never loop forever: a noisy or streaming RX line would otherwise freeze the bridge here.
+  for (int i = 0; i < 256 && SpeeduinoSerial.available(); i++) SpeeduinoSerial.read();
   const uint8_t req[] = {'r', 0x00, 0x30, 0x00, 0x00, (uint8_t)REALTIME_LEN, 0x00};
   SpeeduinoSerial.write(req, sizeof(req));
 
@@ -37,6 +38,7 @@ static bool readSpeeduino(Telemetry &t) {
   uint32_t start = millis();
   while (n < REALTIME_LEN + 1 && millis() - start < 100) {
     if (SpeeduinoSerial.available()) buf[n++] = SpeeduinoSerial.read();
+    else delay(1);   // don't spin flat out while the ECU is quiet: the C3 has one core and the radio needs its share
   }
   // Some firmware echoes 'r' before the data; skip it if the length says so.
   const uint8_t *d = buf;
