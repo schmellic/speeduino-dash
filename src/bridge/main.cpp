@@ -33,10 +33,10 @@ static bool readSpeeduino(Telemetry &t) {
   const uint8_t req[] = {'r', 0x00, 0x30, 0x00, 0x00, (uint8_t)REALTIME_LEN, 0x00};
   SpeeduinoSerial.write(req, sizeof(req));
 
-  uint8_t buf[REALTIME_LEN + 1];
+  uint8_t buf[REALTIME_LEN + 2];
   size_t n = 0;
   uint32_t start = millis();
-  while (n < REALTIME_LEN + 1 && millis() - start < 100) {
+  while (n < REALTIME_LEN + 2 && millis() - start < 100) {
     if (SpeeduinoSerial.available()) buf[n++] = SpeeduinoSerial.read();
     else delay(1);   // don't spin flat out while the ECU is quiet: the C3 has one core and the radio needs its share
   }
@@ -45,10 +45,10 @@ static bool readSpeeduino(Telemetry &t) {
   for (size_t i = 0; i < n; i++) Serial.printf(" %02X", buf[i]);
   Serial.println();
 #endif
-  // Some firmware echoes 'r' before the data; skip it if the length says so.
-  const uint8_t *d = buf;
-  if (n == REALTIME_LEN + 1 && buf[0] == 'r') d = buf + 1;
-  else if (n < REALTIME_LEN) return false;
+  // The ECU replies 'r', 0x30 (the command echo) and then the data. Insisting on that header and the full
+  // length means line noise can never look like a good reply.
+  if (n != REALTIME_LEN + 2 || buf[0] != 'r' || buf[1] != 0x30) return false;
+  const uint8_t *d = buf + 2;
 
   t.mapKpa     = d[4] | (d[5] << 8);
   t.iatC       = (int16_t)d[6] - 40;
@@ -199,27 +199,29 @@ void setup() {
 #if !SIMULATE
   SpeeduinoSerial.begin(SPEEDUINO_BAUD, SERIAL_8N1, SPEEDUINO_RX, SPEEDUINO_TX);
 #endif
-#ifdef BRIDGE_BAUDSCAN   // temporary: try common baud rates, show what the ECU sends back
+#ifdef BRIDGE_BAUDSCAN   // temporary: try single-byte commands at two baud rates, show what the ECU sends back
   delay(3000);
-  const uint32_t bauds[] = {9600, 19200, 38400, 57600, 115200, 230400, 250000, 460800, 500000};
+  const uint32_t bauds[] = {115200, 9600};
+  const char cmds[] = {'Q', 'S', 'n', 'N', 'A', 'r'};
   for (;;) {
     for (uint32_t b : bauds) {
       SpeeduinoSerial.updateBaudRate(b);
       delay(50);
-      while (SpeeduinoSerial.available()) SpeeduinoSerial.read();
-#ifdef BRIDGE_ASCAN   // fixed-list protocol: a single 'A' asks for the realtime block
-      const uint8_t req[] = {'A'};
-#else
-      const uint8_t req[] = {'r', 0x00, 0x30, 0x00, 0x00, (uint8_t)REALTIME_LEN, 0x00};
-#endif
-      SpeeduinoSerial.write(req, sizeof(req));
-      uint8_t rb[40];
-      size_t rn = 0;
-      uint32_t t0 = millis();
-      while (rn < sizeof(rb) && millis() - t0 < 150) { if (SpeeduinoSerial.available()) rb[rn++] = SpeeduinoSerial.read(); else delay(1); }
-      Serial.printf("baud %u n=%u:", (unsigned)b, (unsigned)rn);
-      for (size_t i = 0; i < rn && i < 20; i++) Serial.printf(" %02X", rb[i]);
-      Serial.println();
+      for (char c : cmds) {
+        while (SpeeduinoSerial.available()) SpeeduinoSerial.read();
+        if (c == 'r') { const uint8_t r[] = {'r', 0x00, 0x30, 0x00, 0x00, 0x20, 0x00}; SpeeduinoSerial.write(r, sizeof(r)); }
+        else SpeeduinoSerial.write((uint8_t)c);
+        uint8_t rb[40];
+        size_t rn = 0;
+        uint32_t t0 = millis();
+        while (rn < sizeof(rb) && millis() - t0 < 300) { if (SpeeduinoSerial.available()) rb[rn++] = SpeeduinoSerial.read(); else delay(1); }
+        Serial.printf("baud %u cmd %c n=%u:", (unsigned)b, c, (unsigned)rn);
+        for (size_t i = 0; i < rn && i < 20; i++) Serial.printf(" %02X", rb[i]);
+        Serial.print("  |");
+        for (size_t i = 0; i < rn && i < 20; i++) Serial.print(rb[i] >= 32 && rb[i] < 127 ? (char)rb[i] : '.');
+        Serial.println();
+        delay(150);
+      }
     }
     Serial.println("---");
   }

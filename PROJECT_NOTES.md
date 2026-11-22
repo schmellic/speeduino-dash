@@ -277,3 +277,11 @@ Supersedes the cell order and the peak head panel in "Info screen design (2026-1
 - Bridge debug hooks (compile-time flags, all off in `bridge_c3_live`): `BRIDGE_DEBUG` prints the raw reply, `BRIDGE_BAUDSCAN` tries baud rates 9600 to 500000, `BRIDGE_ASCAN` sends `A` instead of `r`. Use with `PLATFORMIO_BUILD_FLAGS="-DBRIDGE_BAUDSCAN=1 -DBRIDGE_DEBUG=1" pio run -e bridge_c3_live -t upload`.
 - Known weakness: the bridge sets `link=1` for any 32 bytes, so line noise shows up as garbage values. Add a plausibility check before this goes in the car.
 - The dash showed no data in the car because the bridge had no reply from the ECU; the dash and the radio link work (see the earlier section).
+
+## ECU link WORKS after firmware update; bridge boot jams it (2026-11-22)
+- ECU updated to speeduino 202501 (2025.01.7). Over the bridge wiring the ECU now answers Q ("speeduino 202501"), S, n, A and the 7-byte `r` request at 115200. Output-channel offsets in the new ini are unchanged (map 4, iat 6, clt 7, batt 9, rpm 14, afrTarget 21, advance 24, tps 25).
+- `r` reply is `'r', 0x30` + data (34 bytes for 32 of data). The parser used to skip only one byte, so it would have read every value one byte off; it now requires the full 2-byte header and length (also stops noise giving link=1).
+- Protocol setting: Generic (ini File). Secondary serial enabled.
+- PROBLEM: whenever the bridge reboots (flash, reset, power-up), the ECU stops answering until the ECU is power-cycled. Reproduced: ECU power-cycle -> link=1; reset only the bridge -> link=0 and stays. Likely cause: TX is on GPIO21 = C3 UART0 TX, where the ROM bootloader prints its boot text at 115200; the ECU reads that as commands (some, like `G`, `r`, `M`, `B`, wait for more bytes) and its secondary-serial handler gets stuck.
+- Fix to do: re-solder bridge TX from GPIO21 to GPIO5 (GPIO5 is quiet at boot) and set SPEEDUINO_TX = 5. Garbage reaching the ECU could also have written to its RAM config: compare the tune with the saved .msq.
+- Lesson: never open or flash the ECU's own USB port (/dev/ttyACM0) to "test" - opening it resets the Mega. The bridge is the Espressif device in /dev/serial/by-id.
