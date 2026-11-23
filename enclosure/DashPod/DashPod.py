@@ -44,12 +44,13 @@ FACE_T, WALL, LID_T = 2.5, 2.4, 2.5
 SCREEN_REAR_H = 3.0               # ASSUMED: solder joints / SD slot behind the screen PCBs
 WIRE_GAP = 8.0                    # slack for the header wires between the screens and the perfboard
 BOARD_COMP_H = 22.0               # ASSUMED: tallest thing on the perfboard (headers with Dupont plugs, ESP32 module, terminal)
-IH = 74.0                         # inside height
+IH = 71.0                         # inside height: the tach PCB (67.5) plus its pocket wall (1.45 each side) sets the minimum, 70.4
 POST_D, LID_PILOT_D, LID_HOLE_D, POST_PILOT_DEPTH = 7.0, 2.8, 3.4, 12.0   # M3 machine screws
 SEAM = 12.0                       # gap between the two PCBs (the two middle lid posts sit in it)
 LIP_TOL, LIP_T, LIP_H = 0.2, 1.6, 2.0
 
 # ---- Shape --------------------------------------------------------------
+PITCH, YAW = 10.0, 5.0            # degrees: the face plate tips up (bottom toward the driver) and turns toward the driver (+X, the tach side); pivot is the top edge at the info end
 TILT = 0.0                       # degrees: the top plane rises this much per mm of depth, so the face tips up toward the driver
 SIDE_TAPER = 0.12                 # each side moves in this much per mm of height going down (wider at the top)
 R_BOTTOM = 16.0                   # outer radius of the bottom corners
@@ -57,7 +58,7 @@ WING_RISE, WING_X0, WING_X1, WING_R = 24.0, 67.4, 96.0, 20.0   # WING_X0 gives a
 R_FACE = 3.0                      # rounded front edge (not on the top edge)
 SWEEP_START = 14.0                # depth where the underside starts to curve up
 SWEEP_RISE = 16.0                 # how far the underside has risen by the lid
-BOARD_CY = 4.0                    # perfboard centre height (the lid is shorter than the face, so it sits high)
+BOARD_CY = 5.0                    # perfboard centre height (the lid is shorter than the face, so it sits high)
 
 # ---- Derived layout -----------------------------------------------------
 H = IH + 2 * WALL
@@ -65,6 +66,16 @@ YB = -H / 2
 Z_TOP = math.ceil(FACE_T + max(GLASS_H + PCB_T, INFO_GLASS_H + INFO_PCB_T) + SCREEN_REAR_H + WIRE_GAP + STANDOFF + PERF_T + BOARD_COMP_H)   # face to lid seat
 TAN_T = math.tan(math.radians(TILT))
 K = math.sqrt(1 + SIDE_TAPER ** 2)
+PIV_X, PIV_Y = -(TACH_W + SEAM + INFO_L) / 2, H / 2     # tilt pivot: top edge, info-screen end
+
+
+def tilt_pt(x, y, z):
+    """Where a point of the flat face frame ends up after the pitch (about X) then the yaw (about Y)."""
+    rx, ry, rz = x - PIV_X, y - PIV_Y, z
+    a, b = math.radians(PITCH), math.radians(YAW)
+    y1, z1 = ry * math.cos(a) - rz * math.sin(a), ry * math.sin(a) + rz * math.cos(a)
+    return (PIV_X + rx * math.cos(b) + z1 * math.sin(b), PIV_Y + y1, -rx * math.sin(b) + z1 * math.cos(b))
+
 LW = TACH_W + SEAM + INFO_L
 TACH_CX = LW / 2 - TACH_W / 2
 INFO_XMIN, INFO_XMAX = -LW / 2, -LW / 2 + INFO_L
@@ -197,6 +208,7 @@ XOFF = 2 * (HB + SIDE_TAPER * (Y_EXT - YB)) + 15.0
 _in_hw = lambda y: HB + SIDE_TAPER * (y - YB) - WALL * K
 BOARD_CX = 0.0                    # perfboard centred across the pod; its terminal end faces +X (door side)
 HW_TOP = HB + SIDE_TAPER * H
+ZF = math.ceil(-min(tilt_pt(x, y, 0.0)[2] for x in (-HW_TOP - 10, HW_TOP + 10) for y in (YB, Y_EXT))) + 3 if (PITCH or YAW) else 0   # how far the blank extends in front of z=0 before the tilted face plane trims it
 
 
 def mm(v):
@@ -314,9 +326,9 @@ def cavity_body(comp):
     r = SW_R - WALL
     S, Mp, E = sweep_pt(r, 0.0), sweep_pt(r, SW_PHI / 2), sweep_pt(r, SW_PHI)
     top = H / 2 + 50
-    za, zb = FACE_T - 1.0, Z_TOP + 5
+    za, zb = (-ZF if ZF else FACE_T) - 1.0, Z_TOP + 5
     Vi, Ri = cavity_outline()
-    plan = extrude_outline(comp, Vi, Ri, FACE_T, Z_TOP + 1, NEW).bodies.item(0)
+    plan = extrude_outline(comp, Vi, Ri, -ZF if ZF else FACE_T, Z_TOP + 1, NEW).bodies.item(0)
     prof = yz_region(comp, [('L', (S[0], za), S), ('A', S, Mp, E), ('L', E, (E[0], zb)), ('L', (E[0], zb), (top, zb)),
                             ('L', (top, zb), (top, za)), ('L', (top, za), (S[0], za))], NEW).bodies.item(0)
     combine(comp, plan, prof, INTERSECT)
@@ -340,21 +352,35 @@ def round_front_edge(comp, body):
     comp.features.filletFeatures.add(inp)
 
 
-def build_shell(comp):
-    V, R = outer_outline(YB, R_BOTTOM)
-    shell = extrude_outline(comp, V, R, 0, Z_TOP, NEW).bodies.item(0)
-    combine(comp, shell, cavity_body(comp), CUT)
-    for x, y in POSTS:
-        prism(comp, x - POST_D / 2, y - POST_D / 2, x + POST_D / 2, H / 2 - WALL + 0.6, POST_Z0, Z_TOP, JOIN)
-    if TILT > 0:
-        cut_top_slope(comp)
-    cut_underside(comp)
-    for x, y in POSTS:
-        cyl(comp, x, y, LID_PILOT_D, Z_TOP - POST_PILOT_DEPTH, Z_TOP + 1, CUT)
-    try:
-        round_front_edge(comp, comp.bRepBodies.item(0))
-    except Exception:
-        print('front edge fillet skipped')
+def half_space(comp, w):
+    """A huge block in front of the flat plane z = w (flat frame; tilted later with the face)."""
+    return prism(comp, -600, -600, 600, 600, -500, w, NEW).bodies.item(0)
+
+
+def tilt_bodies(comp, bodies):
+    """Rotate bodies about the pivot: pitch about X, then yaw about Y (same order as tilt_pt)."""
+    for ang, axis in ((PITCH, (1, 0, 0)), (YAW, (0, 1, 0))):
+        if not ang:
+            continue
+        m = adsk.core.Matrix3D.create()
+        m.setToRotation(math.radians(ang), adsk.core.Vector3D.create(*axis), adsk.core.Point3D.create(mm(PIV_X), mm(PIV_Y), 0))
+        col = adsk.core.ObjectCollection.create()
+        for b in bodies:
+            col.add(b)
+        inp = comp.features.moveFeatures.createInput2(col)
+        inp.defineAsFreeMove(m)
+        comp.features.moveFeatures.add(inp)
+
+
+def face_parts(comp):
+    """Everything that sits on the face plate, built flat (face at z=0) so it can be tilted as one piece: a thin base under
+    the pockets, the pocket walls, the screw posts, plus separate tool bodies for the two windows."""
+    g = POCKET_CLR + POCKET_WALL
+    yb = TACH_PCB_CY - TACH_H / 2
+    z0 = 0.5     # starts behind the outer face so it stays inside the shell plate after tilting
+    feat = cyl(comp, TACH_CX, YC, TACH_W + 2 * g, z0, FACE_T, NEW).bodies.item(0)
+    prism(comp, TACH_CX - TACH_TAIL_W / 2 - g, yb - g, TACH_CX + TACH_TAIL_W / 2 + g, YC, z0, FACE_T, JOIN)
+    info = prism(comp, INFO_CX - INFO_L / 2 - g, YC - INFO_H / 2 - g, INFO_CX + INFO_L / 2 + g, YC + INFO_H / 2 + g, z0, FACE_T, NEW).bodies.item(0)   # apart from the tach base
     tach_pocket(comp, FACE_T - 0.1, FACE_T + GLASS_H + PCB_T)
     ring(comp, INFO_CX, YC, INFO_L, INFO_H, FACE_T - 0.1, FACE_T + INFO_GLASS_H + INFO_PCB_T, JOIN)
     # tach screw posts: the PCB rests on them (glass height) and an M2 screw goes through its hole from behind
@@ -368,9 +394,43 @@ def build_shell(comp):
             px, py = INFO_CX + sx * (INFO_L / 2 - INFO_HOLE_INSET), YC + sy * (INFO_H / 2 - INFO_HOLE_INSET)
             cyl(comp, px, py, INFO_POST_D, FACE_T - 0.1, FACE_T + INFO_GLASS_H, JOIN)
             cyl(comp, px, py, INFO_PILOT_D, FACE_T + INFO_GLASS_H - SCREEN_PILOT_DEPTH, FACE_T + INFO_GLASS_H + 0.1, CUT)
-    cyl(comp, TACH_CX, YC, TACH_WIN_D, -1, FACE_T + 0.1, CUT)
-    prism(comp, INFO_WIN_CX - INFO_WIN_W / 2, YC - INFO_WIN_H / 2, INFO_WIN_CX + INFO_WIN_W / 2,
-          YC + INFO_WIN_H / 2, -1, FACE_T + 0.1, CUT)
+    tools = [cyl(comp, TACH_CX, YC, TACH_WIN_D, -1, FACE_T + 0.1, NEW).bodies.item(0),
+             prism(comp, INFO_WIN_CX - INFO_WIN_W / 2, YC - INFO_WIN_H / 2, INFO_WIN_CX + INFO_WIN_W / 2,
+                   YC + INFO_WIN_H / 2, -1, FACE_T + 0.1, NEW).bodies.item(0)]
+    return [feat, info], tools
+
+
+def build_shell(comp):
+    feat, tools = face_parts(comp)
+    parts = feat + tools
+    cut_out = cut_in = None
+    if ZF:
+        cut_out, cut_in = half_space(comp, 0.0), half_space(comp, FACE_T)
+        parts += [cut_out, cut_in]
+    tilt_bodies(comp, parts)
+    V, R = outer_outline(YB, R_BOTTOM)
+    shell = extrude_outline(comp, V, R, -ZF, Z_TOP, NEW).bodies.item(0)
+    cav = cavity_body(comp)
+    if ZF:
+        combine(comp, shell, cut_out, CUT)
+        combine(comp, cav, cut_in, CUT)
+    combine(comp, shell, cav, CUT)
+    for f in feat:
+        combine(comp, shell, f, JOIN)
+    for t in tools:
+        combine(comp, shell, t, CUT)
+    for x, y in POSTS:
+        prism(comp, x - POST_D / 2, y - POST_D / 2, x + POST_D / 2, H / 2 - WALL + 0.6, POST_Z0, Z_TOP, JOIN)
+    if TILT > 0:
+        cut_top_slope(comp)
+    cut_underside(comp)
+    for x, y in POSTS:
+        cyl(comp, x, y, LID_PILOT_D, Z_TOP - POST_PILOT_DEPTH, Z_TOP + 1, CUT)
+    if not ZF:
+        try:
+            round_front_edge(comp, comp.bRepBodies.item(0))
+        except Exception:
+            print('front edge fillet skipped')
 
 
 def build_lid(comp):
