@@ -1,0 +1,8 @@
+{
+  "autodeskProduct": "Fusion",
+  "type": "script",
+  "author": "schmellic",
+  "description": { "": "Under-dash pod: round tach, info screen and dash ESP32 board" },
+  "supportedOS": "windows|mac",
+  "editEnabled": true
+}

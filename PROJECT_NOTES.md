@@ -207,8 +207,25 @@ The bridge C3 (mounted in the car) has no OTA yet; it would need the same treatm
   (about 86 x 50 mm outline; measure the active area and mounting holes), and the classic ESP32 dash board (CH340 dev board, USB port must stay reachable for flashing).
 - Both screens share SCK/MOSI/DC, so they want a common wiring rail: 3V3, GND, GPIO18, GPIO23, GPIO21 (see Wiring). Allow room for a small perfboard or a PCB.
 - OTA exists, so USB access is only needed for the first flash or recovery. Power 12 V -> 5 V buck (same type as the bridge).
-- Location not decided (2026-11-12): glovebox area, or under the dash. Under-dash would need a bracket instead of a flush mount; measure the real opening and depth. PETG for heat. Remember the tach ring is 360 x 360 px on a round 2.1" panel.
+- Location decided 2026-11-23: under-dash pod (see "Dash pod enclosure"). Earlier note: glovebox area, or under the dash. Under-dash would need a bracket instead of a flush mount; measure the real opening and depth. PETG for heat. Remember the tach ring is 360 x 360 px on a round 2.1" panel.
 - The firmware, thresholds and layout are settled enough to design around; only the physical mount is open.
+
+## Dash pod enclosure (draft v1, 2026-11-23, not printed yet)
+Decisions (user): an under-dash pod screwed to the dash lower lip (no existing gauge plate or gauges in the car), tach and info screen side by side,
+everything inside (both screens, the dash perfboard, 12 V + fuel sender cable out of the box). Reference panels (data only, not used): Cool Air VW JOPEX AC8573034 and
+Buzzbug 00-3034-0 (plastic, tapered box that bolts under the ashtray area: 279 mm wide at the top, 229 mm at the bottom, 89-121 mm high, 89 mm deep overall);
+the pod is far smaller than that envelope.
+- `enclosure/DashPod/DashPod.py` (+ `.manifest`): Fusion script, constants at the top. STLs: `enclosure/stl/dash_pod_shell.stl`, `dash_pod_lid.stl` (regenerate after any change).
+- Size: shell 165.5 x 77.8 x 42.5 mm (+ two 16 mm mounting ears, 197.5 mm over the ears) and a 2.5 mm lid. Face plate 2.5 mm, walls 2.4 mm.
+- Layout seen from the driver: tach on the left, info screen on the right (swap by mirroring the X layout). Tach opening 53.4 mm; info opening 59.6 x 45 mm; each PCB has a locating wall
+  (0.25 mm clearance) behind the face plate. Four corner posts take M3 machine screws (2.8 mm pilot) through the lid. The perfboard (70 mm along X) sits on four M2 standoffs on the lid,
+  component side forward, with its USB-C and the 3-way terminal facing the driver's-right end wall, where a USB slot (14 x 8) and a terminal window (19 x 9) are cut.
+- Mounting: two flat ears on the top with a 4.5 x 12 mm slot each, for screws up into the dash lip. The pod face is vertical; no tilt yet.
+- ASSUMED, to be measured before printing: tach circle centre (assumed on the PCB's centreline, 29.6 mm from the top), tach and info glass height above the PCB (2.5 mm),
+  info active-area centre (34.6 mm from the tach-side end of the PCB), screen mounting holes (NOT modelled: the PCBs are held only by the locating walls, so use tape/glue
+  or add screw posts once the holes are known), perfboard corner holes (2.5 mm in), USB-C height above the perfboard (5.5 mm), terminal position (from the photo), depth needed behind
+  the screens (INNER_D 40 mm), and the dash lip geometry for the ears. Print the shell first as a fit check.
+- Print: shell face-down, lid plate-down, no supports, PETG for the car (PLA is fine for a bench fit check).
 
 ## Bridge update over ESP-NOW (working, verified 2026-11-17)
 
