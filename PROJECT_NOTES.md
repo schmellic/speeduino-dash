@@ -337,3 +337,6 @@ User measured: four 3 mm holes, 3 mm in from each edge (so 80 x 44 mm apart). Ta
 
 ### Ears removed (2026-11-23)
 User: the side mounting ears are pointless (nothing for them to reach). Removed from DashPod.py; STLs re-exported (shell now 208.7 x 102.8 x 46 mm). How the pod fixes to the car is OPEN. Tach retention: the PCB is held only by the two tail screws plus the pocket walls; a top retainer is proposed, not built.
+
+### Terminal side and cable hole (2026-11-23)
+Car is left-hand drive. User wants the terminal block on the door side (driver's left, +X, tach side), hidden, and a small round hole for the cable in the rear instead of a wall window. DashPod.py: the dash perfboard moved to the +X end and turned 180 deg in its plane (USB end toward that wall; components still face the screens, board still on the lid standoffs, so lifting the lid out gives access to everything); the terminal ends up at the bottom, 15.8 mm below the board-centre height. The end-wall terminal window is gone. The lid has an 8 mm cable hole beside the terminal, 7 mm beyond the board end (BOARD_END_GAP is now 14 mm). Earlier I wrongly said the terminal screws would be unreachable: they are reachable with the lid out. Terminal position still comes from docs/dash_board_labelled.jpg, not calipers.
