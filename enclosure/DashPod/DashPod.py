@@ -17,6 +17,7 @@ import adsk.fusion
 
 # ---- Screens ------------------------------------------------------------
 TACH_W, TACH_H = 59.24, 67.47     # round tach PCB (header tail at the bottom)
+TACH_TAIL_W = 30.5                # width of the narrow tail with the header pins (measured by the user)
 TACH_C_FROM_TOP = TACH_W / 2      # ASSUMED: circle centre from the PCB's top edge
 TACH_WIN_D = 53.4                 # opening (active area is 52.9)
 INFO_L, INFO_H = 86.0, 50.0       # 2.8" ILI9341 PCB, header end on the outer (info) side
@@ -256,6 +257,17 @@ def ring(comp, cx, cy, w, h, z0, z1, op):
         prism(comp, p, q, r, s, z0, z1, op)
 
 
+def tach_pocket(comp, z0, z1):
+    """Locating wall round the real tach PCB outline: a disc (the round part) plus the narrow tail down to the header end."""
+    a, t = POCKET_CLR, POCKET_WALL
+    yb = TACH_PCB_CY - TACH_H / 2
+    for g in (a + t, ):
+        cyl(comp, TACH_CX, YC, TACH_W + 2 * g, z0, z1, JOIN)
+        prism(comp, TACH_CX - TACH_TAIL_W / 2 - g, yb - g, TACH_CX + TACH_TAIL_W / 2 + g, YC, z0, z1, JOIN)
+    cyl(comp, TACH_CX, YC, TACH_W + 2 * a, FACE_T, z1 + 0.5, CUT)
+    prism(comp, TACH_CX - TACH_TAIL_W / 2 - a, yb - a, TACH_CX + TACH_TAIL_W / 2 + a, YC, FACE_T, z1 + 0.5, CUT)
+
+
 def yz_region(comp, segs, op):
     """Extrude a region drawn in the side (YZ) plane across the whole width. segs: ('L', (y,z), (y,z)) or ('A', p, mid, q)."""
     sk = comp.sketches.add(comp.yZConstructionPlane)
@@ -343,7 +355,7 @@ def build_shell(comp):
     except Exception:
         print('front edge fillet skipped')
     ph = GLASS_H + PCB_T
-    ring(comp, TACH_CX, TACH_PCB_CY, TACH_W, TACH_H, FACE_T - 0.1, FACE_T + ph, JOIN)
+    tach_pocket(comp, FACE_T - 0.1, FACE_T + ph)
     ring(comp, INFO_CX, YC, INFO_L, INFO_H, FACE_T - 0.1, FACE_T + ph, JOIN)
     # tach screw posts: the PCB rests on them (glass height) and an M2 screw goes through its hole from behind
     thy = TACH_PCB_CY - TACH_H / 2 + TACH_HOLE_UP
