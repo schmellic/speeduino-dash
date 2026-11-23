@@ -26,7 +26,8 @@ INFO_WIN_W, INFO_WIN_H = 59.6, 45.0   # opening (active area is 57.6 x 43.2): AS
 TACH_HOLE_UP, TACH_HOLE_SPAN = 8.0, 23.88   # tach mounting holes: 8 mm up from the header end (measured), 23.88 mm apart; ASSUMED centred across the width
 SCREEN_POST_D, SCREEN_PILOT_D, SCREEN_PILOT_DEPTH = 5.0, 1.9, 3.2   # M2 x 4 mm machine screws from behind into posts on the face plate
 INFO_HOLE_INSET, INFO_POST_D, INFO_PILOT_D = 3.0, 4.6, 2.1   # info screen: four 3 mm holes, 3 mm in from each edge (measured); M2.5 x 4 screws, 2.1 mm pilot
-GLASS_H, PCB_T = 2.3, 1.3         # measured: PCB + glass 3.6 mm, PCB 1.3 mm (both screens assumed alike)
+GLASS_H, PCB_T = 2.3, 1.3         # tach: measured, PCB + glass 3.6 mm, PCB 1.3 mm
+INFO_GLASS_H, INFO_PCB_T = 3.0, 1.6   # info: measured, PCB + glass 4.6 mm, PCB 1.6 mm
 PERF_T = 1.6                      # dash perfboard thickness (assumed)
 POCKET_CLR, POCKET_WALL = 0.25, 1.2   # locating wall round each PCB
 # ---- Dash perfboard (50 x 70 mm, measured from the photo) ---------------
@@ -61,7 +62,7 @@ BOARD_CY = 4.0                    # perfboard centre height (the lid is shorter 
 # ---- Derived layout -----------------------------------------------------
 H = IH + 2 * WALL
 YB = -H / 2
-Z_TOP = math.ceil(FACE_T + GLASS_H + PCB_T + SCREEN_REAR_H + WIRE_GAP + STANDOFF + PERF_T + BOARD_COMP_H)   # face to lid seat
+Z_TOP = math.ceil(FACE_T + max(GLASS_H + PCB_T, INFO_GLASS_H + INFO_PCB_T) + SCREEN_REAR_H + WIRE_GAP + STANDOFF + PERF_T + BOARD_COMP_H)   # face to lid seat
 TAN_T = math.tan(math.radians(TILT))
 K = math.sqrt(1 + SIDE_TAPER ** 2)
 LW = TACH_W + SEAM + INFO_L
@@ -74,7 +75,7 @@ YC = (TACH_H - TACH_C_FROM_TOP) - (IH / 2 - 1.5)     # circle / info window cent
 TACH_PCB_CY = YC + (TACH_C_FROM_TOP - (TACH_H - TACH_C_FROM_TOP)) / 2
 Y_EXT = H / 2 + WING_RISE                            # top of the end wings
 PY = IH / 2 - POST_D / 2
-POST_Z0 = FACE_T + GLASS_H + PCB_T + 0.5             # posts start behind the screens and hang from the ceiling
+POST_Z0 = FACE_T + max(GLASS_H + PCB_T, INFO_GLASS_H + INFO_PCB_T) + 0.5             # posts start behind the screens and hang from the ceiling
 _px0, _px1 = INFO_XMIN + POST_D / 2, LW / 2 - POST_D / 2
 POSTS = [(_px0 + (_px1 - _px0) * i / 3.0, PY) for i in range(4)]
 # underside sweep: a circular arc, tangent to the flat bottom at SWEEP_START, rising SWEEP_RISE by the lid
@@ -354,9 +355,8 @@ def build_shell(comp):
         round_front_edge(comp, comp.bRepBodies.item(0))
     except Exception:
         print('front edge fillet skipped')
-    ph = GLASS_H + PCB_T
-    tach_pocket(comp, FACE_T - 0.1, FACE_T + ph)
-    ring(comp, INFO_CX, YC, INFO_L, INFO_H, FACE_T - 0.1, FACE_T + ph, JOIN)
+    tach_pocket(comp, FACE_T - 0.1, FACE_T + GLASS_H + PCB_T)
+    ring(comp, INFO_CX, YC, INFO_L, INFO_H, FACE_T - 0.1, FACE_T + INFO_GLASS_H + INFO_PCB_T, JOIN)
     # tach screw posts: the PCB rests on them (glass height) and an M2 screw goes through its hole from behind
     thy = TACH_PCB_CY - TACH_H / 2 + TACH_HOLE_UP
     for sx in (-1, 1):
@@ -366,8 +366,8 @@ def build_shell(comp):
     for sx in (-1, 1):
         for sy in (-1, 1):
             px, py = INFO_CX + sx * (INFO_L / 2 - INFO_HOLE_INSET), YC + sy * (INFO_H / 2 - INFO_HOLE_INSET)
-            cyl(comp, px, py, INFO_POST_D, FACE_T - 0.1, FACE_T + GLASS_H, JOIN)
-            cyl(comp, px, py, INFO_PILOT_D, FACE_T + GLASS_H - SCREEN_PILOT_DEPTH, FACE_T + GLASS_H + 0.1, CUT)
+            cyl(comp, px, py, INFO_POST_D, FACE_T - 0.1, FACE_T + INFO_GLASS_H, JOIN)
+            cyl(comp, px, py, INFO_PILOT_D, FACE_T + INFO_GLASS_H - SCREEN_PILOT_DEPTH, FACE_T + INFO_GLASS_H + 0.1, CUT)
     cyl(comp, TACH_CX, YC, TACH_WIN_D, -1, FACE_T + 0.1, CUT)
     prism(comp, INFO_WIN_CX - INFO_WIN_W / 2, YC - INFO_WIN_H / 2, INFO_WIN_CX + INFO_WIN_W / 2,
           YC + INFO_WIN_H / 2, -1, FACE_T + 0.1, CUT)
