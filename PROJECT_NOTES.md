@@ -141,9 +141,8 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
   C3 end) in the low-Y side wall, so the wires go straight into the blocks. Board orientation in the box: B end at +X, terminal A on the low-Y
   side, C3's USB-C toward the high-Y side. The terminal screws face up, so the lid still has to come off to tighten them.
   No USB slot, no vents.
-- Status: built; checked by point-containment tests in Fusion (standoffs, pilot holes, wire holes, posts, lid holes) and body volumes, and the
-  exported STLs were rendered in matplotlib (Fusion's own viewport screenshots come out washed out under Wine). Not saved, no STL committed,
-  not printed.
+- Status: built and printed; checked by point-containment tests in Fusion (standoffs, pilot holes, wire windows, lid) and body volumes, and the
+  exported STLs were rendered in matplotlib (Fusion's own viewport screenshots come out washed out under Wine). The Fusion document is not saved; the script is the source of truth.
 - Measured by the user: tallest part is about 12 mm above the board, so `COMP_H = 14` stays (2 mm headroom).
 - Wall thicknesses are tuned for a 0.4 mm nozzle at 0.2 mm layers (multiples of the line width): walls and lid 2.0 mm (5 lines), floor 1.6 mm
   (8 layers), screw columns have a 2.0-2.2 mm wall around the pilot holes. Print with at least 3-4 perimeters and about 25% gyroid infill;
@@ -155,8 +154,11 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
   wire up to about 2.5 mm^2 with insulation) and B's entry height (assumed the same as A's). Terminal B's window clears the nearby lid post.
 - Material: the user only has PLA for now. PLA softens at about 55-60 C and a parked car's cabin can exceed that, so treat a PLA box as a fit test
   and print the car version in PETG (or ASA/ABS) before it lives in the car. Same STLs, same settings; the walls were tuned for a 0.4 mm nozzle.
-- STLs of the current design (base and lid) are in `enclosure/stl/` (exported from Fusion with the medium mesh setting). Not printed yet.
+- STLs of the current design (base and lid) are in `enclosure/stl/` (exported from Fusion with the medium mesh setting).
   Regenerate them after any change to `BridgeBox.py`.
+- PRINTED in PLA on a Bambu P1S and reported fine by the user (2026-11-23): no changes needed to the model (details such as the exact lid
+  tightness were not recorded; if it is loose or tight later, tune `LIP_TOL`). It is a PLA fit-test box: print the car version in PETG. Do not close
+  the lid on the bridge board until the TX wire move (GPIO21 -> GPIO5, see the 2026-11-22 section) is done and the ECU link is solid.
 - The wire windows are open slots: use sleeving or sealant around the wires if dust or moisture is a concern; the box is not sealed against water.
 - The earlier OpenSCAD version was removed (it modelled a bare C3 plus a separate buck, and was never rendered).
 
@@ -177,7 +179,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
    bridge wires to the Speeduino (D14 -> TX3 in screw, D15 -> RX3 out screw, J6 GND -> 12 V - screw; run the D21 continuity check first). Then test in the car with
    `bridge_c3_live` on the C3 and `display_rx` on the classic ESP32 plugged into a laptop (it prints `no data` until real values arrive).
    TunerStudio needs Secondary Serial IO enabled at 115200, burned, then power-cycled. Then verify the ECU byte offsets and try `dash`.
-4. Measure the bridge board height, update `BridgeBox.py` if needed, export STLs and print the box (PETG). Close the lid only after the in-car test.
+4. Bridge box: PLA test print done and fine (2026-11-23). Remaining: reprint in PETG for the car, and close the lid only after the TX wire fix and the in-car test.
 5. Measure the glovebox and the real screens, then design the 3D-printed mount.
 
 ## Info screen design (2026-11-12)
