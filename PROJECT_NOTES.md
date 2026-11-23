@@ -346,3 +346,6 @@ The tach pocket was a rectangle (59.24 x 67.47). It is now the board's real shap
 
 ### Board central, cable hole at the top (2026-11-23)
 User: put the cable hole at the top and centre the dash perfboard. DashPod.py: BOARD_CX = 0 (board centred across the pod), the lid's 8 mm cable hole is at the top on the door side, 50 mm from centre and 28 mm up (WIRE_HOLE_X / WIRE_HOLE_Y), beside the board's end and below the lid screw posts; wires run inside from the terminal. STLs re-exported. Not printed.
+
+### Tach glass size (2026-11-23)
+User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and measured the tach screen itself (the glass disc) at 55.5 mm. The window stays 53.4 mm (about 1 mm of glass lip all round behind it). The screw posts clear the glass by about 1.9 mm. No script change. Still unmeasured: glass height above the PCB, overall thickness, info glass offset.
