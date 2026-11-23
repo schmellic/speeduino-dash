@@ -55,6 +55,7 @@ TILT = 0.0                       # degrees: the top plane rises this much per mm
 SIDE_TAPER = 0.12                 # each side moves in this much per mm of height going down (wider at the top)
 R_BOTTOM = 16.0                   # outer radius of the bottom corners
 WING_RISE, WING_X0, WING_X1, WING_R = 24.0, 67.4, 96.0, 20.0   # WING_X0 gives a 40 deg wing (test piece fit, 2026-11-23); the top edge curves up at both ends to follow the dash lip
+RIV_D, RIV_X, RIV_Z0, RIV_Z1 = 4.5, 50.0, 16.0, 34.0   # roof bolt slots for rivnuts in the dash lip (M4 clearance, x each side, along the depth): ASSUMED, check against the dash
 R_FACE = 3.0                      # rounded front edge (not on the top edge)
 SWEEP_START = 14.0                # depth where the underside starts to curve up
 SWEEP_RISE = 16.0                 # how far the underside has risen by the lid
@@ -335,20 +336,19 @@ def cavity_body(comp):
     return plan
 
 
-def round_front_edge(comp, body):
+def round_front_edge(comp, body, radius=None):
+    """Round every edge of the flat front face (called on the solid blank, before the cavity is cut)."""
     face = None
     for f in body.faces:
         if f.geometry.surfaceType == adsk.core.SurfaceTypes.PlaneSurfaceType:
             n = f.geometry.normal
-            if abs(n.z + 1) < 1e-6 and abs(f.boundingBox.minPoint.z) < 1e-6:
+            if abs(abs(n.z) - 1) < 1e-6 and abs(f.boundingBox.minPoint.z) < 1e-6 and abs(f.boundingBox.maxPoint.z) < 1e-6:
                 face = f
     edges = adsk.core.ObjectCollection.create()
     for e in face.edges:
-        bb = e.boundingBox
-        if (bb.minPoint.y + bb.maxPoint.y) / 2 * 10 < H / 2 - 1.0 or (bb.maxPoint.y - bb.minPoint.y) * 10 > 1.0:
-            edges.add(e)
+        edges.add(e)
     inp = comp.features.filletFeatures.createInput()
-    inp.addConstantRadiusEdgeSet(edges, adsk.core.ValueInput.createByReal(mm(R_FACE)), True)
+    inp.addConstantRadiusEdgeSet(edges, adsk.core.ValueInput.createByReal(mm(radius or R_FACE)), True)
     comp.features.filletFeatures.add(inp)
 
 
@@ -400,6 +400,26 @@ def face_parts(comp):
     return [feat, info], tools
 
 
+def roof_slots(comp):
+    """Two slots through the roof (the flat top against the dash), along the depth, for bolts up into rivnuts."""
+    yc = H / 2 - WALL / 2
+    pl = comp.constructionPlanes
+    pin = pl.createInput()
+    pin.setByOffset(comp.xZConstructionPlane, adsk.core.ValueInput.createByReal(mm(yc)))
+    plane = pl.add(pin)
+    for sx in (-1, 1):
+        sk = comp.sketches.add(plane)
+        sp = lambda x, z: sk.modelToSketchSpace(adsk.core.Point3D.create(mm(sx * RIV_X + x), mm(yc), mm(z)))
+        r = RIV_D / 2
+        sk.sketchCurves.sketchCircles.addByCenterRadius(sp(0, RIV_Z0), mm(r))
+        sk.sketchCurves.sketchCircles.addByCenterRadius(sp(0, RIV_Z1), mm(r))
+        sk.sketchCurves.sketchLines.addTwoPointRectangle(sp(-r, RIV_Z0), sp(r, RIV_Z1))
+        for prof in list(sk.profiles):
+            inp = comp.features.extrudeFeatures.createInput(prof, CUT)
+            inp.setSymmetricExtent(adsk.core.ValueInput.createByReal(mm(WALL + 4)), True)
+            comp.features.extrudeFeatures.add(inp)
+
+
 def build_shell(comp):
     feat, tools = face_parts(comp)
     parts = feat + tools
@@ -410,6 +430,11 @@ def build_shell(comp):
     tilt_bodies(comp, parts)
     V, R = outer_outline(YB, R_BOTTOM)
     shell = extrude_outline(comp, V, R, -ZF, Z_TOP, NEW).bodies.item(0)
+    if not ZF:
+        try:
+            round_front_edge(comp, shell)
+        except Exception:
+            print('front edge fillet skipped')
     cav = cavity_body(comp)
     if ZF:
         combine(comp, shell, cut_out, CUT)
@@ -426,11 +451,7 @@ def build_shell(comp):
     cut_underside(comp)
     for x, y in POSTS:
         cyl(comp, x, y, LID_PILOT_D, Z_TOP - POST_PILOT_DEPTH, Z_TOP + 1, CUT)
-    if not ZF:
-        try:
-            round_front_edge(comp, comp.bRepBodies.item(0))
-        except Exception:
-            print('front edge fillet skipped')
+    roof_slots(comp)
 
 
 def build_lid(comp):
