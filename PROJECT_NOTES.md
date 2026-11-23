@@ -229,7 +229,7 @@ shape of moulded under-dash gauge panels (tapered, rounded, sloped). Style refer
 - Layout seen from the driver: tach on the left, info screen on the right. Tach opening 53.4 mm; info opening 59.6 x 45 mm; each PCB has a locating wall (0.25 mm clearance) behind the face plate.
   Four M3 machine-screw posts (2.8 mm pilot) sit beside and between the screens. The perfboard (70 mm along X) sits on four M2 standoffs on the lid, component side forward, with its USB-C
   and the 3-way terminal facing the driver's-right end wall, where a USB slot (14 x 8) and a terminal window (19 x 9) are cut.
-- Top-edge fit template (2026-11-23): `enclosure/stl/dash_top_edge_template.stl` (208.7 x 102.8 x 3 mm, a 12 mm wide frame of the pod's face outline, centre notch on the top edge; built by `build_template()` in `DashPod.py`).
+- Top-edge fit template (2026-11-23): `enclosure/stl/dash_top_edge_template.stl` (208.7 x 38 x 3 mm, only the top 14 mm band of the flat middle plus both end wings of the face outline, centre notch on the top edge, about 10.5 cm3; built by `build_template()` in `DashPod.py`).
   Print it flat and hold it against the dash lip: the top edge and the end wings should follow the lip. This is the biggest unknown, so record where it differs (gap, wing too tall/short or too far in/out) before printing the pod.
 - ASSUMED, to be measured before printing: tach circle centre (assumed on the PCB's centreline, 29.6 mm from the top), glass height above the PCB (2.5 mm), info active-area centre
   (34.6 mm from the tach-side end of the PCB), screen mounting holes (NOT modelled: the PCBs are held only by the locating walls, so use tape/glue or add screw posts once the holes are known),

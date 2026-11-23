@@ -404,15 +404,15 @@ def build_all():
     return '\n'.join(lines)
 
 
-def build_template():
-    """A 3 mm full-size cut-out of the face outline (a 12 mm wide frame), to hold against the dash lip and check the top edge."""
+def build_template(band=14.0):
+    """A 3 mm full-size cut-out of just the top edge of the face outline (the top `band` mm of the flat middle plus the
+    end wings), to hold against the dash lip and check the shape before printing the whole pod."""
     app = adsk.core.Application.get()
     app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)
     comp = adsk.fusion.Design.cast(app.activeProduct).rootComponent
     V, R = outer_outline(YB, R_BOTTOM)
     extrude_outline(comp, V, R, 0, 3.0, NEW)
-    Vi, Ri = outline(HB, 12.0, YB + 12.0, H / 2 - 12.0, R_BOTTOM - 12.0, 2.0)
-    extrude_outline(comp, Vi, Ri, -1.0, 4.0, CUT)
+    prism(comp, -300, -300, 300, H / 2 - band, -1.0, 4.0, CUT)                 # everything below the band
     prism(comp, -0.75, H / 2 - 6.0, 0.75, H / 2 + 1.0, -1.0, 4.0, CUT)     # centre mark on the top edge
     b = comp.bRepBodies.item(0)
     bb = b.boundingBox
