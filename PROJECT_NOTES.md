@@ -377,3 +377,5 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 
 ### Info screen picture position measured (2026-11-23)
 - User measured on the 86 x 50 mm info board: picture starts 8 mm from the tach-side end, stops 15 mm from the header end, about 2 mm from the top and bottom edges. So the picture is 63 x 46 mm and its centre is 39.5 mm from the tach-side end (was assumed 34.6): `INFO_ACTIVE_FROM_FAR` = 39.5; vertically centred. The window is still 59.6 x 45 (datasheet active area 57.6 x 43.2 plus 2 mm): the measured 63 x 46 probably includes the black border of the picture. If the lit pixels really are 63 wide, widen `INFO_WIN_W`. The window clears all four corner posts. STLs rebuilt.
+
+- Correction (user, later): the lit area is 9 mm from the tach-side end and 15 mm from the header end (62 mm wide), so its centre is 40.0 mm from the tach-side end: `INFO_ACTIVE_FROM_FAR` = 40.0 (was 39.5). The user agrees with the datasheet for the active area (57.6 x 43.2), so the window stays 59.6 x 45 mm (about 1.2 mm of the lit border is hidden each side). STLs rebuilt.
