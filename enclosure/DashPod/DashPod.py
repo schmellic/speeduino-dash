@@ -44,9 +44,10 @@ EAR_L, EAR_T, EAR_Z0, EAR_Z1 = 16.0, 4.0, 6.0, 32.0   # mounting ears on the top
 EAR_SLOT_W, EAR_SLOT_Z0, EAR_SLOT_Z1 = 4.5, 13.0, 25.0   # screws up into the dash lip (slot along Z)
 
 # ---- Shape --------------------------------------------------------------
-TILT = 10.0                       # degrees: the top plane rises this much per mm of depth, so the face tips up toward the driver
+TILT = 0.0                       # degrees: the top plane rises this much per mm of depth, so the face tips up toward the driver
 SIDE_TAPER = 0.12                 # each side moves in this much per mm of height going down (wider at the top)
 R_BOTTOM = 16.0                   # outer radius of the bottom corners
+WING_RISE, WING_X0, WING_X1, WING_R = 24.0, 82.0, 96.0, 20.0   # the top edge curves up at both ends to follow the dash lip
 R_FACE = 3.0                      # rounded front edge (not on the top edge)
 SWEEP_START = 18.0                # depth where the underside starts to curve up
 SWEEP_RISE = 16.0                 # how far the underside has risen by the lid
@@ -66,7 +67,7 @@ INFO_WIN_CX = INFO_XMAX - INFO_ACTIVE_FROM_FAR
 SEAM_X = (INFO_XMAX + TACH_CX - TACH_W / 2) / 2
 YC = (TACH_H - TACH_C_FROM_TOP) - (IH / 2 - 1.5)     # circle / info window centre height
 TACH_PCB_CY = YC + (TACH_C_FROM_TOP - (TACH_H - TACH_C_FROM_TOP)) / 2
-Y_EXT = H / 2 + Z_TOP * TAN_T + 4.0                  # outline top before the sloped cut
+Y_EXT = H / 2 + WING_RISE                            # top of the end wings
 PY = IH / 2 - POST_D / 2
 POST_Z0 = FACE_T + GLASS_H + PCB_T + 0.5             # posts start behind the screens and hang from the ceiling
 _px0, _px1 = INFO_XMIN + POST_D / 2, LW / 2 - POST_D / 2
@@ -102,6 +103,15 @@ def outline(hb, t, yb, yt, rb, rt=0.0):
     """Tapered outline (counter-clockwise) between heights yb and yt; t insets the sloped sides."""
     hw = lambda y: hb + SIDE_TAPER * (y - YB) - t * K
     return ([(-hw(yb), yb), (hw(yb), yb), (hw(yt), yt), (-hw(yt), yt)], [rb, rb, rt, rt])
+
+
+def outer_outline(yb, rb):
+    """Outer face outline: tapered sides, flat middle top, and a wing at each end curving up along the dash lip."""
+    hw = lambda y: HB + SIDE_TAPER * (y - YB)
+    yw = H / 2 + WING_RISE
+    V = [(-hw(yb), yb), (hw(yb), yb), (hw(yw), yw), (WING_X1, yw), (WING_X0, H / 2),
+         (-WING_X0, H / 2), (-WING_X1, yw), (-hw(yw), yw)]
+    return V, [rb, rb, 0.0, 2.0, WING_R, WING_R, 2.0, 0.0]
 
 
 def cavity_outline():
@@ -314,19 +324,19 @@ def round_front_edge(comp, body):
 
 
 def build_shell(comp):
-    V, R = outline(HB, 0.0, YB, Y_EXT, R_BOTTOM)
+    V, R = outer_outline(YB, R_BOTTOM)
     shell = extrude_outline(comp, V, R, 0, Z_TOP, NEW).bodies.item(0)
     # mounting ears on the top corners: plates with a vertical screw slot (four pieces), trimmed by the sloped cut
     for s in (-1, 1):
         a, b = s * (HW_TOP - 1.5), s * (HW_TOP + EAR_L)
         c0, c1 = s * (HW_TOP + EAR_L / 2 - EAR_SLOT_W / 2), s * (HW_TOP + EAR_L / 2 + EAR_SLOT_W / 2)
-        y0, y1 = H / 2 - EAR_T, Y_EXT
+        y0, y1 = H / 2 - EAR_T, H / 2
         for (xa, xb, za, zb) in [(a, b, EAR_Z0, EAR_SLOT_Z0), (a, b, EAR_SLOT_Z1, EAR_Z1),
                                  (a, c0, EAR_SLOT_Z0, EAR_SLOT_Z1), (c1, b, EAR_SLOT_Z0, EAR_SLOT_Z1)]:
             prism(comp, min(xa, xb), y0, max(xa, xb), y1, za, zb, JOIN)
     combine(comp, shell, cavity_body(comp), CUT)
     for x, y in POSTS:
-        prism(comp, x - POST_D / 2, y - POST_D / 2, x + POST_D / 2, H / 2 + 50, POST_Z0, Z_TOP, JOIN)
+        prism(comp, x - POST_D / 2, y - POST_D / 2, x + POST_D / 2, H / 2 - WALL + 0.6, POST_Z0, Z_TOP, JOIN)
     if TILT > 0:
         cut_top_slope(comp)
     cut_underside(comp)
@@ -351,8 +361,7 @@ def build_shell(comp):
 
 def build_lid(comp):
     lx = lambda x: XOFF - x
-    yt = y_plane(Z_TOP)
-    V, R = outline(HB, 0.0, Y_BOT_OUT, yt, 0.0)
+    V, R = outer_outline(Y_BOT_OUT, 0.0)
     extrude_outline(comp, V, R, 0, LID_T, NEW, XOFF)
     # lip: a ring that follows the cavity at the back, notched round the posts
     Vo, Ro = outline(HB, WALL + LIP_TOL, Y_BOT_IN + LIP_TOL, H / 2 - WALL - LIP_TOL, 0.0)
