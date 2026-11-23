@@ -4,7 +4,7 @@ Already have: ESP32 DevKitC (WROOM-32), ESP32-C3. Prices not checked.
 
 ## Screens
 - 2.1" round 360x360 SPI, GC9B72 driver (the one you're buying). Ask the seller for sample code and the datasheet.
-- 2.8" ILI9341 240x320 SPI TFT, NON-touch, 3.3V logic OK. PCB about 86 x 50 mm.
+- 2.8" ILI9341 240x320 SPI TFT, NON-touch, 3.3V logic OK. PCB measured 81.6 x 50 mm (the listing said about 86).
 
 ## Power (12V car to 5V)
 - Automotive-rated 12V to 5V buck converter, 36V+ input, 1A+ (e.g. Pololu D24V10F5).
