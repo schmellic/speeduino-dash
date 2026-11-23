@@ -50,7 +50,7 @@ SEAM = 12.0                       # gap between the two PCBs (the two middle lid
 LIP_TOL, LIP_T, LIP_H = 0.2, 1.6, 2.0
 
 # ---- Shape --------------------------------------------------------------
-PITCH, YAW = 10.0, 5.0            # degrees: the face plate tips up (bottom toward the driver) and turns toward the driver (+X, the tach side); pivot is the top edge at the info end
+PITCH, YAW = 0.0, 0.0            # degrees: the face plate tips up (bottom toward the driver) and turns to face the driver, who sits to the LEFT of the pod (LHD): the right-hand (info) end comes toward the driver; pivot is the top edge at the tach end
 TILT = 0.0                       # degrees: the top plane rises this much per mm of depth, so the face tips up toward the driver
 SIDE_TAPER = 0.12                 # each side moves in this much per mm of height going down (wider at the top)
 R_BOTTOM = 16.0                   # outer radius of the bottom corners
@@ -66,13 +66,13 @@ YB = -H / 2
 Z_TOP = math.ceil(FACE_T + max(GLASS_H + PCB_T, INFO_GLASS_H + INFO_PCB_T) + SCREEN_REAR_H + WIRE_GAP + STANDOFF + PERF_T + BOARD_COMP_H)   # face to lid seat
 TAN_T = math.tan(math.radians(TILT))
 K = math.sqrt(1 + SIDE_TAPER ** 2)
-PIV_X, PIV_Y = -(TACH_W + SEAM + INFO_L) / 2, H / 2     # tilt pivot: top edge, info-screen end
+PIV_X, PIV_Y = (TACH_W + SEAM + INFO_L) / 2, H / 2      # tilt pivot: top edge, tach end (nearest the driver in a LHD car)
 
 
 def tilt_pt(x, y, z):
     """Where a point of the flat face frame ends up after the pitch (about X) then the yaw (about Y)."""
     rx, ry, rz = x - PIV_X, y - PIV_Y, z
-    a, b = math.radians(PITCH), math.radians(YAW)
+    a, b = math.radians(PITCH), -math.radians(YAW)
     y1, z1 = ry * math.cos(a) - rz * math.sin(a), ry * math.sin(a) + rz * math.cos(a)
     return (PIV_X + rx * math.cos(b) + z1 * math.sin(b), PIV_Y + y1, -rx * math.sin(b) + z1 * math.cos(b))
 
@@ -359,7 +359,7 @@ def half_space(comp, w):
 
 def tilt_bodies(comp, bodies):
     """Rotate bodies about the pivot: pitch about X, then yaw about Y (same order as tilt_pt)."""
-    for ang, axis in ((PITCH, (1, 0, 0)), (YAW, (0, 1, 0))):
+    for ang, axis in ((PITCH, (1, 0, 0)), (-YAW, (0, 1, 0))):
         if not ang:
             continue
         m = adsk.core.Matrix3D.create()

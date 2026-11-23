@@ -362,3 +362,8 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 - Result: shell 208.0 x 99.8 x 73.4 mm (27.4 mm of it sticks out in front of the old face line at the bottom corner of the tach end; the info end is unchanged), lid 208.0 x 83.8 x 6.5. Checked with STL slices (face slopes in both directions, windows in the right place). Not printed or test-fitted.
 - Printing: the face is no longer flat. Best orientation is open back down (flat) with supports for the screw posts and pocket walls; check in Bambu Studio. The front edge fillet is skipped when tilted.
 - Still open: the key and knee clearance with the face 27 mm closer at the bottom on the tach side (check against the car), how the pod mounts, tach retention.
+
+### Tilt withdrawn (2026-11-23, later)
+- The first tilt turned the face toward the wrong side (the +X/tach end came forward, i.e. toward a right-hand seat); the pivot was moved to the tach end and the sign flipped so the info end comes toward a LEFT-hand driver. The user then found the tilted pod too bulky (73 mm deep at one corner) and asked for the previous flat shape with just the height trim and a sleek look.
+- Now `PITCH, YAW = 0, 0` (flat vertical face, 46 mm deep, 75.8 mm tall, 99.8 mm with wings). The tilt code stays in `DashPod.py` (`PITCH`, `YAW`, `tilt_bodies()`); YAW now means "info end toward the driver" with the tach end as the pivot. If tilting again, use a small pitch only (the yaw adds depth across the 209 mm width).
+- The front edge fillet (R_FACE) is still skipped by Fusion, so the face edge is sharp: next thing to try for a sleeker look.
