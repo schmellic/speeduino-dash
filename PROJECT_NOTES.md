@@ -374,3 +374,6 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 
 ### Rivnut drill template (2026-11-23)
 - `enclosure/stl/dash_rivnut_template.stl` (`build_drill_template()` in DashPod.py): 140 x 46 x 11 mm, a 3 mm plate the size of the pod roof with an 8 mm lip along the face line, a centre notch in the lip, and a 6.0 mm guide hole at x +-50, 25 mm behind the face line (the middle of the roof slots). Print flat with the lip up; in use the flat side goes against the dash underside with the lip hanging down where the pod's face will sit, then drill through the holes. 6.0 mm is the usual M4 rivnut hole: check the rivnut packet and change `drill` if different. Not test-fitted.
+
+### Info screen picture position measured (2026-11-23)
+- User measured on the 86 x 50 mm info board: picture starts 8 mm from the tach-side end, stops 15 mm from the header end, about 2 mm from the top and bottom edges. So the picture is 63 x 46 mm and its centre is 39.5 mm from the tach-side end (was assumed 34.6): `INFO_ACTIVE_FROM_FAR` = 39.5; vertically centred. The window is still 59.6 x 45 (datasheet active area 57.6 x 43.2 plus 2 mm): the measured 63 x 46 probably includes the black border of the picture. If the lit pixels really are 63 wide, widen `INFO_WIN_W`. The window clears all four corner posts. STLs rebuilt.
