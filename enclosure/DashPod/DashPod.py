@@ -216,21 +216,21 @@ def P3(x, y):
     return adsk.core.Point3D.create(mm(x), mm(y), 0)
 
 
-def draw_outline(sk, V, R, dx=0.0):
+def draw_outline(sk, V, R, dx=0.0, dy=0.0):
     c = rounded(V, R)
     n = len(V)
     for i in range(n):
         T1, T2, mid = c[i]
         if mid is not None:
-            sk.sketchCurves.sketchArcs.addByThreePoints(P3(T1[0] + dx, T1[1]), P3(mid[0] + dx, mid[1]), P3(T2[0] + dx, T2[1]))
+            sk.sketchCurves.sketchArcs.addByThreePoints(P3(T1[0] + dx, T1[1] + dy), P3(mid[0] + dx, mid[1] + dy), P3(T2[0] + dx, T2[1] + dy))
         N1 = c[(i + 1) % n][0]
         if math.hypot(T2[0] - N1[0], T2[1] - N1[1]) > 1e-6:
-            sk.sketchCurves.sketchLines.addByTwoPoints(P3(T2[0] + dx, T2[1]), P3(N1[0] + dx, N1[1]))
+            sk.sketchCurves.sketchLines.addByTwoPoints(P3(T2[0] + dx, T2[1] + dy), P3(N1[0] + dx, N1[1] + dy))
 
 
-def extrude_outline(comp, V, R, z0, z1, op, dx=0.0):
+def extrude_outline(comp, V, R, z0, z1, op, dx=0.0, dy=0.0):
     sk = sketch_at(comp, z0)
-    draw_outline(sk, V, R, dx)
+    draw_outline(sk, V, R, dx, dy)
     return extrude(comp, sk.profiles.item(0), z1 - z0, op)
 
 
@@ -418,6 +418,29 @@ def build_template(band=14.0):
     bb = b.boundingBox
     return 'Template %.1f x %.1f x %.1f mm' % ((bb.maxPoint.x - bb.minPoint.x) * 10, (bb.maxPoint.y - bb.minPoint.y) * 10,
                                               (bb.maxPoint.z - bb.minPoint.z) * 10)
+
+
+def build_wing_tests(angles=(30, 40, 50, 60), band=14.0):
+    """Four small 3 mm pieces, each the left wing end of the top edge with the wing's inner edge at a different angle
+    (degrees from horizontal) and that many notches along the bottom (1 = first angle, ...). Hold them against the left end
+    of the dash recess to see which angle matches."""
+    app = adsk.core.Application.get()
+    app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)
+    comp = adsk.fusion.Design.cast(app.activeProduct).rootComponent
+    hw = lambda y: HB + SIDE_TAPER * (y - YB)
+    yw, yb = H / 2 + WING_RISE, H / 2 - band
+    for k, ang in enumerate(angles):
+        x0 = WING_X1 - WING_RISE / math.tan(math.radians(ang))
+        dx, dy = (k % 2) * 75.0, -(k // 2) * 50.0
+        V = [(-hw(yb), yb), (-(x0 - 12.0), yb), (-(x0 - 12.0), H / 2), (-x0, H / 2), (-WING_X1, yw), (-hw(yw), yw)]
+        R = [0.0, 0.0, 0.0, WING_R, 2.0, 0.0]
+        extrude_outline(comp, V, R, 0, 3.0, NEW, dx, dy)
+        for j in range(k + 1):
+            nx = dx - (x0 - 12.0) - 8.0 - 6.0 * j
+            sk = sketch_at(comp, -1.0)
+            sk.sketchCurves.sketchLines.addTwoPointRectangle(P3(nx - 1.0, yb + dy - 1.0), P3(nx + 1.0, yb + dy + 3.0))
+            extrude(comp, sk.profiles.item(0), 5.0, CUT)
+    return '%d pieces, %.0f x %.0f mm layout' % (comp.bRepBodies.count, 75 + hw(yw) + 20, 50 + yw - yb)
 
 
 def run(context):
