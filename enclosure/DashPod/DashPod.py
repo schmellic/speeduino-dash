@@ -538,6 +538,25 @@ def build_wing_tests(angles=(30, 40, 50, 60), band=14.0):
     return '%d pieces, %.0f x %.0f mm layout' % (comp.bRepBodies.count, 75 + hw(yw) + 20, 50 + yw - yb)
 
 
+def build_drill_template(drill=6.0, half_w=70.0, plate_t=3.0, lip_h=8.0):
+    """Drill guide for the rivnut holes: a flat plate the size of the pod's roof (depth 0 = the face line) with a lip along the
+    front edge, and a guide hole where each roof slot is centred (slot centre = middle of RIV_Z0..RIV_Z1). Print it flat (lip up);
+    in use the flat side goes against the dash underside with the lip hanging down, lined up exactly where the pod's face will
+    sit. `drill` is the rivnut hole size: check the packet (M4 is usually 6.0 mm)."""
+    app = adsk.core.Application.get()
+    app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)
+    comp = adsk.fusion.Design.cast(app.activeProduct).rootComponent
+    prism(comp, -half_w, 0, half_w, Z_TOP, 0, plate_t, NEW)                       # plate: x across, y = depth behind the face line
+    prism(comp, -half_w, 0, half_w, 3.0, plate_t - 0.1, plate_t + lip_h, JOIN)    # lip along the face line
+    prism(comp, -0.75, -1, 0.75, 4, plate_t + lip_h - 3.0, plate_t + lip_h + 1, CUT)   # centre notch
+    zc = (RIV_Z0 + RIV_Z1) / 2
+    for sx in (-1, 1):
+        cyl(comp, sx * RIV_X, zc, drill, -1, plate_t + 1, CUT)
+    bb = comp.bRepBodies.item(0).boundingBox
+    return 'Template %.1f x %.1f x %.1f mm, holes %.1f mm at x +-%.1f, %.1f mm behind the face line' % (
+        (bb.maxPoint.x - bb.minPoint.x) * 10, (bb.maxPoint.y - bb.minPoint.y) * 10, (bb.maxPoint.z - bb.minPoint.z) * 10, drill, RIV_X, zc)
+
+
 def run(context):
     ui = None
     try:
