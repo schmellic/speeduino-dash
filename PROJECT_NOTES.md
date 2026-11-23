@@ -328,3 +328,6 @@ dash_pod_shell.stl and dash_pod_lid.stl re-exported with the 40 deg wings and no
 
 ### Perfboard hole inset (2026-11-23)
 Dash perfboard corner holes measured by the user: 2.0 mm in from the edges (was assumed 2.5). Set in DashPod.py; STLs not rebuilt yet. User also confirmed 4 mm standoffs are enough for the ESP32 pins and 22 mm component height is plenty; no USB window.
+
+### Tach screw posts (2026-11-23)
+Tach mounting holes: 8 mm up from the header end (user), 23.88 mm apart (listing), ASSUMED centred across the 59.24 mm width (not confirmed). DashPod.py now adds two 5 mm posts (2.5 mm tall, 1.9 mm pilot, 3.2 deep) on the face plate; the PCB rests on them and an M2 x 4 mm machine screw goes through its hole from behind. Hole diameter not measured (listing says about 2 mm). Info screen holes still unknown. Shell/lid STLs re-exported (perfboard inset 2.0 mm too). Not printed.

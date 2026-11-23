@@ -22,6 +22,8 @@ TACH_WIN_D = 53.4                 # opening (active area is 52.9)
 INFO_L, INFO_H = 86.0, 50.0       # 2.8" ILI9341 PCB, header end on the outer (info) side
 INFO_ACTIVE_FROM_FAR = 34.6       # ASSUMED: active-area centre from the PCB end nearest the tach
 INFO_WIN_W, INFO_WIN_H = 59.6, 45.0   # opening (active area is 57.6 x 43.2): ASSUMED offsets
+TACH_HOLE_UP, TACH_HOLE_SPAN = 8.0, 23.88   # tach mounting holes: 8 mm up from the header end (measured), 23.88 mm apart; ASSUMED centred across the width
+SCREEN_POST_D, SCREEN_PILOT_D, SCREEN_PILOT_DEPTH = 5.0, 1.9, 3.2   # M2 x 4 mm machine screws from behind into posts on the face plate
 GLASS_H, PCB_T = 2.5, 1.6         # ASSUMED glass height above the PCB, PCB thickness
 POCKET_CLR, POCKET_WALL = 0.25, 1.2   # locating wall round each PCB
 # ---- Dash perfboard (50 x 70 mm, measured from the photo) ---------------
@@ -351,6 +353,12 @@ def build_shell(comp):
     ph = GLASS_H + PCB_T
     ring(comp, TACH_CX, TACH_PCB_CY, TACH_W, TACH_H, FACE_T - 0.1, FACE_T + ph, JOIN)
     ring(comp, INFO_CX, YC, INFO_L, INFO_H, FACE_T - 0.1, FACE_T + ph, JOIN)
+    # tach screw posts: the PCB rests on them (glass height) and an M2 screw goes through its hole from behind
+    thy = TACH_PCB_CY - TACH_H / 2 + TACH_HOLE_UP
+    for sx in (-1, 1):
+        px = TACH_CX + sx * TACH_HOLE_SPAN / 2
+        cyl(comp, px, thy, SCREEN_POST_D, FACE_T - 0.1, FACE_T + GLASS_H, JOIN)
+        cyl(comp, px, thy, SCREEN_PILOT_D, FACE_T + GLASS_H - SCREEN_PILOT_DEPTH, FACE_T + GLASS_H + 0.1, CUT)
     cyl(comp, TACH_CX, YC, TACH_WIN_D, -1, FACE_T + 0.1, CUT)
     prism(comp, INFO_WIN_CX - INFO_WIN_W / 2, YC - INFO_WIN_H / 2, INFO_WIN_CX + INFO_WIN_W / 2,
           YC + INFO_WIN_H / 2, -1, FACE_T + 0.1, CUT)
