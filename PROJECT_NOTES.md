@@ -319,3 +319,6 @@ Supersedes the cell order and the peak head panel in "Info screen design (2026-1
 
 ### Wing-angle test result (2026-11-23)
 The 2-notch piece (40 deg) was held against the left end of the dash recess (photos from the user) and follows the metal well. The dash edge is a concave curve rather than a straight diagonal, so a 40 deg straight wing with the R20 corner is a good approximation. DashPod.py now has WING_X0 = 67.4 (= 96 - 24 / tan 40). The pod has NOT been rebuilt or re-exported with this yet. Still open: underside side profile, right-hand end shape, whether the roof fills/covers the recess. A third photo shows the dash end panel near the steering column has a stepped, angular shape that the pod must clear.
+
+### Pod: no USB-C window (2026-11-23)
+User does not need USB access to the dash board in the pod (OTA update works). The USB slot is removed from DashPod.py; only the terminal window remains. Recovery by USB then needs the lid off. Not rebuilt yet.

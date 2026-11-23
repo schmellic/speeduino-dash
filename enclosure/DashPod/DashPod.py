@@ -354,9 +354,9 @@ def build_shell(comp):
     cyl(comp, TACH_CX, YC, TACH_WIN_D, -1, FACE_T + 0.1, CUT)
     prism(comp, INFO_WIN_CX - INFO_WIN_W / 2, YC - INFO_WIN_H / 2, INFO_WIN_CX + INFO_WIN_W / 2,
           YC + INFO_WIN_H / 2, -1, FACE_T + 0.1, CUT)
-    # USB-C and terminal windows in the info-side end wall, at the board's height
+    # terminal window in the info-side end wall, at the board's height (no USB-C window: OTA update, user decision 2026-11-23)
     zb = Z_TOP - (STANDOFF + PCB_T)
-    for y, w, zc, h in [(BOARD_CY + USB_Y, USB_SLOT_W, USB_Z, USB_SLOT_H), (BOARD_CY + TERM_Y, TERM_SLOT_W, TERM_Z, TERM_SLOT_H)]:
+    for y, w, zc, h in [(BOARD_CY + TERM_Y, TERM_SLOT_W, TERM_Z, TERM_SLOT_H)]:
         z = zb - zc
         prism(comp, -HB - 60, y - w / 2, BOARD_CX - BOARD_L / 2 - BOARD_END_GAP + 0.5, y + w / 2, z - h / 2, z + h / 2, CUT)
 
