@@ -718,24 +718,141 @@ static void updateInfo(const Telemetry &t, bool alive) {
   setCell(C_IAT, b, "C", C_FG, C_GREEN);
 }
 
+// ---- Splash ------------------------------------------------------------
+// Tach: the ring sweeps up to full scale and back (the normal ring and numerals, so almost no extra flash).
+// Info screen: a red line draws, then "Schmellic" and "EFi" slide in from the left, left-aligned and centred as a block.
+// Fades use PWM on the backlight pins.
+static void blInit(int pin) {
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcAttach(pin, 5000, 8);
+#else
+  static int ch = 0;
+  ledcSetup(ch, 5000, 8);
+  ledcAttachPin(pin, ch++);
+#endif
+}
+static void blSet(int pin, int v) {
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcWrite(pin, v);
+#else
+  ledcWrite(pin == PIN_TACH_BL ? 0 : 1, v);
+#endif
+}
+static void fadeBoth(bool up, uint32_t ms) {
+  uint32_t t0 = millis(), e;
+  while ((e = millis() - t0) < ms) {
+    int v = (int)(255L * e / ms);
+    if (!up) v = 255 - v;
+    blSet(PIN_TACH_BL, v);
+    blSet(PIN_INFO_BL, v);
+    delay(8);
+  }
+  blSet(PIN_TACH_BL, up ? 255 : 0);
+  blSet(PIN_INFO_BL, up ? 255 : 0);
+}
+
+static float easeOut(float v) {
+  v = constrain(v, 0.0f, 1.0f);
+  float u = 1.0f - v;
+  return 1.0f - u * u * u;
+}
+static float easeInOut(float v) {
+  v = constrain(v, 0.0f, 1.0f);
+  return v < 0.5f ? 2 * v * v : 1.0f - powf(-2 * v + 2, 2) / 2;
+}
+
+#if INFO_SCREEN
+constexpr int SP_PANEL_X = 20, SP_PANEL_Y = 50, SP_PANEL_W = 280, SP_PANEL_H = 140;
+static int spInkL, spW, spX1, spX2, spLineY, spBase1, spTop1, spH1, spBase2, spTop2, spH2;
+
+// Measure the two lines with the real font so the gap above and below the red line is the same and the block is centred.
+static void splashInfoSetup() {
+  info->fillScreen(C_BG);
+  info->fillRoundRect(SP_PANEL_X, SP_PANEL_Y, SP_PANEL_W, SP_PANEL_H, 8, C_BAND);
+  info->setUTF8Print(true);
+  info->setFont(u8g2_font_logisoso32_tr);
+  int16_t x1, y1, x2, y2;
+  uint16_t w, h, w2, h2;
+  info->getTextBounds("Schmellic", 0, 0, &x1, &y1, &w, &h);
+  info->getTextBounds("EFi", 0, 0, &x2, &y2, &w2, &h2);
+  const int G = 9, LH = 3;
+  int top = 120 - (h + G + LH + G + h2) / 2;
+  spW = w;
+  spInkL = 160 - w / 2;
+  spX1 = x1;
+  spX2 = x2;
+  spTop1 = top;
+  spH1 = h;
+  spBase1 = top - y1;
+  spLineY = top + h + G;
+  spTop2 = spLineY + LH + G;
+  spH2 = h2;
+  spBase2 = spTop2 - y2;
+}
+
+// One line of text, slid in from the left by (1 - v) * 280 px. Erases its own row first and masks anything left of the
+// panel, because the library cannot clip text.
+static void splashText(const char *s, int xOff, int base, int top, int h, float v) {
+  info->fillRect(SP_PANEL_X, top - 2, SP_PANEL_W, h + 4, C_BAND);
+  info->setFont(u8g2_font_logisoso32_tr);
+  info->setTextColor(C_FG);
+  info->setCursor(spInkL - xOff - (int)((1.0f - v) * 280), base);
+  info->print(s);
+  info->fillRect(0, top - 2, SP_PANEL_X, h + 4, C_BG);
+}
+
+static void splashInfoFrame(uint32_t t) {   // t in ms from the start of the fade-in
+  static float la = -1, aa = -1, ea = -1;
+  float l = easeOut((t - 300.0f) / 300.0f), a = easeOut((t - 600.0f) / 500.0f), e = easeOut((t - 900.0f) / 500.0f);
+  if (l != la) { la = l; info->fillRect(spInkL, spLineY, (int)(spW * l), 3, C_RED); }
+  if (a != aa) { aa = a; if (a > 0) splashText("Schmellic", spX1, spBase1, spTop1, spH1, a); }
+  if (e != ea) { ea = e; if (e > 0) splashText("EFi", spX2, spBase2, spTop2, spH2, e); }
+}
+#endif
+
+static void playSplash() {
+  const uint32_t UP = 1100, HOLD = 250, DOWN = 800, TOTAL = UP + HOLD + DOWN + 300;
+  fadeBoth(true, 500);
+  uint32_t t0 = millis(), t;
+  while ((t = millis() - t0) < TOTAL) {
+    float f;
+    if (t < UP) f = easeInOut(t / (float)UP);
+    else if (t < UP + HOLD) f = 1.0f;
+    else if (t < UP + HOLD + DOWN) f = 1.0f - easeInOut((t - UP - HOLD) / (float)DOWN);
+    else f = 0.0f;
+    int want = (int)lroundf(SEG_N * f);
+    if (want != litSegs) setLitSegments(want);   // the live tach's own block drawing
+#if INFO_SCREEN
+    splashInfoFrame(t + 500);
+#endif
+    delay(2);
+  }
+  fadeBoth(false, 500);
+}
+
 // ---- Main --------------------------------------------------------------
 void setup() {
   Serial.begin(115200);
   fuelInit();
-  pinMode(PIN_TACH_BL, OUTPUT);
-  pinMode(PIN_INFO_BL, OUTPUT);
-  digitalWrite(PIN_TACH_BL, HIGH);   // GC9B72 stays black unless BL is high
-  digitalWrite(PIN_INFO_BL, HIGH);
+  blInit(PIN_TACH_BL);   // PWM so the splash can fade; the GC9B72 stays black unless BL is high
+  blInit(PIN_INFO_BL);
+  blSet(PIN_TACH_BL, 0);
+  blSet(PIN_INFO_BL, 0);
 
   if (!tach->begin(20000000)) Serial.println("tach init failed");
 #if INFO_SCREEN
   if (!info->begin(20000000)) Serial.println("info init failed");
 #endif
-  drawTachFace();
+  drawTachFace();      // drawn with the backlight off; the splash lights its ring blocks
+#if INFO_SCREEN
+  splashInfoSetup();
+#endif
+  playSplash();        // fades in, sweep and slide-in, fades out (about 3.5 s)
   drawNoData();
 #if INFO_SCREEN
   drawInfoStatic();
 #endif
+  fadeBoth(true, 400);
 
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(OTA_SSID, OTA_PASS, 1);   // channel 1, same as the bridge's default

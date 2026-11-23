@@ -388,3 +388,10 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 ### Full-width top-edge test piece (2026-11-23)
 - The user has no stereo under-mount to measure; the tape photo (`docs/dash_lip/lower_dash_with_tape.jpg`) puts the flat part of the lip underside at roughly 7 to 19.5 cm on the tape (about 12 to 13 cm, perspective makes it uncertain by about 10 mm), consistent with the pod's 134.8 mm flat (+-67.4).
 - Regenerated `enclosure/stl/dash_top_edge_template.stl` with the current outline (`build_template(16)`): 203.0 x 40.0 x 3.0 mm, the whole top edge (flat middle plus both wings) with a centre notch. Print flat, hold against the dash underside with the flat top edge along the lip, centre notch on the pod centre, and check BOTH ends. Correction (user): the dash underside IS symmetrical, the right end curves up like the left (see the tape photo), so the earlier note that the recess runs on to the right end was wrong and the symmetrical pod outline is right. Result: pending.
+
+## Power-on splash (2026-11-23, flashed over USB)
+- Tach: the normal ring sweeps up to full scale (green to 4500, orange to 5400, red to 6000), holds briefly, falls back to zero. Uses the live tach's own block drawing, so almost no extra flash.
+- Info screen: on a dark `C_BAND` panel a red line draws first, then "Schmellic" and "EFi" (both `logisoso32`, white, left-aligned, block centred, equal gaps above and below the line, measured from the real font bounds) slide in from the left. Text is erased and masked per frame because the library cannot clip.
+- Sequence: backlights fade in (PWM, 500 ms), sweep and slide (about 2.5 s), fade out, then the normal faces fade in (400 ms). Total about 3.5 s before the normal screens. The OTA Wi-Fi window (120 s) is counted from power-on as before.
+- Dash firmware is 87.2% of flash after this. A Beetle-with-flashing-lights splash was tried in mock-ups and dropped (looked wrong without a proper bitmap).
+- Dash USB port is the CH340 `/dev/ttyUSB0`; never touch `/dev/ttyACM0` (the ECU's own USB, opening it resets the ECU).
