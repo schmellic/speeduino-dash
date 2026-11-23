@@ -325,3 +325,6 @@ User does not need USB access to the dash board in the pod (OTA update works). T
 
 ### Pod rebuilt (2026-11-23, v6)
 dash_pod_shell.stl and dash_pod_lid.stl re-exported with the 40 deg wings and no USB window (shell 234.9 x 102.8 x 46 mm incl. ears, lid 208.7 x 86.8 x 6.5). NOT included: the open top / tall scribe-to-fit walls (proposed, not confirmed by the user, and it conflicts with the ears), and screen screw posts (need the screens' hole positions). Front edge fillet still skipped. Not printed.
+
+### Perfboard hole inset (2026-11-23)
+Dash perfboard corner holes measured by the user: 2.0 mm in from the edges (was assumed 2.5). Set in DashPod.py; STLs not rebuilt yet. User also confirmed 4 mm standoffs are enough for the ESP32 pins and 22 mm component height is plenty; no USB window.

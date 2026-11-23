@@ -26,7 +26,7 @@ GLASS_H, PCB_T = 2.5, 1.6         # ASSUMED glass height above the PCB, PCB thic
 POCKET_CLR, POCKET_WALL = 0.25, 1.2   # locating wall round each PCB
 # ---- Dash perfboard (50 x 70 mm, measured from the photo) ---------------
 BOARD_L, BOARD_W = 70.0, 50.0     # along X, along Y
-BOARD_HOLE_INSET = 2.5            # ASSUMED corner hole inset
+BOARD_HOLE_INSET = 2.0            # measured by the user (2026-11-23)
 STANDOFF, STANDOFF_D, PILOT_D = 4.0, 5.6, 1.9   # M2 machine screws cut their own thread in 1.9 mm
 BOARD_END_GAP = 3.0               # board end to the -X end wall (USB-C and terminal face this wall)
 USB_Y, USB_Z = -4.7, 5.5          # USB-C centre: across from the board centre; ASSUMED height above the perfboard
