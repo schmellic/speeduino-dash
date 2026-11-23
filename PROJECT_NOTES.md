@@ -349,3 +349,8 @@ User: put the cable hole at the top and centre the dash perfboard. DashPod.py: B
 
 ### Tach glass size (2026-11-23)
 User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and measured the tach screen itself (the glass disc) at 55.5 mm. The window stays 53.4 mm (about 1 mm of glass lip all round behind it). The screw posts clear the glass by about 1.9 mm. No script change. Still unmeasured: glass height above the PCB, overall thickness, info glass offset.
+
+## Screen thickness measured (2026-11-23)
+- User measured PCB + glass = 3.6 mm, PCB = 1.3 mm, so glass height above the PCB = 2.3 mm (was assumed 2.5 / 1.6). Applied to both screens (not yet confirmed separately for the info screen).
+- `DashPod.py`: `GLASS_H, PCB_T = 2.3, 1.3`; new `PERF_T = 1.6` (perfboard, assumed) so the depth sum stays right. Pod depth drops from 46 to 45 mm (Z_TOP 44.7 rounded up).
+- STLs in the repo are NOT rebuilt yet (still the 46 mm version); rebuild with the next batch of changes. Still unmeasured: rear height behind the screens (3.0 assumed), info glass offset.

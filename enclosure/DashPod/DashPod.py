@@ -26,7 +26,8 @@ INFO_WIN_W, INFO_WIN_H = 59.6, 45.0   # opening (active area is 57.6 x 43.2): AS
 TACH_HOLE_UP, TACH_HOLE_SPAN = 8.0, 23.88   # tach mounting holes: 8 mm up from the header end (measured), 23.88 mm apart; ASSUMED centred across the width
 SCREEN_POST_D, SCREEN_PILOT_D, SCREEN_PILOT_DEPTH = 5.0, 1.9, 3.2   # M2 x 4 mm machine screws from behind into posts on the face plate
 INFO_HOLE_INSET, INFO_POST_D, INFO_PILOT_D = 3.0, 4.6, 2.1   # info screen: four 3 mm holes, 3 mm in from each edge (measured); M2.5 x 4 screws, 2.1 mm pilot
-GLASS_H, PCB_T = 2.5, 1.6         # ASSUMED glass height above the PCB, PCB thickness
+GLASS_H, PCB_T = 2.3, 1.3         # measured: PCB + glass 3.6 mm, PCB 1.3 mm (both screens assumed alike)
+PERF_T = 1.6                      # dash perfboard thickness (assumed)
 POCKET_CLR, POCKET_WALL = 0.25, 1.2   # locating wall round each PCB
 # ---- Dash perfboard (50 x 70 mm, measured from the photo) ---------------
 BOARD_L, BOARD_W = 70.0, 50.0     # along X, along Y
@@ -60,7 +61,7 @@ BOARD_CY = 4.0                    # perfboard centre height (the lid is shorter 
 # ---- Derived layout -----------------------------------------------------
 H = IH + 2 * WALL
 YB = -H / 2
-Z_TOP = math.ceil(FACE_T + GLASS_H + PCB_T + SCREEN_REAR_H + WIRE_GAP + STANDOFF + PCB_T + BOARD_COMP_H)   # face to lid seat
+Z_TOP = math.ceil(FACE_T + GLASS_H + PCB_T + SCREEN_REAR_H + WIRE_GAP + STANDOFF + PERF_T + BOARD_COMP_H)   # face to lid seat
 TAN_T = math.tan(math.radians(TILT))
 K = math.sqrt(1 + SIDE_TAPER ** 2)
 LW = TACH_W + SEAM + INFO_L
