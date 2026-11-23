@@ -32,8 +32,7 @@ POCKET_CLR, POCKET_WALL = 0.25, 1.2   # locating wall round each PCB
 BOARD_L, BOARD_W = 70.0, 50.0     # along X, along Y
 BOARD_HOLE_INSET = 2.0            # measured by the user (2026-11-23)
 STANDOFF, STANDOFF_D, PILOT_D = 4.0, 5.6, 1.9   # M2 machine screws cut their own thread in 1.9 mm
-BOARD_END_GAP = 14.0              # board end to the +X (door side) end wall: room for the cable to turn back to the lid hole
-WIRE_HOLE_D = 8.0                 # round hole in the lid for the 12 V / sender cable, beside the terminal
+WIRE_HOLE_D, WIRE_HOLE_X, WIRE_HOLE_Y = 8.0, 50.0, 28.0   # round cable hole in the lid, at the top, door side of the perfboard (x is the shell's x)
 USB_Y, USB_Z = -4.7, 5.5          # USB-C centre: across from the board centre; ASSUMED height above the perfboard
 USB_SLOT_W, USB_SLOT_H = 14.0, 8.0
 TERM_Y, TERM_Z = 19.8, 4.5        # 3-way terminal centre across the board; entry height above the board
@@ -194,7 +193,7 @@ while not _fits(HB):
     HB += 0.5
 XOFF = 2 * (HB + SIDE_TAPER * (Y_EXT - YB)) + 15.0
 _in_hw = lambda y: HB + SIDE_TAPER * (y - YB) - WALL * K
-BOARD_CX = _in_hw(BOARD_CY - BOARD_W / 2) - BOARD_END_GAP - BOARD_L / 2   # board at the +X (driver's left, door) end, USB end toward that wall
+BOARD_CX = 0.0                    # perfboard centred across the pod; its terminal end faces +X (door side)
 HW_TOP = HB + SIDE_TAPER * H
 
 
@@ -398,8 +397,8 @@ def build_lid(comp):
             cyl(comp, lx(x), y, PILOT_D, LID_T + STANDOFF - 6, LID_T + STANDOFF + 1, CUT)
     for x, y in POSTS:
         cyl(comp, lx(x), y, LID_HOLE_D, -1, LID_T + 1, CUT)
-    # cable hole beside the terminal (board turned 180 deg in its plane: terminal at the bottom, wires leave from the USB end)
-    cyl(comp, lx(BOARD_CX + BOARD_L / 2 + BOARD_END_GAP / 2), BOARD_CY - TERM_Y, WIRE_HOLE_D, -1, LID_T + 1, CUT)
+    # cable hole at the top of the lid, beside the board's door-side end (wires run inside from the terminal)
+    cyl(comp, lx(WIRE_HOLE_X), WIRE_HOLE_Y, WIRE_HOLE_D, -1, LID_T + 1, CUT)
 
 
 def build_all():

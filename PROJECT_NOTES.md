@@ -343,3 +343,6 @@ Car is left-hand drive. User wants the terminal block on the door side (driver's
 
 ### Tach pocket follows the real board outline (2026-11-23)
 The tach pocket was a rectangle (59.24 x 67.47). It is now the board's real shape: a disc of 59.24 mm (ASSUMED: the round part is a full circle centred on the glass window) plus the 30.5 mm wide tail with the header pins (measured), with the same 0.25 mm clearance and 1.2 mm wall. `tach_pocket()` in DashPod.py. The info screen pocket stays rectangular (the board is). Check the join between the disc and the tail against the real board: it may have rounded corners. STLs re-exported.
+
+### Board central, cable hole at the top (2026-11-23)
+User: put the cable hole at the top and centre the dash perfboard. DashPod.py: BOARD_CX = 0 (board centred across the pod), the lid's 8 mm cable hole is at the top on the door side, 50 mm from centre and 28 mm up (WIRE_HOLE_X / WIRE_HOLE_Y), beside the board's end and below the lid screw posts; wires run inside from the terminal. STLs re-exported. Not printed.
