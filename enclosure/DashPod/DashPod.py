@@ -404,6 +404,22 @@ def build_all():
     return '\n'.join(lines)
 
 
+def build_template():
+    """A 3 mm full-size cut-out of the face outline (a 12 mm wide frame), to hold against the dash lip and check the top edge."""
+    app = adsk.core.Application.get()
+    app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)
+    comp = adsk.fusion.Design.cast(app.activeProduct).rootComponent
+    V, R = outer_outline(YB, R_BOTTOM)
+    extrude_outline(comp, V, R, 0, 3.0, NEW)
+    Vi, Ri = outline(HB, 12.0, YB + 12.0, H / 2 - 12.0, R_BOTTOM - 12.0, 2.0)
+    extrude_outline(comp, Vi, Ri, -1.0, 4.0, CUT)
+    prism(comp, -0.75, H / 2 - 6.0, 0.75, H / 2 + 1.0, -1.0, 4.0, CUT)     # centre mark on the top edge
+    b = comp.bRepBodies.item(0)
+    bb = b.boundingBox
+    return 'Template %.1f x %.1f x %.1f mm' % ((bb.maxPoint.x - bb.minPoint.x) * 10, (bb.maxPoint.y - bb.minPoint.y) * 10,
+                                              (bb.maxPoint.z - bb.minPoint.z) * 10)
+
+
 def run(context):
     ui = None
     try:
