@@ -322,3 +322,6 @@ The 2-notch piece (40 deg) was held against the left end of the dash recess (pho
 
 ### Pod: no USB-C window (2026-11-23)
 User does not need USB access to the dash board in the pod (OTA update works). The USB slot is removed from DashPod.py; only the terminal window remains. Recovery by USB then needs the lid off. Not rebuilt yet.
+
+### Pod rebuilt (2026-11-23, v6)
+dash_pod_shell.stl and dash_pod_lid.stl re-exported with the 40 deg wings and no USB window (shell 234.9 x 102.8 x 46 mm incl. ears, lid 208.7 x 86.8 x 6.5). NOT included: the open top / tall scribe-to-fit walls (proposed, not confirmed by the user, and it conflicts with the ears), and screen screw posts (need the screens' hole positions). Front edge fillet still skipped. Not printed.
