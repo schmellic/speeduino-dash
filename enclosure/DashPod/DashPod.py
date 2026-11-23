@@ -35,7 +35,7 @@ TERM_Y, TERM_Z = 19.8, 4.5        # 3-way terminal centre across the board; entr
 TERM_SLOT_W, TERM_SLOT_H = 19.0, 9.0
 # ---- Shell --------------------------------------------------------------
 FACE_T, WALL, LID_T = 2.5, 2.4, 2.5
-INNER_D = 40.0                    # depth behind the face plate (headers + wires + perfboard parts)
+POD_DEPTH = 90.0                  # overall depth, face to lid (room for wiring behind the screens)
 IH = 74.0                         # inside height
 POST_D, LID_PILOT_D, LID_HOLE_D, POST_PILOT_DEPTH = 7.0, 2.8, 3.4, 12.0   # M3 machine screws
 SEAM = 12.0                       # gap between the two PCBs (the two middle lid posts sit in it)
@@ -48,11 +48,14 @@ TILT = 10.0                       # degrees: the top plane rises this much per m
 SIDE_TAPER = 0.12                 # each side moves in this much per mm of height going down (wider at the top)
 R_BOTTOM = 16.0                   # outer radius of the bottom corners
 R_FACE = 3.0                      # rounded front edge (not on the top edge)
+SWEEP_START = 18.0                # depth where the underside starts to curve up
+SWEEP_RISE = 16.0                 # how far the underside has risen by the lid
+BOARD_CY = 4.0                    # perfboard centre height (the lid is shorter than the face, so it sits high)
 
 # ---- Derived layout -----------------------------------------------------
 H = IH + 2 * WALL
 YB = -H / 2
-Z_TOP = FACE_T + INNER_D
+Z_TOP = POD_DEPTH
 TAN_T = math.tan(math.radians(TILT))
 K = math.sqrt(1 + SIDE_TAPER ** 2)
 LW = TACH_W + SEAM + INFO_L
@@ -65,12 +68,29 @@ YC = (TACH_H - TACH_C_FROM_TOP) - (IH / 2 - 1.5)     # circle / info window cent
 TACH_PCB_CY = YC + (TACH_C_FROM_TOP - (TACH_H - TACH_C_FROM_TOP)) / 2
 Y_EXT = H / 2 + Z_TOP * TAN_T + 4.0                  # outline top before the sloped cut
 PY = IH / 2 - POST_D / 2
-POSTS = [(SEAM_X, PY), (SEAM_X, -PY), (INFO_XMIN + POST_D / 2, PY), (INFO_XMIN + POST_D / 2, -PY)]
-XOFF = 0.0                                           # lid layout offset (set below once the width is known)
+POST_Z0 = FACE_T + GLASS_H + PCB_T + 0.5             # posts start behind the screens and hang from the ceiling
+_px0, _px1 = INFO_XMIN + POST_D / 2, LW / 2 - POST_D / 2
+POSTS = [(_px0 + (_px1 - _px0) * i / 3.0, PY) for i in range(4)]
+# underside sweep: a circular arc, tangent to the flat bottom at SWEEP_START, rising SWEEP_RISE by the lid
+_L = Z_TOP - SWEEP_START
+SW_R = (_L ** 2 + SWEEP_RISE ** 2) / (2 * SWEEP_RISE)
+SW_CY = YB + SW_R
+SW_PHI = math.asin(_L / SW_R)
+
+
+def sweep_pt(r, a):
+    """Point (y, z) on the sweep circle of radius r at angle a from straight down."""
+    return (SW_CY - r * math.cos(a), SWEEP_START + r * math.sin(a))
+
+
+Y_BOT_OUT = sweep_pt(SW_R, SW_PHI)[0]                # outer underside height at the lid
+Y_BOT_IN = sweep_pt(SW_R - WALL, SW_PHI)[0]          # inner floor height at the lid
+XOFF = 0.0
 
 NEW = adsk.fusion.FeatureOperations.NewBodyFeatureOperation
 JOIN = adsk.fusion.FeatureOperations.JoinFeatureOperation
 CUT = adsk.fusion.FeatureOperations.CutFeatureOperation
+INTERSECT = adsk.fusion.FeatureOperations.IntersectFeatureOperation
 
 
 def y_plane(z):
@@ -78,11 +98,14 @@ def y_plane(z):
     return H / 2 + z * TAN_T
 
 
-def outline(hb, t, ytop, rt=0.0):
-    """Tapered outline inset by t: vertices and corner radii (counter-clockwise)."""
+def outline(hb, t, yb, yt, rb, rt=0.0):
+    """Tapered outline (counter-clockwise) between heights yb and yt; t insets the sloped sides."""
     hw = lambda y: hb + SIDE_TAPER * (y - YB) - t * K
-    yb, yt = YB + t, ytop - t
-    return ([(-hw(yb), yb), (hw(yb), yb), (hw(yt), yt), (-hw(yt), yt)], [R_BOTTOM - t, R_BOTTOM - t, rt, rt])
+    return ([(-hw(yb), yb), (hw(yb), yb), (hw(yt), yt), (-hw(yt), yt)], [rb, rb, rt, rt])
+
+
+def cavity_outline():
+    return outline(HB, WALL, YB + WALL, H / 2 - WALL, R_BOTTOM - WALL, 2.0)
 
 
 def _unit(v):
@@ -103,7 +126,6 @@ def _corner(p, c, n, r):
 
 
 def rounded(V, R):
-    """Return [(T1, T2, mid)] for each corner; the outline runs T2[i] -> T1[i+1] along straight edges."""
     n = len(V)
     return [_corner(V[i - 1], V[i], V[(i + 1) % n], R[i]) for i in range(n)]
 
@@ -114,7 +136,6 @@ def polyline(V, R, steps=16):
         if mid is None:
             pts.append(T1)
             continue
-        # sample the arc through T1, mid, T2
         ax, ay = T1; bx, by = mid; cx, cy = T2
         d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by))
         ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / d
@@ -143,7 +164,7 @@ def clearance(pt, pts):
 
 
 def _fits(hb):
-    pts = polyline(*outline(hb, WALL, H / 2))
+    pts = polyline(*outline(hb, WALL, YB + WALL, H / 2 - WALL, R_BOTTOM - WALL, 2.0))
     g = POCKET_CLR + POCKET_WALL
     for cx, cy, w, h in [(TACH_CX, TACH_PCB_CY, TACH_W, TACH_H), (INFO_CX, YC, INFO_L, INFO_H)]:
         for sx in (-1, 1):
@@ -158,8 +179,8 @@ while not _fits(HB):
     HB += 0.5
 XOFF = 2 * (HB + SIDE_TAPER * (Y_EXT - YB)) + 15.0
 _in_hw = lambda y: HB + SIDE_TAPER * (y - YB) - WALL * K
-BOARD_CX = -_in_hw(-BOARD_W / 2) + BOARD_END_GAP + BOARD_L / 2
-HW_TOP = HB + SIDE_TAPER * (H - 0)                      # outer half width at the top plane's front edge
+BOARD_CX = -_in_hw(BOARD_CY - BOARD_W / 2) + BOARD_END_GAP + BOARD_L / 2
+HW_TOP = HB + SIDE_TAPER * H
 
 
 def mm(v):
@@ -214,7 +235,6 @@ def cyl(comp, cx, cy, d, z0, z1, op):
 
 
 def ring(comp, cx, cy, w, h, z0, z1, op):
-    """Four overlapping strips forming a rectangular locating wall round a w x h PCB."""
     a, t = POCKET_CLR, POCKET_WALL
     x0, x1, y0, y1 = cx - w / 2 - a, cx + w / 2 + a, cy - h / 2 - a, cy + h / 2 + a
     for (p, q, r, s) in [(x0 - t, y0 - t, x1 + t, y0), (x0 - t, y1, x1 + t, y1 + t),
@@ -222,17 +242,58 @@ def ring(comp, cx, cy, w, h, z0, z1, op):
         prism(comp, p, q, r, s, z0, z1, op)
 
 
-def cut_top_slope(comp):
-    """Remove everything above the sloped top plane (plane through the face's top edge, rising TILT deg with depth)."""
+def yz_region(comp, segs, op):
+    """Extrude a region drawn in the side (YZ) plane across the whole width. segs: ('L', (y,z), (y,z)) or ('A', p, mid, q)."""
     sk = comp.sketches.add(comp.yZConstructionPlane)
-    big = H + 200
-    pts = [(y_plane(-5), -5), (y_plane(Z_TOP + 5), Z_TOP + 5), (big, Z_TOP + 5), (big, -5)]
-    sp = [sk.modelToSketchSpace(adsk.core.Point3D.create(0, mm(y), mm(z))) for y, z in pts]
-    for i in range(4):
-        sk.sketchCurves.sketchLines.addByTwoPoints(sp[i], sp[(i + 1) % 4])
-    inp = comp.features.extrudeFeatures.createInput(sk.profiles.item(0), CUT)
+    sp = lambda p: sk.modelToSketchSpace(adsk.core.Point3D.create(0, mm(p[0]), mm(p[1])))
+    for sg in segs:
+        if sg[0] == 'L':
+            sk.sketchCurves.sketchLines.addByTwoPoints(sp(sg[1]), sp(sg[2]))
+        else:
+            sk.sketchCurves.sketchArcs.addByThreePoints(sp(sg[1]), sp(sg[2]), sp(sg[3]))
+    inp = comp.features.extrudeFeatures.createInput(sk.profiles.item(0), op)
     inp.setSymmetricExtent(adsk.core.ValueInput.createByReal(mm(1000)), True)
-    comp.features.extrudeFeatures.add(inp)
+    return comp.features.extrudeFeatures.add(inp)
+
+
+def combine(comp, target, tool, op):
+    tools = adsk.core.ObjectCollection.create()
+    tools.add(tool)
+    inp = comp.features.combineFeatures.createInput(target, tools)
+    inp.operation = op
+    inp.isKeepToolBodies = False
+    comp.features.combineFeatures.add(inp)
+
+
+def cut_top_slope(comp):
+    big = H + 200
+    a, b = (y_plane(-5), -5), (y_plane(Z_TOP + 5), Z_TOP + 5)
+    yz_region(comp, [('L', a, b), ('L', b, (big, Z_TOP + 5)), ('L', (big, Z_TOP + 5), (big, -5)), ('L', (big, -5), a)], CUT)
+
+
+def cut_underside(comp):
+    """Remove everything below the swept underside (flat to SWEEP_START, then the arc up to the lid)."""
+    S = sweep_pt(SW_R, 0.0)
+    Mp = sweep_pt(SW_R, SW_PHI / 2)
+    E = sweep_pt(SW_R, SW_PHI)
+    low = YB - 50
+    z1 = Z_TOP + 10
+    yz_region(comp, [('A', S, Mp, E), ('L', E, (E[0], z1)), ('L', (E[0], z1), (low, z1)),
+                     ('L', (low, z1), (low, SWEEP_START)), ('L', (low, SWEEP_START), S)], CUT)
+
+
+def cavity_body(comp):
+    """The inside space: tapered plan inset, floor following the swept underside, ceiling flat at the top."""
+    r = SW_R - WALL
+    S, Mp, E = sweep_pt(r, 0.0), sweep_pt(r, SW_PHI / 2), sweep_pt(r, SW_PHI)
+    top = H / 2 + 50
+    za, zb = FACE_T - 1.0, Z_TOP + 5
+    Vi, Ri = cavity_outline()
+    plan = extrude_outline(comp, Vi, Ri, FACE_T, Z_TOP + 1, NEW).bodies.item(0)
+    prof = yz_region(comp, [('L', (S[0], za), S), ('A', S, Mp, E), ('L', E, (E[0], zb)), ('L', (E[0], zb), (top, zb)),
+                            ('L', (top, zb), (top, za)), ('L', (top, za), (S[0], za))], NEW).bodies.item(0)
+    combine(comp, plan, prof, INTERSECT)
+    return plan
 
 
 def round_front_edge(comp, body):
@@ -253,29 +314,28 @@ def round_front_edge(comp, body):
 
 
 def build_shell(comp):
-    V, R = outline(HB, 0.0, Y_EXT)
-    extrude_outline(comp, V, R, 0, Z_TOP, NEW)
+    V, R = outline(HB, 0.0, YB, Y_EXT, R_BOTTOM)
+    shell = extrude_outline(comp, V, R, 0, Z_TOP, NEW).bodies.item(0)
     # mounting ears on the top corners: plates with a vertical screw slot (four pieces), trimmed by the sloped cut
-    hwt = HB + SIDE_TAPER * (H - 0.0)
     for s in (-1, 1):
-        a, b = s * (hwt - 1.5), s * (hwt + EAR_L)
-        c0, c1 = s * (hwt + EAR_L / 2 - EAR_SLOT_W / 2), s * (hwt + EAR_L / 2 + EAR_SLOT_W / 2)
+        a, b = s * (HW_TOP - 1.5), s * (HW_TOP + EAR_L)
+        c0, c1 = s * (HW_TOP + EAR_L / 2 - EAR_SLOT_W / 2), s * (HW_TOP + EAR_L / 2 + EAR_SLOT_W / 2)
         y0, y1 = H / 2 - EAR_T, Y_EXT
         for (xa, xb, za, zb) in [(a, b, EAR_Z0, EAR_SLOT_Z0), (a, b, EAR_SLOT_Z1, EAR_Z1),
                                  (a, c0, EAR_SLOT_Z0, EAR_SLOT_Z1), (c1, b, EAR_SLOT_Z0, EAR_SLOT_Z1)]:
             prism(comp, min(xa, xb), y0, max(xa, xb), y1, za, zb, JOIN)
+    combine(comp, shell, cavity_body(comp), CUT)
+    for x, y in POSTS:
+        prism(comp, x - POST_D / 2, y - POST_D / 2, x + POST_D / 2, H / 2 + 50, POST_Z0, Z_TOP, JOIN)
     if TILT > 0:
         cut_top_slope(comp)
+    cut_underside(comp)
+    for x, y in POSTS:
+        cyl(comp, x, y, LID_PILOT_D, Z_TOP - POST_PILOT_DEPTH, Z_TOP + 1, CUT)
     try:
         round_front_edge(comp, comp.bRepBodies.item(0))
     except Exception:
         print('front edge fillet skipped')
-    Vi, Ri = outline(HB, WALL, H / 2, 2.0)
-    extrude_outline(comp, Vi, Ri, FACE_T, Z_TOP + 1, CUT)
-    for x, y in POSTS:
-        cyl(comp, x, y, POST_D, FACE_T - 0.1, Z_TOP, JOIN)
-    for x, y in POSTS:
-        cyl(comp, x, y, LID_PILOT_D, Z_TOP - POST_PILOT_DEPTH, Z_TOP + 1, CUT)
     ph = GLASS_H + PCB_T
     ring(comp, TACH_CX, TACH_PCB_CY, TACH_W, TACH_H, FACE_T - 0.1, FACE_T + ph, JOIN)
     ring(comp, INFO_CX, YC, INFO_L, INFO_H, FACE_T - 0.1, FACE_T + ph, JOIN)
@@ -284,27 +344,29 @@ def build_shell(comp):
           YC + INFO_WIN_H / 2, -1, FACE_T + 0.1, CUT)
     # USB-C and terminal windows in the info-side end wall, at the board's height
     zb = Z_TOP - (STANDOFF + PCB_T)
-    for y, w, zc, h in [(USB_Y, USB_SLOT_W, USB_Z, USB_SLOT_H), (TERM_Y, TERM_SLOT_W, TERM_Z, TERM_SLOT_H)]:
+    for y, w, zc, h in [(BOARD_CY + USB_Y, USB_SLOT_W, USB_Z, USB_SLOT_H), (BOARD_CY + TERM_Y, TERM_SLOT_W, TERM_Z, TERM_SLOT_H)]:
         z = zb - zc
         prism(comp, -HB - 60, y - w / 2, BOARD_CX - BOARD_L / 2 - BOARD_END_GAP + 0.5, y + w / 2, z - h / 2, z + h / 2, CUT)
 
 
 def build_lid(comp):
     lx = lambda x: XOFF - x
-    V, R = outline(HB, 0.0, y_plane(Z_TOP))
+    yt = y_plane(Z_TOP)
+    V, R = outline(HB, 0.0, Y_BOT_OUT, yt, 0.0)
     extrude_outline(comp, V, R, 0, LID_T, NEW, XOFF)
-    # lip: a ring that follows the cavity, notched round the posts
-    Vo, Ro = outline(HB, WALL + LIP_TOL, H / 2, 2.0)
-    Vn, Rn = outline(HB, WALL + LIP_TOL + LIP_T, H / 2, 2.0)
+    # lip: a ring that follows the cavity at the back, notched round the posts
+    Vo, Ro = outline(HB, WALL + LIP_TOL, Y_BOT_IN + LIP_TOL, H / 2 - WALL - LIP_TOL, 0.0)
+    Vn, Rn = outline(HB, WALL + LIP_TOL + LIP_T, Y_BOT_IN + LIP_TOL + LIP_T, H / 2 - WALL - LIP_TOL - LIP_T, 0.0)
     sk = sketch_at(comp, LID_T - 0.1)
     draw_outline(sk, Vo, Ro, XOFF)
     draw_outline(sk, Vn, Rn, XOFF)
     ringp = [p for p in sk.profiles if p.profileLoops.count == 2][0]
     extrude(comp, ringp, LIP_H + 0.1, JOIN)
     for x, y in POSTS:
-        cyl(comp, lx(x), y, POST_D + 1.0, LID_T - 0.2, LID_T + LIP_H + 1, CUT)
+        prism(comp, lx(x) - POST_D / 2 - 0.5, y - POST_D / 2 - 0.5, lx(x) + POST_D / 2 + 0.5, y + POST_D / 2 + 0.5,
+              LID_T - 0.2, LID_T + LIP_H + 1, CUT)
     hx = (BOARD_CX - BOARD_L / 2 + BOARD_HOLE_INSET, BOARD_CX + BOARD_L / 2 - BOARD_HOLE_INSET)
-    hy = (-BOARD_W / 2 + BOARD_HOLE_INSET, BOARD_W / 2 - BOARD_HOLE_INSET)
+    hy = (BOARD_CY - BOARD_W / 2 + BOARD_HOLE_INSET, BOARD_CY + BOARD_W / 2 - BOARD_HOLE_INSET)
     for x in hx:
         for y in hy:
             cyl(comp, lx(x), y, STANDOFF_D, LID_T - 0.1, LID_T + STANDOFF, JOIN)
@@ -321,8 +383,8 @@ def build_all():
     comp = adsk.fusion.Design.cast(app.activeProduct).rootComponent
     build_shell(comp)
     build_lid(comp)
-    lines = ['Outer: %.1f mm wide at the bottom, %.1f at the top, %.1f high, %.1f deep (+ ears), lid %.1f mm' % (
-        2 * HB, 2 * HW_TOP, H, Z_TOP, LID_T)]
+    lines = ['Outer: %.1f mm wide at the bottom, %.1f at the top, %.1f high, %.1f deep (+ ears), lid %.1f mm; sweep R%.0f' % (
+        2 * HB, 2 * HW_TOP, H, Z_TOP, LID_T, SW_R)]
     for b in comp.bRepBodies:
         bb = b.boundingBox
         lines.append('%s %.1f x %.1f x %.1f mm' % (b.name, (bb.maxPoint.x - bb.minPoint.x) * 10,

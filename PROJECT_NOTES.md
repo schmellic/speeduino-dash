@@ -210,22 +210,25 @@ The bridge C3 (mounted in the car) has no OTA yet; it would need the same treatm
 - Location decided 2026-11-23: under-dash pod (see "Dash pod enclosure"). Earlier note: glovebox area, or under the dash. Under-dash would need a bracket instead of a flush mount; measure the real opening and depth. PETG for heat. Remember the tach ring is 360 x 360 px on a round 2.1" panel.
 - The firmware, thresholds and layout are settled enough to design around; only the physical mount is open.
 
-## Dash pod enclosure (draft v2, 2026-11-23, not printed yet)
+## Dash pod enclosure (draft v3, 2026-11-23, not printed yet)
 Decisions (user): an under-dash pod screwed to the dash lower lip (no existing gauge plate or gauges in the car), tach and info screen side by side,
 everything inside (both screens, the dash perfboard, 12 V + fuel sender cable out of the box). v1 was a plain rectangular box and the user rejected it: the pod must follow the
 shape of moulded under-dash gauge panels (tapered, rounded, sloped). Style references (data only, not used): Buzzbug 00-3034-0 (black plastic tray, 279 mm wide at the top, 229 mm at the bottom,
 89-121 mm high, 89 mm deep, rounded bottom corners, flat flange against the dash) and Cool Air VW JOPEX AC8573034.
 - `enclosure/DashPod/DashPod.py` (+ `.manifest`): Fusion script, constants at the top. STLs: `enclosure/stl/dash_pod_shell.stl`, `dash_pod_lid.stl` (regenerate after any change).
   Run it through the MCP by exec'ing the copy in Fusion's Scripts folder (see BridgeBox); Fusion must have no command dialog open (a stray Move/Copy dialog blocks every script).
-- Shape: 184 mm wide at the bottom, 203 mm at the top (`SIDE_TAPER`), 78.8 mm high, 42.5 mm deep, bottom corners R16, top cut flat against the dash underside by a sloped plane
-  (`TILT` = 10 degrees tips the face up toward the driver), two mounting ears (16 mm, 4.5 x 12 mm slot) on the top corners trimmed flush with that plane (235 mm over the ears). The outline width is
-  solved by the script so both PCBs and the lid posts clear the curved walls. Face plate 2.5 mm, walls 2.4 mm. The 3 mm front-edge rounding is attempted but Fusion refused it (skipped).
+- Shape (v3): 184 mm wide at the bottom, 203 mm at the top (`SIDE_TAPER`), 78.8 mm high at the face, 90 mm deep (`POD_DEPTH`; the user said depth can exceed the Buzzbug panel's 89 mm),
+  bottom corners R16, the underside flat for 18 mm then sweeping up on an R170 arc (`SWEEP_START`, `SWEEP_RISE` 16 mm by the lid), top cut flat against the dash underside by a sloped plane
+  (`TILT` = 10 degrees tips the face up toward the driver), two mounting ears (16 mm, 4.5 x 12 mm slot) on the top corners trimmed flush with that plane (235 mm over the ears).
+  The outline width is solved by the script so both PCBs and the lid posts clear the curved walls. Face plate 2.5 mm, walls 2.4 mm. The 3 mm front-edge rounding is attempted but Fusion refuses it (skipped).
+  The lid (back plate, 207 x 79 mm) is the section at the back, so it is shorter than the face; the perfboard sits on it, shifted up (`BOARD_CY`). All four M3 lid screws are in a row along the top
+  (posts hang from the ceiling behind the screens), because the underside curves away at the bottom. History: v1 was a plain box, v2 only tapered, both rejected by the user as "just a blob".
 - Layout seen from the driver: tach on the left, info screen on the right. Tach opening 53.4 mm; info opening 59.6 x 45 mm; each PCB has a locating wall (0.25 mm clearance) behind the face plate.
   Four M3 machine-screw posts (2.8 mm pilot) sit beside and between the screens. The perfboard (70 mm along X) sits on four M2 standoffs on the lid, component side forward, with its USB-C
   and the 3-way terminal facing the driver's-right end wall, where a USB slot (14 x 8) and a terminal window (19 x 9) are cut.
 - ASSUMED, to be measured before printing: tach circle centre (assumed on the PCB's centreline, 29.6 mm from the top), glass height above the PCB (2.5 mm), info active-area centre
   (34.6 mm from the tach-side end of the PCB), screen mounting holes (NOT modelled: the PCBs are held only by the locating walls, so use tape/glue or add screw posts once the holes are known),
-  perfboard corner holes (2.5 mm in), USB-C height above the perfboard (5.5 mm), terminal position (from the photo), depth needed behind the screens (INNER_D 40 mm), the dash lip geometry for the ears,
+  perfboard corner holes (2.5 mm in), USB-C height above the perfboard (5.5 mm), terminal position (from the photo), how much room the wiring needs behind the screens (the pod is now deep), the dash lip geometry for the ears,
   and the tilt angle. Print the shell first as a fit check.
 - Print: shell face-down, lid plate-down, no supports, PETG for the car (PLA is fine for a bench fit check).
 
