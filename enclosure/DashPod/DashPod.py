@@ -35,7 +35,9 @@ TERM_Y, TERM_Z = 19.8, 4.5        # 3-way terminal centre across the board; entr
 TERM_SLOT_W, TERM_SLOT_H = 19.0, 9.0
 # ---- Shell --------------------------------------------------------------
 FACE_T, WALL, LID_T = 2.5, 2.4, 2.5
-POD_DEPTH = 90.0                  # overall depth, face to lid (room for wiring behind the screens)
+SCREEN_REAR_H = 3.0               # ASSUMED: solder joints / SD slot behind the screen PCBs
+WIRE_GAP = 8.0                    # slack for the header wires between the screens and the perfboard
+BOARD_COMP_H = 22.0               # ASSUMED: tallest thing on the perfboard (headers with Dupont plugs, ESP32 module, terminal)
 IH = 74.0                         # inside height
 POST_D, LID_PILOT_D, LID_HOLE_D, POST_PILOT_DEPTH = 7.0, 2.8, 3.4, 12.0   # M3 machine screws
 SEAM = 12.0                       # gap between the two PCBs (the two middle lid posts sit in it)
@@ -49,14 +51,14 @@ SIDE_TAPER = 0.12                 # each side moves in this much per mm of heigh
 R_BOTTOM = 16.0                   # outer radius of the bottom corners
 WING_RISE, WING_X0, WING_X1, WING_R = 24.0, 82.0, 96.0, 20.0   # the top edge curves up at both ends to follow the dash lip
 R_FACE = 3.0                      # rounded front edge (not on the top edge)
-SWEEP_START = 18.0                # depth where the underside starts to curve up
+SWEEP_START = 14.0                # depth where the underside starts to curve up
 SWEEP_RISE = 16.0                 # how far the underside has risen by the lid
 BOARD_CY = 4.0                    # perfboard centre height (the lid is shorter than the face, so it sits high)
 
 # ---- Derived layout -----------------------------------------------------
 H = IH + 2 * WALL
 YB = -H / 2
-Z_TOP = POD_DEPTH
+Z_TOP = math.ceil(FACE_T + GLASS_H + PCB_T + SCREEN_REAR_H + WIRE_GAP + STANDOFF + PCB_T + BOARD_COMP_H)   # face to lid seat
 TAN_T = math.tan(math.radians(TILT))
 K = math.sqrt(1 + SIDE_TAPER ** 2)
 LW = TACH_W + SEAM + INFO_L
