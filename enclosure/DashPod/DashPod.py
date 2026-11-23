@@ -2,7 +2,7 @@
 
 Shaped like a moulded under-dash gauge panel: wider at the top than the bottom (tapered sides), large rounded bottom corners,
 a rounded front edge, and a top that is cut flat against the underside of the dash (TILT tips the face up toward the driver).
-Two printed parts: the shell (face plate, walls, lid posts, screen pockets, two mounting ears) and the rear lid (carries the
+Two printed parts: the shell (face plate, walls, lid posts, screen pockets, screen screw posts) and the rear lid (carries the
 50 x 70 mm dash perfboard on four standoffs). Print the shell face-down and the lid plate-down, no supports.
 Frame (shell): the face is the XY plane at z=0 and the inside is +Z. The driver looks along +Z, so the driver's left is +X:
 the tach is on the driver's left, the info screen on the right. The top of the pod is +Y. The lid is laid out beside the shell,
@@ -45,8 +45,6 @@ IH = 74.0                         # inside height
 POST_D, LID_PILOT_D, LID_HOLE_D, POST_PILOT_DEPTH = 7.0, 2.8, 3.4, 12.0   # M3 machine screws
 SEAM = 12.0                       # gap between the two PCBs (the two middle lid posts sit in it)
 LIP_TOL, LIP_T, LIP_H = 0.2, 1.6, 2.0
-EAR_L, EAR_T, EAR_Z0, EAR_Z1 = 16.0, 4.0, 6.0, 32.0   # mounting ears on the top, flush with the top plane
-EAR_SLOT_W, EAR_SLOT_Z0, EAR_SLOT_Z1 = 4.5, 13.0, 25.0   # screws up into the dash lip (slot along Z)
 
 # ---- Shape --------------------------------------------------------------
 TILT = 0.0                       # degrees: the top plane rises this much per mm of depth, so the face tips up toward the driver
@@ -331,14 +329,6 @@ def round_front_edge(comp, body):
 def build_shell(comp):
     V, R = outer_outline(YB, R_BOTTOM)
     shell = extrude_outline(comp, V, R, 0, Z_TOP, NEW).bodies.item(0)
-    # mounting ears on the top corners: plates with a vertical screw slot (four pieces), trimmed by the sloped cut
-    for s in (-1, 1):
-        a, b = s * (HW_TOP - 1.5), s * (HW_TOP + EAR_L)
-        c0, c1 = s * (HW_TOP + EAR_L / 2 - EAR_SLOT_W / 2), s * (HW_TOP + EAR_L / 2 + EAR_SLOT_W / 2)
-        y0, y1 = H / 2 - EAR_T, H / 2
-        for (xa, xb, za, zb) in [(a, b, EAR_Z0, EAR_SLOT_Z0), (a, b, EAR_SLOT_Z1, EAR_Z1),
-                                 (a, c0, EAR_SLOT_Z0, EAR_SLOT_Z1), (c1, b, EAR_SLOT_Z0, EAR_SLOT_Z1)]:
-            prism(comp, min(xa, xb), y0, max(xa, xb), y1, za, zb, JOIN)
     combine(comp, shell, cavity_body(comp), CUT)
     for x, y in POSTS:
         prism(comp, x - POST_D / 2, y - POST_D / 2, x + POST_D / 2, H / 2 - WALL + 0.6, POST_Z0, Z_TOP, JOIN)
@@ -408,7 +398,7 @@ def build_all():
     comp = adsk.fusion.Design.cast(app.activeProduct).rootComponent
     build_shell(comp)
     build_lid(comp)
-    lines = ['Outer: %.1f mm wide at the bottom, %.1f at the top, %.1f high, %.1f deep (+ ears), lid %.1f mm; sweep R%.0f' % (
+    lines = ['Outer: %.1f mm wide at the bottom, %.1f at the top, %.1f high, %.1f deep, lid %.1f mm; sweep R%.0f' % (
         2 * HB, 2 * HW_TOP, H, Z_TOP, LID_T, SW_R)]
     for b in comp.bRepBodies:
         bb = b.boundingBox

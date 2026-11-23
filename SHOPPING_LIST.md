@@ -25,4 +25,4 @@ Already have: ESP32 DevKitC (WROOM-32), ESP32-C3. Prices not checked.
 - PETG filament (heat resistant, better than PLA for a hot glovebox) for the 3D-printed mount.
 - Optional: M3 x 8-10 mm screws (4) only if the box is built with `LID_MODE = 'screws'`; the default friction-fit lid needs none. Sleeving or sealant for the wire windows.
 - M2 x 6 mm screws (4) to hold the bridge board on its standoffs (machine screws work: they cut their own thread in the 1.9 mm pilot holes; do not go longer than 8 mm).
-- Dash pod: M3 x 8-10 mm machine screws (4) for the lid, M2 x 6 mm (4) for the dash perfboard, M2 x 4 mm (2) for the tach, M2.5 x 4 mm (4) for the info screen, and screws/nuts for the two mounting ears (4 mm class, length depends on the dash lip).
+- Dash pod: M3 x 8-10 mm machine screws (4) for the lid, M2 x 6 mm (4) for the dash perfboard, M2 x 4 mm (2) for the tach, M2.5 x 4 mm (4) for the info screen.

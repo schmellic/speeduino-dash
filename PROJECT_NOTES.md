@@ -334,3 +334,6 @@ Tach mounting holes: 8 mm up from the header end (user), 23.88 mm apart (listing
 
 ### Info screen screw posts (2026-11-23)
 User measured: four 3 mm holes, 3 mm in from each edge (so 80 x 44 mm apart). Tach tail is 30.5 mm wide with the holes about 3.3 mm from its edges, which confirms the 23.88 mm spacing and that they are centred. DashPod.py adds four 4.6 mm posts (2.5 mm tall, 2.1 mm pilot) for M2.5 x 4 mm screws. The right-hand posts touch the corner of the 59.6 x 45 mm info window by about 0.5 mm (window offset is ASSUMED, see INFO_ACTIVE_FROM_FAR); check against the real glass. Shell/lid STLs re-exported. Not printed.
+
+### Ears removed (2026-11-23)
+User: the side mounting ears are pointless (nothing for them to reach). Removed from DashPod.py; STLs re-exported (shell now 208.7 x 102.8 x 46 mm). How the pod fixes to the car is OPEN. Tach retention: the PCB is held only by the two tail screws plus the pocket walls; a top retainer is proposed, not built.
