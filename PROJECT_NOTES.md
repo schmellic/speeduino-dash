@@ -411,4 +411,5 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 - User measured: flat length L = 45 mm, step height S = 11 mm, slope angle A = 12 deg from the flat. Slope length T is not needed (the pod depth, 46 mm, cuts it off).
 - User: the dial face sits at the outer end of the short flat piece, so the flat runs from the face back 45 mm, then the dash steps down 11 mm and slopes at 12 deg.
 - Current pod is 48.5 mm deep overall (Z_TOP 46 + lid 2.5), 3.5 mm too deep. Preferred fix: make it 45 mm overall so the roof stays flat (needs the tallest thing above the perfboard, plugs fitted, to be about 18 mm or less, or less WIRE_GAP). Also move the lid cable hole lower (now y = 28, which the stepped-down dash would block).
+- User: the dash is curved at the step, so round off that transition on the pod (the back top edge). Radius not yet known; ask how far back from the face the curve starts.
 - Pod not changed yet. Do not print the shell until this is done; the 250 mm top-edge template only checks the width.
