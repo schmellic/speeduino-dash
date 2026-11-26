@@ -557,6 +557,25 @@ def build_drill_template(drill=6.0, half_w=70.0, plate_t=3.0, lip_h=8.0):
         (bb.maxPoint.x - bb.minPoint.x) * 10, (bb.maxPoint.y - bb.minPoint.y) * 10, (bb.maxPoint.z - bb.minPoint.z) * 10, drill, RIV_X, zc)
 
 
+def build_split_template(band=16.0, over=40.0):
+    """The top-edge template as two halves that overlap by `over` mm past the centre, to find the right width: slide them apart
+    until both wings sit on the dash, tape them, and measure across the outer top corners (the difference from the pod's top
+    width at those corners is what to add)."""
+    app = adsk.core.Application.get()
+    app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)
+    comp = adsk.fusion.Design.cast(app.activeProduct).rootComponent
+    V, R = outer_outline(YB, R_BOTTOM)
+    for sx, dy in ((-1, 0.0), (1, -(WING_RISE + band + 10.0))):
+        body = extrude_outline(comp, V, R, 0, 3.0, NEW, 0.0, dy).bodies.item(0)
+        for x0, x1, y0, y1 in ((-300, 300, -150, H / 2 - band), (over, 300, H / 2 - band - 1, Y_EXT + 1)):
+            xa, xb = (x0, x1) if sx < 0 or x0 == -300 else (-x1, -x0)
+            tool = prism(comp, xa, y0 + dy, xb, y1 + dy, -1.0, 4.0, NEW).bodies.item(0)
+            combine(comp, body, tool, CUT)
+    yw = H / 2 + WING_RISE
+    corner = HB + SIDE_TAPER * (yw - YB)
+    return '%d pieces; width across the outer top corners at the current design: %.1f mm' % (comp.bRepBodies.count, 2 * corner)
+
+
 def run(context):
     ui = None
     try:

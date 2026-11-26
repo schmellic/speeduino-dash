@@ -395,3 +395,8 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 - Sequence: backlights fade in (PWM, 500 ms), sweep and slide (about 2.5 s), fade out, then the normal faces fade in (400 ms). Total about 3.5 s before the normal screens. The OTA Wi-Fi window (120 s) is counted from power-on as before.
 - Dash firmware is 87.2% of flash after this. A Beetle-with-flashing-lights splash was tried in mock-ups and dropped (looked wrong without a proper bitmap).
 - Dash USB port is the CH340 `/dev/ttyUSB0`; never touch `/dev/ttyACM0` (the ECU's own USB, opening it resets the ECU).
+
+## Top-edge test result and sliding width template (2026-11-26)
+- RESULT (user, template pushed fully up): the top edge is TOO NARROW. From the photos it is centred on the knob and the wing angle (about 40 deg) matches the dash curves; the dash bulge is wider than the wings. Amount not yet known.
+- `enclosure/stl/dash_width_template.stl` (`build_split_template()`): the same top edge as two halves (each 141.5 x 40 x 3 mm), overlapping 40 mm past the centre. Slide apart until both wings sit on the dash, tape, and measure across the two outer top corners; the design is 203.0 mm there, so the extra is (measured - 203). Result: pending.
+- Limit to remember: P1S bed 256 mm; the shell prints face-down at 203 mm wide now, so more than about 45 mm extra needs diagonal placement or a rethink (split shell, or shorter wings).
