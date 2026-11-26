@@ -423,3 +423,12 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 - C "compact, no wings": 187 wide x 76 high, bottom half-width 92, top 94, bottom R32, top R14, about 26% less. Does not follow the dash shoulders.
 - Bottom flat goes from about 210 to about 140 mm in all three. Height stays (tach PCB sets it). Lid screw posts at x = +/-96 would need to move inward.
 - Check: in the mock-up the steering wheel rim hides part of the tach (driver side). Check the real sightline; swapping the two screens is an option.
+
+## Pod shape B built (2026-11-26) -- CURRENT SHAPE
+- User chose B "curved hull" and kept the 3 mm front edge round. Chrome strips and bezels dropped ("too hard"). Dash-coloured paint planned.
+- `DashPod.py` outline rewritten: spline sides from the wing tips (`TIP_X = 125`) to a bottom that is full depth to x = +/-66 and bows 2.1 mm lower in the middle (`lower_curve`, `face_body`, `inset_body`). The old tapered outline, `SIDE_TAPER`, the width-fitting loop and `build_wing_tests` are gone.
+- Wing inner edge now ends at x = 118 (was 119.5) at the same 40 deg, so tips are 1.3 mm lower (rise 22.74): needed for the 3 mm round to compute. Flat top and 250 mm tip width unchanged.
+- Outer lid screws moved to x = +/-86 (middle pair +/-43, all y = 20).
+- Size: shell 250 x 100.6 x 42.5, lid 250 x 82.5 x 6.5; 45 mm deep assembled. Shell face-down and lid plate-down, no supports. P1S bed leaves 3 mm per side.
+- Checked: watertight STLs, STL slices, no overlap between shell, lid, perfboard, 22 mm component space and screen PCBs in Fusion. Not printed or test-fitted. Top-edge template STL regenerated.
+- Open: steering wheel may hide part of the tach (check from the seat; screens could be swapped). Pocket walls nearly touch the side walls (0.06 mm margin at the tightest corner).

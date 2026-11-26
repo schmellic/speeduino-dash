@@ -1,7 +1,7 @@
 """Fusion script: under-dash pod for the dash (2.1" round tach, 2.8" info screen, dash ESP32 perfboard).
 
-Shaped like a moulded under-dash gauge panel: wider at the top than the bottom (tapered sides), large rounded bottom corners,
-a rounded front edge, and a flat top that ends where the dash underside steps down (DEPTH).
+Shaped like a curved hull under the dash: the sides curve in from the wing tips to a slightly bowed bottom, a rounded front
+edge, and a flat top that ends where the dash underside steps down (DEPTH).
 Two printed parts: the shell (face plate, walls, lid posts, screen pockets, screen screw posts) and the rear lid (carries the
 50 x 70 mm dash perfboard on four standoffs). Print the shell face-down and the lid plate-down, no supports.
 Frame (shell): the face is the XY plane at z=0 and the inside is +Z. The driver looks along +Z, so the driver's left is +X:
@@ -52,14 +52,16 @@ LIP_TOL, LIP_T, LIP_H = 0.2, 1.6, 2.0
 # ---- Shape --------------------------------------------------------------
 PITCH, YAW = 0.0, 0.0            # degrees: the face plate tips up (bottom toward the driver) and turns to face the driver, who sits to the LEFT of the pod (LHD): the right-hand (info) end comes toward the driver; pivot is the top edge at the tach end
 TILT = 0.0                       # degrees: the top plane rises this much per mm of depth, so the face tips up toward the driver
-SIDE_TAPER = 0.12                 # each side moves in this much per mm of height going down (wider at the top)
-R_BOTTOM = 16.0                   # outer radius of the bottom corners
 WIDEN = 23.5                      # extra on each side to match the dash: 250 mm tip to tip, measured with the sliding template (2026-11-26)
-WING_RISE, WING_X0, WING_X1, WING_R = 24.0, 67.4 + WIDEN, 96.0 + WIDEN, 20.0   # WING_X0 gives a 40 deg wing (test piece fit, 2026-11-23); the top edge curves up at both ends to follow the dash lip
+WING_RISE, WING_X0, WING_X1, WING_R = 22.74, 67.4 + WIDEN, 94.5 + WIDEN, 20.0   # 40 deg wing (test piece fit, 2026-11-23), flattening 1.5 mm early so the 3 mm front round fits at the tips
 RIV_D, RIV_X, RIV_Z0, RIV_Z1 = 4.5, 50.0, 16.0, 34.0   # roof bolt slots for rivnuts in the dash lip (M4 clearance, x each side, along the depth): ASSUMED, check against the dash
+TIP_X = 125.0                     # half width at the wing tips (250 mm, measured)
+BOT_X = 66.0                      # the bottom is full depth out to here, then the side curves up
+BOW = 2.1                         # how far the middle of the bottom hangs below its ends
+SIDE_C1_X, SIDE_C2 = 82.0, (86.0, 0.0)   # control points of the side curve, from (BOT_X, bottom) to the wing tip
 R_FACE = 3.0                      # rounded front edge (not on the top edge)
 BACK_R = 2.0                      # slight round on the lid's rear top edge, where the dash curves at the step
-LID_POST_Y, LID_POST_X = 20.0, 43.0   # screw heads sit below the dash step; the middle pair stands clear of the perfboard
+LID_POST_Y, LID_POST_X, LID_POST_OUT = 20.0, 43.0, 86.0   # screw heads sit below the dash step; the middle pair stands clear of the perfboard
 SWEEP_START = 14.0                # depth where the underside starts to curve up
 SWEEP_RISE = 16.0                 # how far the underside has risen by the lid
 BOARD_CY = 5.0                    # perfboard centre height (the lid is shorter than the face, so it sits high)
@@ -72,7 +74,6 @@ Z_TOP = DEPTH - LID_T                                                      # fac
 WIRE_GAP = Z_TOP - (FACE_T + max(GLASS_H + PCB_T, INFO_GLASS_H + INFO_PCB_T) + SCREEN_REAR_H + STANDOFF + PERF_T + BOARD_COMP_H)
 assert WIRE_GAP >= 4.0, 'too little room behind the screens'
 TAN_T = math.tan(math.radians(TILT))
-K = math.sqrt(1 + SIDE_TAPER ** 2)
 PIV_X, PIV_Y = (TACH_W + SEAM + INFO_L) / 2, H / 2      # tilt pivot: top edge, tach end (nearest the driver in a LHD car)
 
 
@@ -94,12 +95,13 @@ TACH_PCB_CY = YC + (TACH_C_FROM_TOP - (TACH_H - TACH_C_FROM_TOP)) / 2
 Y_EXT = H / 2 + WING_RISE                            # top of the end wings
 PY = IH / 2 - POST_D / 2
 POST_Z0 = FACE_T + max(GLASS_H + PCB_T, INFO_GLASS_H + INFO_PCB_T) + 0.5             # posts start behind the screens and hang from the ceiling
-_px0, _px1 = INFO_XMIN + POST_D / 2 - WIDEN, LW / 2 - POST_D / 2 + WIDEN   # lid posts spread with the width
-POSTS = [(x, LID_POST_Y) for x in (_px0, -LID_POST_X, LID_POST_X, _px1)]
+POSTS = [(x, LID_POST_Y) for x in (-LID_POST_OUT, -LID_POST_X, LID_POST_X, LID_POST_OUT)]
 # underside sweep: a circular arc, tangent to the flat bottom at SWEEP_START, rising SWEEP_RISE by the lid
 _L = Z_TOP - SWEEP_START
-SW_R = (_L ** 2 + SWEEP_RISE ** 2) / (2 * SWEEP_RISE)
-SW_CY = YB + SW_R
+YBL = YB - BOW                       # lowest point of the face: the sweep starts here
+_RISE = SWEEP_RISE + BOW
+SW_R = (_L ** 2 + _RISE ** 2) / (2 * _RISE)
+SW_CY = YBL + SW_R
 SW_PHI = math.asin(_L / SW_R)
 
 
@@ -126,25 +128,6 @@ def y_plane(z):
     return H / 2 + z * TAN_T
 
 
-def outline(hb, t, yb, yt, rb, rt=0.0):
-    """Tapered outline (counter-clockwise) between heights yb and yt; t insets the sloped sides."""
-    hw = lambda y: hb + SIDE_TAPER * (y - YB) - t * K
-    return ([(-hw(yb), yb), (hw(yb), yb), (hw(yt), yt), (-hw(yt), yt)], [rb, rb, rt, rt])
-
-
-def outer_outline(yb, rb):
-    """Outer face outline: tapered sides, flat middle top, and a wing at each end curving up along the dash lip."""
-    hw = lambda y: HB + SIDE_TAPER * (y - YB)
-    yw = H / 2 + WING_RISE
-    V = [(-hw(yb), yb), (hw(yb), yb), (hw(yw), yw), (WING_X1, yw), (WING_X0, H / 2),
-         (-WING_X0, H / 2), (-WING_X1, yw), (-hw(yw), yw)]
-    return V, [rb, rb, 0.0, 2.0, WING_R, WING_R, 2.0, 0.0]
-
-
-def cavity_outline():
-    return outline(HB, WALL, YB + WALL, H / 2 - WALL, R_BOTTOM - WALL, 2.0)
-
-
 def _unit(v):
     n = math.hypot(*v)
     return (v[0] / n, v[1] / n)
@@ -167,23 +150,39 @@ def rounded(V, R):
     return [_corner(V[i - 1], V[i], V[(i + 1) % n], R[i]) for i in range(n)]
 
 
-def polyline(V, R, steps=16):
-    pts = []
-    for T1, T2, mid in rounded(V, R):
-        if mid is None:
-            pts.append(T1)
-            continue
-        ax, ay = T1; bx, by = mid; cx, cy = T2
-        d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by))
-        ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / d
-        uy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / d
-        a0, a1, am = math.atan2(ay - uy, ax - ux), math.atan2(cy - uy, cx - ux), math.atan2(by - uy, bx - ux)
-        da = (a1 - a0 + math.pi) % (2 * math.pi) - math.pi
-        if (am - a0 + math.pi) % (2 * math.pi) - math.pi < 0 != da < 0:
-            da = da - math.copysign(2 * math.pi, da)
-        r = math.hypot(ax - ux, ay - uy)
-        pts += [(ux + r * math.cos(a0 + da * i / steps), uy + r * math.sin(a0 + da * i / steps)) for i in range(steps + 1)]
-    return pts
+def _bez(p0, p1, p2, p3, n):
+    out = []
+    for i in range(n + 1):
+        t = i / n
+        a, b, c, d = (1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t * t, t ** 3
+        out.append((a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0], a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1]))
+    return out
+
+
+def lower_curve(t=0.0, top=None):
+    """The curved lower boundary of the face, left to right: from the left side, round the bowed bottom, up the right side.
+    t offsets it inward; it stops at height `top` (the wing tips if not given)."""
+    yw = H / 2 + WING_RISE
+    right = _bez((0.0, YB - BOW), (30.0, YB - BOW), (48.0, YB), (BOT_X, YB), 24)
+    right += _bez((BOT_X, YB), (SIDE_C1_X, YB), SIDE_C2, (TIP_X, yw), 48)[1:]
+    if t:
+        off = []
+        for i, (x, y) in enumerate(right):
+            a, b = right[max(i - 1, 0)], right[min(i + 1, len(right) - 1)]
+            tx, ty = _unit((b[0] - a[0], b[1] - a[1])) if i else (1.0, 0.0)
+            off.append((x - ty * t, y + tx * t))
+        right = off
+    if top is not None:
+        for i in range(1, len(right)):
+            if right[i][1] >= top > right[i - 1][1]:
+                (x0, y0), (x1, y1) = right[i - 1], right[i]
+                end = (x0 + (x1 - x0) * (top - y0) / (y1 - y0), top)
+                keep = right[:i]
+                if math.hypot(end[0] - keep[-1][0], end[1] - keep[-1][1]) < 1.0:
+                    keep = keep[:-1]
+                right = keep + [end]
+                break
+    return [(-x, y) for x, y in right[:0:-1]] + right
 
 
 def clearance(pt, pts):
@@ -200,26 +199,21 @@ def clearance(pt, pts):
     return best if inside else -best
 
 
-def _fits(hb):
-    pts = polyline(*outline(hb, WALL, YB + WALL, H / 2 - WALL, R_BOTTOM - WALL, 2.0))
-    g = POCKET_CLR + POCKET_WALL
-    for cx, cy, w, h in [(TACH_CX, TACH_PCB_CY, TACH_W, TACH_H), (INFO_CX, YC, INFO_L, INFO_H)]:
-        for sx in (-1, 1):
-            for sy in (-1, 1):
-                if clearance((cx + sx * (w / 2 + g), cy + sy * (h / 2 + g)), pts) < -0.2:
-                    return False
-    return all(clearance((x - math.copysign(WIDEN, x), y), pts) >= 3.0 for x, y in (POSTS[0], POSTS[-1]))
-
-
-HB = 60.0
-while not _fits(HB):
-    HB += 0.5
-HB += WIDEN                       # the screens set the least width; the dash sets the real one
-XOFF = 2 * (HB + SIDE_TAPER * (Y_EXT - YB)) + 15.0
-_in_hw = lambda y: HB + SIDE_TAPER * (y - YB) - WALL * K
+XOFF = 2 * TIP_X + 15.0
 BOARD_CX = 0.0                    # perfboard centred across the pod; its terminal end faces +X (door side)
-HW_TOP = HB + SIDE_TAPER * H
+HW_TOP = TIP_X
 ZF = math.ceil(-min(tilt_pt(x, y, 0.0)[2] for x in (-HW_TOP - 10, HW_TOP + 10) for y in (YB, Y_EXT))) + 3 if (PITCH or YAW) else 0   # how far the blank extends in front of z=0 before the tilted face plane trims it
+
+
+def _check_fit():
+    """Every screen pocket corner (and the round part of the tach pocket) must be inside the walls."""
+    inner = lower_curve(WALL, H / 2 - WALL)
+    g = POCKET_CLR + POCKET_WALL
+    r = TACH_W / 2 + g
+    pts = [(TACH_CX + r * math.cos(a * math.pi / 45), YC + r * math.sin(a * math.pi / 45)) for a in range(90)]
+    pts += [(TACH_CX + s * (TACH_TAIL_W / 2 + g), TACH_PCB_CY - TACH_H / 2 - g) for s in (-1, 1)]
+    pts += [(INFO_CX + sx * (INFO_L / 2 + g), YC + sy * (INFO_H / 2 + g)) for sx in (-1, 1) for sy in (-1, 1)]
+    return min(clearance(p, inner) for p in pts)
 
 
 def mm(v):
@@ -243,22 +237,54 @@ def P3(x, y):
     return adsk.core.Point3D.create(mm(x), mm(y), 0)
 
 
-def draw_outline(sk, V, R, dx=0.0, dy=0.0):
-    c = rounded(V, R)
-    n = len(V)
-    for i in range(n):
-        T1, T2, mid = c[i]
-        if mid is not None:
-            sk.sketchCurves.sketchArcs.addByThreePoints(P3(T1[0] + dx, T1[1] + dy), P3(mid[0] + dx, mid[1] + dy), P3(T2[0] + dx, T2[1] + dy))
-        N1 = c[(i + 1) % n][0]
-        if math.hypot(T2[0] - N1[0], T2[1] - N1[1]) > 1e-6:
-            sk.sketchCurves.sketchLines.addByTwoPoints(P3(T2[0] + dx, T2[1] + dy), P3(N1[0] + dx, N1[1] + dy))
+def _fit_spline(sk, pts, dx, dy):
+    col = adsk.core.ObjectCollection.create()
+    for x, y in pts:
+        col.add(P3(x + dx, y + dy))
+    return sk.sketchCurves.sketchFittedSplines.add(col)
 
 
-def extrude_outline(comp, V, R, z0, z1, op, dx=0.0, dy=0.0):
+def face_body(comp, z0, z1, op=None, dx=0.0, dy=0.0):
+    """The outer face outline (curved hull below, flat middle top, a wing at each end) extruded from z0 to z1."""
     sk = sketch_at(comp, z0)
-    draw_outline(sk, V, R, dx, dy)
-    return extrude(comp, sk.profiles.item(0), z1 - z0, op)
+    sp = _fit_spline(sk, lower_curve(), dx, dy)
+    T, yw = H / 2, H / 2 + WING_RISE
+    V = [(TIP_X, yw), (WING_X1, yw), (WING_X0, T), (-WING_X0, T), (-WING_X1, yw), (-TIP_X, yw)]
+    R = [0.0, 2.5, WING_R, WING_R, 2.5, 0.0]
+    c = [rounded(V, R)[i] if 0 < i < len(V) - 1 else (V[i], V[i], None) for i in range(len(V))]
+    lines, arcs = sk.sketchCurves.sketchLines, sk.sketchCurves.sketchArcs
+    prev = sp.endSketchPoint                      # right wing tip
+    for i in range(1, len(V)):
+        T1, T2, mid = c[i]
+        end = sp.startSketchPoint if i == len(V) - 1 else P3(T1[0] + dx, T1[1] + dy)
+        ln = lines.addByTwoPoints(prev, end)
+        if mid is None:
+            continue
+        arc = arcs.addByThreePoints(ln.endSketchPoint, P3(mid[0] + dx, mid[1] + dy), P3(T2[0] + dx, T2[1] + dy))
+        a, b = arc.startSketchPoint, arc.endSketchPoint      # the arc may store its ends in either order
+        here = ln.endSketchPoint.geometry
+        prev = a if a.geometry.distanceTo(here) > b.geometry.distanceTo(here) else b
+    assert sk.profiles.count == 1, 'face outline: %d profiles' % sk.profiles.count
+    return extrude(comp, sk.profiles.item(0), z1 - z0, op if op is not None else NEW)
+
+
+def inset_body(comp, t, top, z0, z1, dx=0.0):
+    """The face outline offset inward by t, cut off flat at height `top`, as a new body."""
+    sk = sketch_at(comp, z0)
+    sp = _fit_spline(sk, lower_curve(t, top), dx, 0.0)
+    sk.sketchCurves.sketchLines.addByTwoPoints(sp.endSketchPoint, sp.startSketchPoint)
+    assert sk.profiles.count == 1, 'inset outline: %d profiles' % sk.profiles.count
+    return extrude(comp, sk.profiles.item(0), z1 - z0, NEW).bodies.item(0)
+
+
+def clip_below(comp, body, y, z0, z1):
+    """Remove the part of one body below height y."""
+    sk = sketch_at(comp, z0)
+    sk.sketchCurves.sketchLines.addTwoPointRectangle(P3(-2 * XOFF, YB - 60), P3(2 * XOFF, y))
+    inp = comp.features.extrudeFeatures.createInput(sk.profiles.item(0), CUT)
+    inp.setDistanceExtent(False, adsk.core.ValueInput.createByReal(mm(z1 - z0)))
+    inp.participantBodies = [body]
+    comp.features.extrudeFeatures.add(inp)
 
 
 def prism(comp, x0, y0, x1, y1, z0, z1, op):
@@ -340,8 +366,7 @@ def cavity_body(comp):
     S, Mp, E = sweep_pt(r, 0.0), sweep_pt(r, SW_PHI / 2), sweep_pt(r, SW_PHI)
     top = H / 2 + 50
     za, zb = (-ZF if ZF else FACE_T) - 1.0, Z_TOP + 5
-    Vi, Ri = cavity_outline()
-    plan = extrude_outline(comp, Vi, Ri, -ZF if ZF else FACE_T, Z_TOP + 1, NEW).bodies.item(0)
+    plan = inset_body(comp, WALL, H / 2 - WALL, -ZF if ZF else FACE_T, Z_TOP + 1)
     prof = yz_region(comp, [('L', (S[0], za), S), ('A', S, Mp, E), ('L', E, (E[0], zb)), ('L', (E[0], zb), (top, zb)),
                             ('L', (top, zb), (top, za)), ('L', (top, za), (S[0], za))], NEW).bodies.item(0)
     combine(comp, plan, prof, INTERSECT)
@@ -452,8 +477,7 @@ def build_shell(comp):
         cut_out, cut_in = half_space(comp, 0.0), half_space(comp, FACE_T)
         parts += [cut_out, cut_in]
     tilt_bodies(comp, parts)
-    V, R = outer_outline(YB, R_BOTTOM)
-    shell = extrude_outline(comp, V, R, -ZF, Z_TOP, NEW).bodies.item(0)
+    shell = face_body(comp, -ZF, Z_TOP).bodies.item(0)
     if not ZF:
         try:
             round_front_edge(comp, shell)
@@ -501,18 +525,18 @@ def round_back_edge(comp, lid):
 
 def build_lid(comp):
     lx = lambda x: XOFF - x
-    V, R = outer_outline(Y_BOT_OUT, 0.0)
-    lid = extrude_outline(comp, V, R, 0, LID_T, NEW, XOFF).bodies.item(0)
+    lid = face_body(comp, 0, LID_T, NEW, XOFF).bodies.item(0)
+    clip_below(comp, lid, Y_BOT_OUT, -1.0, LID_T + 1.0)
     round_back_edge(comp, lid)
     lz = lambda z: Z_TOP + LID_T - z       # lid z (outer face at 0) for a shell depth z
     # lip: a ring that follows the cavity at the back, notched round the posts
-    Vo, Ro = outline(HB, WALL + LIP_TOL, Y_BOT_IN + LIP_TOL, H / 2 - WALL - LIP_TOL, 0.0, 2.0)
-    Vn, Rn = outline(HB, WALL + LIP_TOL + LIP_T, Y_BOT_IN + LIP_TOL + LIP_T, H / 2 - WALL - LIP_TOL - LIP_T, 0.0)
-    sk = sketch_at(comp, LID_T - 0.1)
-    draw_outline(sk, Vo, Ro, XOFF)
-    draw_outline(sk, Vn, Rn, XOFF)
-    ringp = [p for p in sk.profiles if p.profileLoops.count == 2][0]
-    extrude(comp, ringp, LIP_H + 0.1, JOIN)
+    t0, t1 = WALL + LIP_TOL, WALL + LIP_TOL + LIP_T
+    lip = inset_body(comp, t0, H / 2 - t0, LID_T - 0.1, LID_T + LIP_H, XOFF)
+    clip_below(comp, lip, Y_BOT_IN + LIP_TOL, LID_T - 1.0, LID_T + LIP_H + 1)
+    hole = inset_body(comp, t1, H / 2 - t1, LID_T - 0.1, LID_T + LIP_H, XOFF)
+    clip_below(comp, hole, Y_BOT_IN + LIP_TOL + LIP_T, LID_T - 1.0, LID_T + LIP_H + 1)
+    combine(comp, lip, hole, CUT)
+    combine(comp, lid, lip, JOIN)
     for x, y in POSTS:
         prism(comp, lx(x) - POST_D / 2 - 0.5, y - POST_D / 2 - 0.5, lx(x) + POST_D / 2 + 0.5, H / 2 - WALL,      # post and its web
               LID_T - 0.2, LID_T + LIP_H + 1, CUT)
@@ -537,8 +561,8 @@ def build_all():
     comp = adsk.fusion.Design.cast(app.activeProduct).rootComponent
     build_shell(comp)
     build_lid(comp)
-    lines = ['Outer: %.1f mm wide at the bottom, %.1f at the top, %.1f high, %.1f deep, lid %.1f mm; sweep R%.0f' % (
-        2 * HB, 2 * HW_TOP, H, Z_TOP, LID_T, SW_R)]
+    lines = ['Outer: %.1f mm full-depth bottom, %.1f tip to tip, %.1f high, %.1f deep, lid %.1f mm; sweep R%.0f' % (
+        2 * BOT_X, 2 * TIP_X, H + BOW, Z_TOP, LID_T, SW_R)]
     for b in comp.bRepBodies:
         bb = b.boundingBox
         lines.append('%s %.1f x %.1f x %.1f mm' % (b.name, (bb.maxPoint.x - bb.minPoint.x) * 10,
@@ -553,37 +577,13 @@ def build_template(band=14.0):
     app = adsk.core.Application.get()
     app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)
     comp = adsk.fusion.Design.cast(app.activeProduct).rootComponent
-    V, R = outer_outline(YB, R_BOTTOM)
-    extrude_outline(comp, V, R, 0, 3.0, NEW)
+    face_body(comp, 0, 3.0)
     prism(comp, -300, -300, 300, H / 2 - band, -1.0, 4.0, CUT)                 # everything below the band
     prism(comp, -0.75, H / 2 - 6.0, 0.75, H / 2 + 1.0, -1.0, 4.0, CUT)     # centre mark on the top edge
     b = comp.bRepBodies.item(0)
     bb = b.boundingBox
     return 'Template %.1f x %.1f x %.1f mm' % ((bb.maxPoint.x - bb.minPoint.x) * 10, (bb.maxPoint.y - bb.minPoint.y) * 10,
                                               (bb.maxPoint.z - bb.minPoint.z) * 10)
-
-
-def build_wing_tests(angles=(30, 40, 50, 60), band=14.0):
-    """Four small 3 mm pieces, each the left wing end of the top edge with the wing's inner edge at a different angle
-    (degrees from horizontal) and that many notches along the bottom (1 = first angle, ...). Hold them against the left end
-    of the dash recess to see which angle matches."""
-    app = adsk.core.Application.get()
-    app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)
-    comp = adsk.fusion.Design.cast(app.activeProduct).rootComponent
-    hw = lambda y: HB + SIDE_TAPER * (y - YB)
-    yw, yb = H / 2 + WING_RISE, H / 2 - band
-    for k, ang in enumerate(angles):
-        x0 = WING_X1 - WING_RISE / math.tan(math.radians(ang))
-        dx, dy = (k % 2) * 75.0, -(k // 2) * 50.0
-        V = [(-hw(yb), yb), (-(x0 - 12.0), yb), (-(x0 - 12.0), H / 2), (-x0, H / 2), (-WING_X1, yw), (-hw(yw), yw)]
-        R = [0.0, 0.0, 0.0, WING_R, 2.0, 0.0]
-        extrude_outline(comp, V, R, 0, 3.0, NEW, dx, dy)
-        for j in range(k + 1):
-            nx = dx - (x0 - 12.0) - 8.0 - 6.0 * j
-            sk = sketch_at(comp, -1.0)
-            sk.sketchCurves.sketchLines.addTwoPointRectangle(P3(nx - 1.0, yb + dy - 1.0), P3(nx + 1.0, yb + dy + 3.0))
-            extrude(comp, sk.profiles.item(0), 5.0, CUT)
-    return '%d pieces, %.0f x %.0f mm layout' % (comp.bRepBodies.count, 75 + hw(yw) + 20, 50 + yw - yb)
 
 
 def build_drill_template(drill=6.0, half_w=70.0, plate_t=3.0, lip_h=8.0):
@@ -612,15 +612,14 @@ def build_split_template(band=16.0, over=40.0):
     app = adsk.core.Application.get()
     app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)
     comp = adsk.fusion.Design.cast(app.activeProduct).rootComponent
-    V, R = outer_outline(YB, R_BOTTOM)
     for sx, dy in ((-1, 0.0), (1, -(WING_RISE + band + 10.0))):
-        body = extrude_outline(comp, V, R, 0, 3.0, NEW, 0.0, dy).bodies.item(0)
+        body = face_body(comp, 0, 3.0, NEW, 0.0, dy).bodies.item(0)
         for x0, x1, y0, y1 in ((-300, 300, -150, H / 2 - band), (over, 300, H / 2 - band - 1, Y_EXT + 1)):
             xa, xb = (x0, x1) if sx < 0 or x0 == -300 else (-x1, -x0)
             tool = prism(comp, xa, y0 + dy, xb, y1 + dy, -1.0, 4.0, NEW).bodies.item(0)
             combine(comp, body, tool, CUT)
     yw = H / 2 + WING_RISE
-    corner = HB + SIDE_TAPER * (yw - YB)
+    corner = TIP_X
     return '%d pieces; width across the outer top corners at the current design: %.1f mm' % (comp.bRepBodies.count, 2 * corner)
 
 
