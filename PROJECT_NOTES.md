@@ -167,7 +167,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
 1. Realtime byte offsets now match the 61Bug mainController.ini (speeduino 202402; advance is byte 24, TPS byte 25). Still unconfirmed on the wire: whether Serial3 answers the ini's `r` command, and whether it echoes an `r` first (the code tolerates both). The secondary-serial protocol setting in TunerStudio may matter (try msDroid or Generic).
 2. AFR is shown as the `afr` channel (byte 10, scale 0.1 in the ini); it only means something if a wideband is wired in.
 3. "Head temp" is the Speeduino CLT input; needs a CHT sender wired to it and calibrated in TunerStudio.
-4. ~~GC9B72 library on a classic ESP32~~ works (2026-11-10, tach only). Still open: two screens on one SPI bus.
+4. ~~GC9B72 library on a classic ESP32~~ works (2026-11-10, tach only). Two screens on one SPI bus work too (2026-11-12).
 5. Warning thresholds: redline 5400 rpm and orange from 4500 rpm are set by the user; head 190/220 C and the battery limits are still guesses.
 6. Serial3 on the user's Speeduino v0.4.4d: the schematic shows J2 "HC-05 Bluetooth" is Serial0 (D1/D0, shared with USB, 2k/1k divider), NOT Serial3, so don't use it. The Mega is soldered under the shield, so the shield's holes are the Mega's pin positions. From the board photo (USB/power jack at the top = Mega rotated 90 degrees clockwise), the right-hand column of holes carries the Mega's top header; its lowest group of 8 holes, just above the double row, is the communication header: from the bottom up 21,20,19,18,17,16,15,14. So D15 (RX3) is the 2nd hole from the top of that group and D14 (TX3) the top one. Derived from the photo and the standard Mega layout, NOT yet confirmed on the board: check by continuity that the bottom hole of that group beeps to the J5 pad labelled D21. The J6 pads labelled GND sit beside the group. `bridge_c3_live` is flashed; the C3 reports link=0 until the board is connected to the ECU.
 
@@ -180,7 +180,7 @@ Built in Fusion (via the Fusion MCP) from a parametric script.
    `bridge_c3_live` on the C3 and `display_rx` on the classic ESP32 plugged into a laptop (it prints `no data` until real values arrive).
    TunerStudio needs Secondary Serial IO enabled at 115200, burned, then power-cycled. Then verify the ECU byte offsets and try `dash`.
 4. Bridge box: PLA test print done and fine (2026-11-23). Remaining: reprint in PETG for the car, and close the lid only after the TX wire fix and the in-car test.
-5. Measure the glovebox and the real screens, then design the 3D-printed mount.
+5. Dash pod: see "Dash pod (current state)" for the print and fit checks.
 
 ## Info screen design (2026-11-12)
 Same design language as the tach: black ground, dark rounded panels (`C_BAND`), rim-grey labels, U8g2 fonts (helvB10 labels, logisoso20 values),
@@ -202,42 +202,24 @@ Firmware is about 1.1 MB, 84% of the 1.31 MB OTA slot. The first OTA-capable bui
 Checked 2026-11-12: with the test C3 sending, both screens kept updating before, during and after the access point shut off (it waited for the phone to disconnect first).
 The bridge C3 (mounted in the car) has no OTA yet; it would need the same treatment.
 
-## Dash mount: what the design needs (collected 2026-11-12, not designed yet)
-- Parts to hold: round tach (PCB 59.24 x 67.47 mm, active area 52.9 mm, 10-pin 2.54 mm header, two ~2 mm holes 23.88 mm apart), 2.8" info screen
-  (about 86 x 50 mm outline; measure the active area and mounting holes), and the classic ESP32 dash board (CH340 dev board, USB port must stay reachable for flashing).
-- Both screens share SCK/MOSI/DC, so they want a common wiring rail: 3V3, GND, GPIO18, GPIO23, GPIO21 (see Wiring). Allow room for a small perfboard or a PCB.
-- OTA exists, so USB access is only needed for the first flash or recovery. Power 12 V -> 5 V buck (same type as the bridge).
-- Location decided 2026-11-23: under-dash pod (see "Dash pod enclosure"). Earlier note: glovebox area, or under the dash. Under-dash would need a bracket instead of a flush mount; measure the real opening and depth. PETG for heat. Remember the tach ring is 360 x 360 px on a round 2.1" panel.
-- The firmware, thresholds and layout are settled enough to design around; only the physical mount is open.
+## Dash pod (current state, 2026-11-26: first shape B print started)
+**Status:** the user started printing `dash_pod_shell.stl` and `dash_pod_lid.stl` together on the P1S. Not yet test-fitted. Ask how the print and fit went.
 
-## Dash pod enclosure (draft v5, 2026-11-23, not printed yet)
-Decisions (user): an under-dash pod screwed to the dash lower lip (no existing gauge plate or gauges in the car), tach and info screen side by side,
-everything inside (both screens, the dash perfboard, 12 V + fuel sender cable out of the box). v1 was a plain rectangular box and the user rejected it: the pod must follow the
-shape of moulded under-dash gauge panels (tapered, rounded, sloped). Style references (data only, not used): Buzzbug 00-3034-0 (black plastic tray, 279 mm wide at the top, 229 mm at the bottom,
-89-121 mm high, 89 mm deep, rounded bottom corners, flat flange against the dash) and Cool Air VW JOPEX AC8573034.
-- `enclosure/DashPod/DashPod.py` (+ `.manifest`): Fusion script, constants at the top. STLs: `enclosure/stl/dash_pod_shell.stl`, `dash_pod_lid.stl` (regenerate after any change).
-  Run it through the MCP by exec'ing the copy in Fusion's Scripts folder (see BridgeBox); Fusion must have no command dialog open (a stray Move/Copy dialog blocks every script).
-- Shape (v3): 184 mm wide at the bottom, 203 mm at the top (`SIDE_TAPER`), 78.8 mm high at the face, 46 mm deep (computed from the stack behind the face: plate 2.5 + glass and PCB 4.1 + 3 behind the PCBs + 8 wire slack + perfboard standoffs, board and a 22 mm tallest part; the user has plenty of room behind the dash but said not to make it deeper than needed),
-  bottom corners R16, the underside flat for 14 mm then sweeping up on an R40 arc (`SWEEP_START`, `SWEEP_RISE` 16 mm by the lid), top cut flat against the dash underside by a sloped plane
-  two mounting ears (16 mm, 4.5 x 12 mm slot) on the sides at the flat top level (235 mm over the ears). v4 follows the user's photos of the real dash (`docs/dash_lip/`):
-  the lower lip is a wide stepped "smile", flat along the middle and curving up into the dash face at both ends, so the pod's top edge is flat in the middle and has a wing at each end
-  (`WING_RISE` 24 mm, `WING_X0/X1`, `WING_R`). `TILT` is now 0 (flat top, vertical face); a value above 0 cuts the wings off, so do not combine them.
-  The outline width is solved by the script so both PCBs and the lid posts clear the curved walls. Face plate 2.5 mm, walls 2.4 mm. The 3 mm front-edge rounding is attempted but Fusion refuses it (skipped).
-  The lid (back plate, 207 x 79 mm) is the section at the back, so it is shorter than the face; the perfboard sits on it, shifted up (`BOARD_CY`). All four M3 lid screws are in a row along the top
-  (posts hang from the ceiling behind the screens), because the underside curves away at the bottom. History: v1 was a plain box, v2 only tapered, both rejected by the user as "just a blob".
-- Dash photos (user, 2026-11-23): 1961 dash, body colour painted steel, no ashtray tray. Under the main dash face a lower panel carries the ignition (left, key and fob hang below it), a pull-knob panel (middle) and a toggle switch (right); the lip beneath is about 190 mm wide (read from the tape in `lower_dash_with_tape.jpg`, +/- perspective) and hangs about 50 mm below the main face line, with a stepped underside (three ridges going back). The pod must not block the key and fob: the user will mount the pod with its face set back from the front of the dash, so the key and fob hang clear in front of it (decided 2026-11-23; set-back distance and the depth available behind it are not measured yet, so check the 90 mm depth still fits). Not yet measured: the lip's exact outline, the step depths and the clearance for the key.
-- Layout seen from the driver: tach on the left, info screen on the right. Tach opening 53.4 mm; info opening 59.6 x 45 mm; each PCB has a locating wall (0.25 mm clearance) behind the face plate.
-  Four M3 machine-screw posts (2.8 mm pilot) sit beside and between the screens. The perfboard (70 mm along X) sits on four M2 standoffs on the lid, component side forward, with its USB-C
-  and the 3-way terminal facing the driver's-right end wall, where a USB slot (14 x 8) and a terminal window (19 x 9) are cut.
-- Top-edge fit template (2026-11-23): `enclosure/stl/dash_top_edge_template.stl` (208.7 x 38 x 3 mm, only the top 14 mm band of the flat middle plus both end wings of the face outline, centre notch on the top edge, about 10.5 cm3; built by `build_template()` in `DashPod.py`).
-  Print it flat and hold it against the dash lip: the top edge and the end wings should follow the lip. This is the biggest unknown, so record where it differs (gap, wing too tall/short or too far in/out) before printing the pod.
-  RESULT (user, 2026-11-23, corrected): the first photo does NOT fit; the problem is the ANGLE OF THE WINGS (the dash metal at the end sweeps away at a shallow diagonal, roughly 35-40 degrees, my wing's inner edge is about 60). My earlier reading below, that it fitted, was wrong. (Corrected later by the user: the dash is symmetrical and the right end curves up like the left.)
-  Next test: `enclosure/stl/dash_wing_angle_tests.stl` (4 pieces, the left wing end at 30, 40, 50 and 60 degrees, marked with 1 to 4 notches in that order; `build_wing_tests()` in `DashPod.py`). The user picks the angle that matches; then set `WING_X0` = `WING_X1` - `WING_RISE` / tan(angle) in the pod. Superseded reading: Held with its flat band just below the pressed recess in the dash underside, the wings' inner curves follow the ends of that recess and the band's top edge lines up with the recess's lower rim. So the face outline's top edge (`WING_RISE` 24, `WING_X0` 82, `WING_X1` 96, `WING_R` 20) is accepted as is. Still unchecked: the underside steps, the depth, the screen holes.
-- ASSUMED, to be measured before printing: tach circle centre (assumed on the PCB's centreline, 29.6 mm from the top), glass height above the PCB (2.5 mm), info active-area centre
-  (34.6 mm from the tach-side end of the PCB), screen mounting holes (NOT modelled: the PCBs are held only by the locating walls, so use tape/glue or add screw posts once the holes are known),
-  perfboard corner holes (2.5 mm in), USB-C height above the perfboard (5.5 mm), terminal position (from the photo), the 22 mm tallest part on the perfboard and the 8 mm wiring slack (they set the pod depth), the dash lip geometry for the ears,
-  and the tilt angle. Print the shell first as a fit check.
-- Print: shell face-down, lid plate-down, no supports, PETG for the car (PLA is fine for a bench fit check).
+**Design** (`enclosure/DashPod/DashPod.py`, constants at the top; run it through the Fusion MCP from the copy in Fusion's Scripts folder, with no command dialog open):
+- Under-dash pod, face flat and vertical: tach on the driver's left (LHD, +X), info screen on the right, everything inside. Shape "B curved hull": 250 mm tip to tip, flat top about 182 mm (+/-90.9), 40 deg wings, sides curving to a bottom that is full depth to x = +/-66 and bows 2.1 mm lower in the middle. 3 mm round on the front edge.
+- 45 mm deep assembled (`DEPTH`): shell 250 x 100.6 x 42.5, lid 250 x 82.5 x 6.5. Underside sweeps up toward the back. Lid rear top edge rounded 2 mm.
+- Fixing: rivnuts in the dash and bolts up through two roof slots at x = +/-50, z 16 to 34. Drill guide: `enclosure/stl/dash_rivnut_template.stl` (holes 25 mm behind the face line).
+- Lid: 4 x M3 into posts at y = 20 (x = +/-43, +/-86); the dash perfboard (70 x 50, centred, `BOARD_CY` 5, terminal toward +X) on 4 x M2 standoffs; 8 mm cable hole at x = 50, y = 10. Screens: 2 x M2 x 4 (tach), 4 x M2.5 x 4 (info).
+- Printing: shell face-down, lid plate-down, supports, brim and skirt OFF (only 3 mm bed margin per side). With supports on, Bambu reports an overhang it cannot support in the shell; a layer-by-layer check of both STLs finds nothing unsupported. PLA for fit checks, PETG for the car. Dash-coloured paint planned.
+- Checked in Fusion/STL: watertight, no overlap between shell, lid, perfboard, 22 mm component space and screen PCBs. Pocket walls nearly touch the side walls (0.06 mm margin at the tightest corner).
+
+**Measured by the user:** tach PCB 59.24 round part with a 30.5 mm tail (67.47 long), glass disc 55.5, PCB+glass 3.6, PCB 1.3, holes 8 mm up from the header end. Info board 81.6 x 50, PCB+glass 4.6, PCB 1.6, four 3 mm holes 3 mm from each edge, lit area 9 mm / 15 mm from the two ends. Perfboard holes 2.0 mm in; "22 mm is plenty, 20 probably enough" for its tallest part; wires plug onto header pins. Dash: 250 mm tip to tip; underside seen from the side is flat for 45 mm from the dial face, then steps down 11 mm and slopes at 12 deg. Dash is symmetrical. Car is a 1961 LHD Beetle.
+
+**Assumed, check on the print:** 3.0 mm behind the screen PCBs; tach hole spacing 23.88 (listing; fits the measured tail) and glass circle centred; perfboard thickness 1.6 and terminal position (from the photo); rivnut size M4 (6.0 mm drill) and slot positions; key and knee clearance.
+
+**Open:** the steering wheel may hide part of the tach (check from the seat; the screens could be swapped); tach is held only by its two tail screws and pocket walls (top retainer proposed, not built).
+
+**How it got here** (details in git history): plain box and tapered versions rejected as blobs -> wings matched to the dash with test pieces (40 deg) -> tilt toward the driver tried and withdrawn (too bulky; the tilt code remains, `PITCH, YAW = 0`) -> widened to 250 mm using the sliding template -> stepped roof tried, dropped for a 45 mm deep pod -> slimmer shapes mocked up, user chose B; chrome strips and bezels dropped as too hard. Style references: Buzzbug 00-3034-0, Cool Air VW JOPEX AC8573034.
 
 ## Bridge update over ESP-NOW (working, verified 2026-11-17)
 
@@ -317,119 +299,9 @@ Supersedes the cell order and the peak head panel in "Info screen design (2026-1
 - Fix to do: re-solder bridge TX from GPIO21 to GPIO5 (GPIO5 is quiet at boot) and set SPEEDUINO_TX = 5. Garbage reaching the ECU could also have written to its RAM config: compare the tune with the saved .msq.
 - Lesson: never open or flash the ECU's own USB port (/dev/ttyACM0) to "test" - opening it resets the Mega. The bridge is the Espressif device in /dev/serial/by-id.
 
-### Wing-angle test result (2026-11-23)
-The 2-notch piece (40 deg) was held against the left end of the dash recess (photos from the user) and follows the metal well. The dash edge is a concave curve rather than a straight diagonal, so a 40 deg straight wing with the R20 corner is a good approximation. DashPod.py now has WING_X0 = 67.4 (= 96 - 24 / tan 40). The pod has NOT been rebuilt or re-exported with this yet. Still open: underside side profile, right-hand end shape, whether the roof fills/covers the recess. A third photo shows the dash end panel near the steering column has a stepped, angular shape that the pod must clear.
-
-### Pod: no USB-C window (2026-11-23)
-User does not need USB access to the dash board in the pod (OTA update works). The USB slot is removed from DashPod.py; only the terminal window remains. Recovery by USB then needs the lid off. Not rebuilt yet.
-
-### Pod rebuilt (2026-11-23, v6)
-dash_pod_shell.stl and dash_pod_lid.stl re-exported with the 40 deg wings and no USB window (shell 234.9 x 102.8 x 46 mm incl. ears, lid 208.7 x 86.8 x 6.5). NOT included: the open top / tall scribe-to-fit walls (proposed, not confirmed by the user, and it conflicts with the ears), and screen screw posts (need the screens' hole positions). Front edge fillet still skipped. Not printed.
-
-### Perfboard hole inset (2026-11-23)
-Dash perfboard corner holes measured by the user: 2.0 mm in from the edges (was assumed 2.5). Set in DashPod.py; STLs not rebuilt yet. User also confirmed 4 mm standoffs are enough for the ESP32 pins and 22 mm component height is plenty; no USB window.
-
-### Tach screw posts (2026-11-23)
-Tach mounting holes: 8 mm up from the header end (user), 23.88 mm apart (listing), ASSUMED centred across the 59.24 mm width (not confirmed). DashPod.py now adds two 5 mm posts (2.5 mm tall, 1.9 mm pilot, 3.2 deep) on the face plate; the PCB rests on them and an M2 x 4 mm machine screw goes through its hole from behind. Hole diameter not measured (listing says about 2 mm). Info screen holes still unknown. Shell/lid STLs re-exported (perfboard inset 2.0 mm too). Not printed.
-
-### Info screen screw posts (2026-11-23)
-User measured: four 3 mm holes, 3 mm in from each edge (so 80 x 44 mm apart). Tach tail is 30.5 mm wide with the holes about 3.3 mm from its edges, which confirms the 23.88 mm spacing and that they are centred. DashPod.py adds four 4.6 mm posts (2.5 mm tall, 2.1 mm pilot) for M2.5 x 4 mm screws. The right-hand posts touch the corner of the 59.6 x 45 mm info window by about 0.5 mm (window offset is ASSUMED, see INFO_ACTIVE_FROM_FAR); check against the real glass. Shell/lid STLs re-exported. Not printed.
-
-### Ears removed (2026-11-23)
-User: the side mounting ears are pointless (nothing for them to reach). Removed from DashPod.py; STLs re-exported (shell now 208.7 x 102.8 x 46 mm). How the pod fixes to the car is OPEN. Tach retention: the PCB is held only by the two tail screws plus the pocket walls; a top retainer is proposed, not built.
-
-### Terminal side and cable hole (2026-11-23)
-Car is left-hand drive. User wants the terminal block on the door side (driver's left, +X, tach side), hidden, and a small round hole for the cable in the rear instead of a wall window. DashPod.py: the dash perfboard moved to the +X end and turned 180 deg in its plane (USB end toward that wall; components still face the screens, board still on the lid standoffs, so lifting the lid out gives access to everything); the terminal ends up at the bottom, 15.8 mm below the board-centre height. The end-wall terminal window is gone. The lid has an 8 mm cable hole beside the terminal, 7 mm beyond the board end (BOARD_END_GAP is now 14 mm). Earlier I wrongly said the terminal screws would be unreachable: they are reachable with the lid out. Terminal position still comes from docs/dash_board_labelled.jpg, not calipers.
-
-### Tach pocket follows the real board outline (2026-11-23)
-The tach pocket was a rectangle (59.24 x 67.47). It is now the board's real shape: a disc of 59.24 mm (ASSUMED: the round part is a full circle centred on the glass window) plus the 30.5 mm wide tail with the header pins (measured), with the same 0.25 mm clearance and 1.2 mm wall. `tach_pocket()` in DashPod.py. The info screen pocket stays rectangular (the board is). Check the join between the disc and the tail against the real board: it may have rounded corners. STLs re-exported.
-
-### Board central, cable hole at the top (2026-11-23)
-User: put the cable hole at the top and centre the dash perfboard. DashPod.py: BOARD_CX = 0 (board centred across the pod), the lid's 8 mm cable hole is at the top on the door side, 50 mm from centre and 28 mm up (WIRE_HOLE_X / WIRE_HOLE_Y), beside the board's end and below the lid screw posts; wires run inside from the terminal. STLs re-exported. Not printed.
-
-### Tach glass size (2026-11-23)
-User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and measured the tach screen itself (the glass disc) at 55.5 mm. The window stays 53.4 mm (about 1 mm of glass lip all round behind it). The screw posts clear the glass by about 1.9 mm. No script change. Still unmeasured: glass height above the PCB, overall thickness, info glass offset.
-
-## Screen thickness measured (2026-11-23)
-- User measured PCB + glass = 3.6 mm, PCB = 1.3 mm, so glass height above the PCB = 2.3 mm (was assumed 2.5 / 1.6). Tach only. Info screen measured separately: PCB + glass 4.6 mm, PCB 1.6 mm, so glass 3.0 mm above the PCB (`INFO_GLASS_H, INFO_PCB_T`); info posts and pocket use these.
-- `DashPod.py`: `GLASS_H, PCB_T = 2.3, 1.3`; new `PERF_T = 1.6` (perfboard, assumed) so the depth sum stays right. The info screen is the thicker one so it sets the depth: 2.5+4.6+3+8+4+1.6+22 = 45.7, so Z_TOP stays 46 mm.
-- STLs in the repo are NOT rebuilt yet (still the 46 mm version); rebuild with the next batch of changes. Still unmeasured: rear height behind the screens (3.0 assumed), info glass offset.
-
-## Trimmed height and tilted face (2026-11-23)
-- User: trim the height as far as possible and tilt the dials toward the driver (LHD).
-- Height: `IH` 74 -> 71 (inside); the tach PCB (67.47) plus its pocket wall (1.45 each side) needs 70.4, so this is the limit with the tail pocket closed. Face height H 78.8 -> 75.8 (the 24 mm wings still add on top). `BOARD_CY` 4 -> 5 because the lid floor rises with the shorter pod (standoffs clear the lid edge). An open-bottom tail pocket would allow about 62 mm (offered, not chosen).
-- Tilt: `PITCH, YAW = 10, 5` degrees. The face plate tips up (bottom toward the driver) and turns toward the driver (+X, tach side). The pivot is the top edge at the info end (`PIV_X, PIV_Y`), so the top edge/wings still meet the dash flat and the lid, perfboard and lid posts are unchanged. Implementation: pockets, posts and base are built flat (`face_parts()`), rotated with Move features (`tilt_bodies()`), the shell blank is extruded forward by `ZF` and trimmed by a rotated half-space (`half_space()`), and the cavity is trimmed by a second one `FACE_T` behind. Set both to 0 for the old flat face.
-- Result: shell 208.0 x 99.8 x 73.4 mm (27.4 mm of it sticks out in front of the old face line at the bottom corner of the tach end; the info end is unchanged), lid 208.0 x 83.8 x 6.5. Checked with STL slices (face slopes in both directions, windows in the right place). Not printed or test-fitted.
-- Printing: the face is no longer flat. Best orientation is open back down (flat) with supports for the screw posts and pocket walls; check in Bambu Studio. The front edge fillet is skipped when tilted.
-- Still open: the key and knee clearance with the face 27 mm closer at the bottom on the tach side (check against the car), how the pod mounts, tach retention.
-
-### Tilt withdrawn (2026-11-23, later)
-- The first tilt turned the face toward the wrong side (the +X/tach end came forward, i.e. toward a right-hand seat); the pivot was moved to the tach end and the sign flipped so the info end comes toward a LEFT-hand driver. The user then found the tilted pod too bulky (73 mm deep at one corner) and asked for the previous flat shape with just the height trim and a sleek look.
-- Now `PITCH, YAW = 0, 0` (flat vertical face, 46 mm deep, 75.8 mm tall, 99.8 mm with wings). The tilt code stays in `DashPod.py` (`PITCH`, `YAW`, `tilt_bodies()`); YAW now means "info end toward the driver" with the tach end as the pivot. If tilting again, use a small pitch only (the yaw adds depth across the 209 mm width).
-- The front edge fillet (R_FACE) is still skipped by Fusion, so the face edge is sharp: next thing to try for a sleeker look.
-
-### Rivnut roof slots and rounded face edge (2026-11-23)
-- Fixing: the user will secure the pod with rivnuts (in the dash lip) and bolts up through the pod roof. `roof_slots()` cuts two slots through the roof at x = +-50 mm, running along the depth (z 16 to 34 mm), 4.5 mm wide (M4 clearance; `RIV_D, RIV_X, RIV_Z0, RIV_Z1`). Slots, not round holes, so the pod can slide fore-aft to line up with the rivnuts. ASSUMED: the rivnut size (M4) and the x positions: check against the real dash (where the lip is solid) and move them. They sit between the lid posts (x +-25, +-75) and clear of the perfboard (x +-35) and the screens (they end about z 12).
-- The front edge fillet (R3, `R_FACE`) now works: the old code looked for a face normal of exactly -z, but Fusion reports +z for that face, so it never found the face. `round_front_edge()` now runs on the solid blank before the cavity is cut and rounds all edges of the front face (including the top edge, so a tiny gap shows against the dash). Checked in an STL slice.
-
-### Rivnut drill template (2026-11-23)
-- `enclosure/stl/dash_rivnut_template.stl` (`build_drill_template()` in DashPod.py): 140 x 46 x 11 mm, a 3 mm plate the size of the pod roof with an 8 mm lip along the face line, a centre notch in the lip, and a 6.0 mm guide hole at x +-50, 25 mm behind the face line (the middle of the roof slots). Print flat with the lip up; in use the flat side goes against the dash underside with the lip hanging down where the pod's face will sit, then drill through the holes. 6.0 mm is the usual M4 rivnut hole: check the rivnut packet and change `drill` if different. Not test-fitted.
-
-### Info screen picture position measured (2026-11-23)
-- User measured on the 86 x 50 mm info board: picture starts 8 mm from the tach-side end, stops 15 mm from the header end, about 2 mm from the top and bottom edges. So the picture is 63 x 46 mm and its centre is 39.5 mm from the tach-side end (was assumed 34.6): `INFO_ACTIVE_FROM_FAR` = 39.5; vertically centred. The window is still 59.6 x 45 (datasheet active area 57.6 x 43.2 plus 2 mm): the measured 63 x 46 probably includes the black border of the picture. If the lit pixels really are 63 wide, widen `INFO_WIN_W`. The window clears all four corner posts. STLs rebuilt.
-
-- Correction (user, later): the lit area is 9 mm from the tach-side end and 15 mm from the header end (62 mm wide), so its centre is 40.0 mm from the tach-side end: `INFO_ACTIVE_FROM_FAR` = 40.0 (was 39.5). The user agrees with the datasheet for the active area (57.6 x 43.2), so the window stays 59.6 x 45 mm (about 1.2 mm of the lit border is hidden each side). STLs rebuilt.
-
-### Info board is 81.6 x 50 mm (2026-11-23)
-- User measured the info screen board as 81.6 x 50 mm (the listing/assumption was 86 x 50). `INFO_L` = 81.6. Holes stay 3 mm from each edge (so 75.6 x 44 apart: the 3 mm inset was measured on the real board, the span follows from the length).
-- This also fixes the picture: 9 mm from the tach-side end and 15 mm from the header end of an 81.6 mm board gives exactly 57.6 mm, the datasheet active area. So the lit-area centre is 37.8 mm from the tach-side end (`INFO_ACTIVE_FROM_FAR` = 37.8, replacing 40.0) and the window (59.6 x 45) keeps a 1 mm border all round. The earlier "63 x 46 / 62 mm" readings were from using 86 mm.
-- Pod is narrower: 179.0 mm at the bottom, 197.2 at the top, 203.0 mm overall (was 208.0); the wings, height and depth are unchanged. Slots (x +-50) and the rivnut template are unchanged. STLs rebuilt. Other things that came from the listing and may also be off: the tach PCB (59.24 x 67.47, you confirmed) and anything not measured.
-
-### Full-width top-edge test piece (2026-11-23)
-- The user has no stereo under-mount to measure; the tape photo (`docs/dash_lip/lower_dash_with_tape.jpg`) puts the flat part of the lip underside at roughly 7 to 19.5 cm on the tape (about 12 to 13 cm, perspective makes it uncertain by about 10 mm), consistent with the pod's 134.8 mm flat (+-67.4).
-- Regenerated `enclosure/stl/dash_top_edge_template.stl` with the current outline (`build_template(16)`): 203.0 x 40.0 x 3.0 mm, the whole top edge (flat middle plus both wings) with a centre notch. Print flat, hold against the dash underside with the flat top edge along the lip, centre notch on the pod centre, and check BOTH ends. Correction (user): the dash underside IS symmetrical, the right end curves up like the left (see the tape photo), so the earlier note that the recess runs on to the right end was wrong and the symmetrical pod outline is right. Result: pending.
-
 ## Power-on splash (2026-11-23, flashed over USB)
 - Tach: the normal ring sweeps up to full scale (green to 4500, orange to 5400, red to 6000), holds briefly, falls back to zero. Uses the live tach's own block drawing, so almost no extra flash.
 - Info screen: on a dark `C_BAND` panel a red line draws first, then "Schmellic" and "EFi" (both `logisoso32`, white, left-aligned, block centred, equal gaps above and below the line, measured from the real font bounds) slide in from the left. Text is erased and masked per frame because the library cannot clip.
 - Sequence: backlights fade in (PWM, 500 ms), sweep and slide (about 2.5 s), fade out, then the normal faces fade in (400 ms). Total about 3.5 s before the normal screens. The OTA Wi-Fi window (120 s) is counted from power-on as before.
 - Dash firmware is 87.2% of flash after this. A Beetle-with-flashing-lights splash was tried in mock-ups and dropped (looked wrong without a proper bitmap).
 - Dash USB port is the CH340 `/dev/ttyUSB0`; never touch `/dev/ttyACM0` (the ECU's own USB, opening it resets the ECU).
-
-## Top-edge test result and sliding width template (2026-11-26)
-- RESULT (user, template pushed fully up): the top edge is TOO NARROW. From the photos it is centred on the knob and the wing angle (about 40 deg) matches the dash curves; the dash bulge is wider than the wings. Amount not yet known.
-- `enclosure/stl/dash_width_template.stl` (`build_split_template()`): the same top edge as two halves (each 141.5 x 40 x 3 mm), overlapping 40 mm past the centre. Slide apart until both wings sit on the dash, tape, and measure across the two outer top corners; the design is 203.0 mm there, so the extra is (measured - 203). Result: pending.
-- Limit to remember: P1S bed 256 mm; the shell prints face-down at 203 mm wide now, so more than about 45 mm extra needs diagonal placement or a rethink (split shell, or shorter wings).
-
-## Pod widened to 250 mm tip to tip (2026-11-26)
-- RESULT (user, sliding template): 250 mm across the wing tips (design was 203). `WIDEN = 23.5` per side in DashPod.py: flat 134.8 -> 181.8 mm (+-90.9), wing tips and side walls move out 23.5 each side; wing angle and height unchanged. Screens and perfboard stay centred with the same spacing (about 48 mm more blank face each side of them, in total); the four lid screw posts spread out with the width (x +-32.1, +-96.4). Roof rivnut slots stay at x +-50 (rivnut drill template unchanged).
-- Built and checked (single piece each, STL sections): shell 250.0 x 99.8 x 46.0 mm, 226.0 wide at the bottom; lid 250.0 x 83.8 x 6.5. `dash_top_edge_template.stl` regenerated at 250 mm to confirm the fit before the shell. Not printed.
-- P1S bed is 256 x 256: only 3 mm spare each side, so no wide brim and place it clear of the front-left exclusion zone.
-
-## Dash underside side profile (2026-11-26, modelled)
-- User made a cardboard gauge of the profile the pod TOP must clear (side view). Confirmed shape of its top edge: a flat section, then a step down, then a long straight slope going further down (about 9 deg from the flat, read from a photo only). The step is real.
-- User measured: flat length L = 45 mm, step height S = 11 mm, slope angle A = 12 deg from the flat. Slope length T is not needed (the pod depth, 46 mm, cuts it off).
-- User: the dial face sits at the outer end of the short flat piece, so the flat runs from the face back 45 mm, then the dash steps down 11 mm and slopes at 12 deg.
-- A stepped 48.5 mm version was built first (commit 1c8d303), then DROPPED: the user chose to shrink the pod instead. The user's perfboard height from 2026-11-23 stands ("22 mm is plenty, 20 probably enough"); wires plug onto header pins.
-- CURRENT: `DEPTH = 45.0` overall (shell 42.5 + flat 2.5 lid), so the pod ends at the step. `WIRE_GAP` is now derived (4.8 mm, on top of 3 mm behind the screen PCBs). Lid rear top edge rounded 2 mm (`BACK_R`).
-- Lid screw posts at y = 20 so the screw heads sit below the dash step; middle pair at x = +/-43 (at +/-32.1 they overlapped the perfboard since the widening). Post undersides 45 deg. Cable hole at y = 10 so wires can leave behind the pod. Lower perfboard standoffs trimmed to clear the swept floor.
-- Printing: shell face-down, lid plate-down, no supports.
-- Checked in Fusion: no overlap between shell, lid, perfboard, 22 mm component space, and the screen PCBs (checked on the shrunk model before the last lip notch change; shell/lid, board and components rechecked after it). Not printed or test-fitted.
-
-## Slimmer pod shape concepts (2026-11-26, user to choose)
-- User finds the pod too large, the bottom edge too long; wants cues from other pods and how it looks under the Beetle dash. Mock-ups made on a full-dash photo (2D concepts, scale estimated; NOT modelled in Fusion). Screens unchanged, face-outline fit around the screen pockets checked only (not lid posts, lid, underside sweep).
-- A "swept sides": same flat and wings, straight sides from the wing tips to bottom corners at x = +/-84, R34. 248 wide, face area about 16% less than now.
-- B "curved hull": curved sides into a slightly bowed bottom (y -40 at centre), 250 wide, about 21% less.
-- C "compact, no wings": 187 wide x 76 high, bottom half-width 92, top 94, bottom R32, top R14, about 26% less. Does not follow the dash shoulders.
-- Bottom flat goes from about 210 to about 140 mm in all three. Height stays (tach PCB sets it). Lid screw posts at x = +/-96 would need to move inward.
-- Check: in the mock-up the steering wheel rim hides part of the tach (driver side). Check the real sightline; swapping the two screens is an option.
-
-## Pod shape B built (2026-11-26) -- CURRENT SHAPE
-- User chose B "curved hull" and kept the 3 mm front edge round. Chrome strips and bezels dropped ("too hard"). Dash-coloured paint planned.
-- `DashPod.py` outline rewritten: spline sides from the wing tips (`TIP_X = 125`) to a bottom that is full depth to x = +/-66 and bows 2.1 mm lower in the middle (`lower_curve`, `face_body`, `inset_body`). The old tapered outline, `SIDE_TAPER`, the width-fitting loop and `build_wing_tests` are gone.
-- Wing inner edge now ends at x = 118 (was 119.5) at the same 40 deg, so tips are 1.3 mm lower (rise 22.74): needed for the 3 mm round to compute. Flat top and 250 mm tip width unchanged.
-- Outer lid screws moved to x = +/-86 (middle pair +/-43, all y = 20).
-- Size: shell 250 x 100.6 x 42.5, lid 250 x 82.5 x 6.5; 45 mm deep assembled. Shell face-down and lid plate-down, no supports. P1S bed leaves 3 mm per side.
-- Checked: watertight STLs, STL slices, no overlap between shell, lid, perfboard, 22 mm component space and screen PCBs in Fusion. Not printed or test-fitted. Top-edge template STL regenerated.
-- Open: steering wheel may hide part of the tach (check from the seat; screens could be swapped). Pocket walls nearly touch the side walls (0.06 mm margin at the tightest corner).
-- Lid print fix (2026-11-26): Bambu Studio reported floating regions on the shape B lid (the arc trim to the shell floor undercut the lip and lower standoffs). Now a level cut `FLOOR_CLR = 0.5` above the floor at the lid. A layer-by-layer check of both STLs finds nothing unsupported. The shell shows a Bambu "could not get support" notice only with supports enabled: print it with supports OFF.
