@@ -406,10 +406,11 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 - Built and checked (single piece each, STL sections): shell 250.0 x 99.8 x 46.0 mm, 226.0 wide at the bottom; lid 250.0 x 83.8 x 6.5. `dash_top_edge_template.stl` regenerated at 250 mm to confirm the fit before the shell. Not printed.
 - P1S bed is 256 x 256: only 3 mm spare each side, so no wide brim and place it clear of the front-left exclusion zone.
 
-## Dash underside side profile (2026-11-26, waiting on measurements)
+## Dash underside side profile (2026-11-26, modelled)
 - User made a cardboard gauge of the profile the pod TOP must clear (side view). Confirmed shape of its top edge: a flat section, then a step down, then a long straight slope going further down (about 9 deg from the flat, read from a photo only). The step is real.
 - User measured: flat length L = 45 mm, step height S = 11 mm, slope angle A = 12 deg from the flat. Slope length T is not needed (the pod depth, 46 mm, cuts it off).
 - User: the dial face sits at the outer end of the short flat piece, so the flat runs from the face back 45 mm, then the dash steps down 11 mm and slopes at 12 deg.
-- Current pod is 48.5 mm deep overall (Z_TOP 46 + lid 2.5), 3.5 mm too deep. Preferred fix: make it 45 mm overall so the roof stays flat (needs the tallest thing above the perfboard, plugs fitted, to be about 18 mm or less, or less WIRE_GAP). Also move the lid cable hole lower (now y = 28, which the stepped-down dash would block).
-- User: round the step slightly (the dash is curved there). Use about 3 mm on the pod back top edge, matching the front edge. No measurement needed.
-- Pod not changed yet. Do not print the shell until this is done; the 250 mm top-edge template only checks the width.
+- MODELLED (user did not want the pod shortened): depth stays 48.5 mm. Behind z = 45 the roof (and wing tops) is cut to 11 mm below the flat, then falls at 12 deg. The shell's roof edge there is rounded 2 mm ("round the step slightly"). The lid has a recessed top strip (wall at z 42.6..45 plus a ledge) that closes the notch.
+- Lid screw posts moved down to y = 20, middle pair at x = +/-43 (at +/-32.1 they overlapped the perfboard since the widening). Post undersides are 45 deg so the shell still prints face-down without support. Lid cable hole moved to y = 10. Lower perfboard standoffs trimmed to clear the swept floor.
+- Printing: shell face-down, no supports. Lid plate-down NOW NEEDS SUPPORT under the recessed top strip (3.5 mm high, hidden face).
+- Checked in Fusion: no overlap between shell, lid, perfboard, assumed 22 mm component space, screen PCBs; nothing behind z = 45 above the step. Not yet printed or test-fitted.

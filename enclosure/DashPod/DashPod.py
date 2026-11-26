@@ -1,9 +1,9 @@
 """Fusion script: under-dash pod for the dash (2.1" round tach, 2.8" info screen, dash ESP32 perfboard).
 
 Shaped like a moulded under-dash gauge panel: wider at the top than the bottom (tapered sides), large rounded bottom corners,
-a rounded front edge, and a top that is cut flat against the underside of the dash (TILT tips the face up toward the driver).
+a rounded front edge, and a flat top that steps down behind STEP_Z to clear the dash underside.
 Two printed parts: the shell (face plate, walls, lid posts, screen pockets, screen screw posts) and the rear lid (carries the
-50 x 70 mm dash perfboard on four standoffs). Print the shell face-down and the lid plate-down, no supports.
+50 x 70 mm dash perfboard on four standoffs). Print the shell face-down (no supports) and the lid plate-down (support under its recessed top strip).
 Frame (shell): the face is the XY plane at z=0 and the inside is +Z. The driver looks along +Z, so the driver's left is +X:
 the tach is on the driver's left, the info screen on the right. The top of the pod is +Y. The lid is laid out beside the shell,
 mirrored in X (as it will be after it is flipped onto the back).
@@ -34,7 +34,7 @@ POCKET_CLR, POCKET_WALL = 0.25, 1.2   # locating wall round each PCB
 BOARD_L, BOARD_W = 70.0, 50.0     # along X, along Y
 BOARD_HOLE_INSET = 2.0            # measured by the user (2026-11-23)
 STANDOFF, STANDOFF_D, PILOT_D = 4.0, 5.6, 1.9   # M2 machine screws cut their own thread in 1.9 mm
-WIRE_HOLE_D, WIRE_HOLE_X, WIRE_HOLE_Y = 8.0, 50.0, 28.0   # round cable hole in the lid, at the top, door side of the perfboard (x is the shell's x)
+WIRE_HOLE_D, WIRE_HOLE_X, WIRE_HOLE_Y = 8.0, 50.0, 10.0   # round cable hole in the lid, below the roof step, door side of the perfboard (x is the shell's x)
 USB_Y, USB_Z = -4.7, 5.5          # USB-C centre: across from the board centre; ASSUMED height above the perfboard
 USB_SLOT_W, USB_SLOT_H = 14.0, 8.0
 TERM_Y, TERM_Z = 19.8, 4.5        # 3-way terminal centre across the board; entry height above the board
@@ -58,6 +58,9 @@ WIDEN = 23.5                      # extra on each side to match the dash: 250 mm
 WING_RISE, WING_X0, WING_X1, WING_R = 24.0, 67.4 + WIDEN, 96.0 + WIDEN, 20.0   # WING_X0 gives a 40 deg wing (test piece fit, 2026-11-23); the top edge curves up at both ends to follow the dash lip
 RIV_D, RIV_X, RIV_Z0, RIV_Z1 = 4.5, 50.0, 16.0, 34.0   # roof bolt slots for rivnuts in the dash lip (M4 clearance, x each side, along the depth): ASSUMED, check against the dash
 R_FACE = 3.0                      # rounded front edge (not on the top edge)
+# Roof step to clear the dash underside (user's cardboard gauge): flat from the face back STEP_Z, down STEP_H, then sloping
+STEP_Z, STEP_H, STEP_A, STEP_R = 45.0, 11.0, 12.0, 2.0   # mm, mm, degrees, rounding of the roof edge at the step
+LID_POST_Y, LID_POST_X = 20.0, 43.0   # lid screws sit below the step; the middle pair stands clear of the perfboard
 SWEEP_START = 14.0                # depth where the underside starts to curve up
 SWEEP_RISE = 16.0                 # how far the underside has risen by the lid
 BOARD_CY = 5.0                    # perfboard centre height (the lid is shorter than the face, so it sits high)
@@ -90,7 +93,7 @@ Y_EXT = H / 2 + WING_RISE                            # top of the end wings
 PY = IH / 2 - POST_D / 2
 POST_Z0 = FACE_T + max(GLASS_H + PCB_T, INFO_GLASS_H + INFO_PCB_T) + 0.5             # posts start behind the screens and hang from the ceiling
 _px0, _px1 = INFO_XMIN + POST_D / 2 - WIDEN, LW / 2 - POST_D / 2 + WIDEN   # lid posts spread with the width
-POSTS = [(_px0 + (_px1 - _px0) * i / 3.0, PY) for i in range(4)]
+POSTS = [(x, LID_POST_Y) for x in (_px0, -LID_POST_X, LID_POST_X, _px1)]
 # underside sweep: a circular arc, tangent to the flat bottom at SWEEP_START, rising SWEEP_RISE by the lid
 _L = Z_TOP - SWEEP_START
 SW_R = (_L ** 2 + SWEEP_RISE ** 2) / (2 * SWEEP_RISE)
@@ -106,6 +109,9 @@ def sweep_pt(r, a):
 Y_BOT_OUT = sweep_pt(SW_R, SW_PHI)[0]                # outer underside height at the lid
 Y_BOT_IN = sweep_pt(SW_R - WALL, SW_PHI)[0]          # inner floor height at the lid
 XOFF = 0.0
+STEP_Y = H / 2 - STEP_H              # roof height just behind the step
+STEP_IN_Y = STEP_Y - WALL            # underside of the lid's ledge
+STEP_IN_Z = STEP_Z - WALL            # inner face of the lid's recessed top strip
 
 NEW = adsk.fusion.FeatureOperations.NewBodyFeatureOperation
 JOIN = adsk.fusion.FeatureOperations.JoinFeatureOperation
@@ -284,7 +290,7 @@ def tach_pocket(comp, z0, z1):
     prism(comp, TACH_CX - TACH_TAIL_W / 2 - a, yb - a, TACH_CX + TACH_TAIL_W / 2 + a, YC, FACE_T, z1 + 0.5, CUT)
 
 
-def yz_region(comp, segs, op):
+def yz_region(comp, segs, op, bodies=None):
     """Extrude a region drawn in the side (YZ) plane across the whole width. segs: ('L', (y,z), (y,z)) or ('A', p, mid, q)."""
     sk = comp.sketches.add(comp.yZConstructionPlane)
     sp = lambda p: sk.modelToSketchSpace(adsk.core.Point3D.create(0, mm(p[0]), mm(p[1])))
@@ -295,6 +301,8 @@ def yz_region(comp, segs, op):
             sk.sketchCurves.sketchArcs.addByThreePoints(sp(sg[1]), sp(sg[2]), sp(sg[3]))
     inp = comp.features.extrudeFeatures.createInput(sk.profiles.item(0), op)
     inp.setSymmetricExtent(adsk.core.ValueInput.createByReal(mm(1000)), True)
+    if bodies:
+        inp.participantBodies = bodies
     return comp.features.extrudeFeatures.add(inp)
 
 
@@ -422,6 +430,42 @@ def roof_slots(comp):
             comp.features.extrudeFeatures.add(inp)
 
 
+def cut_roof_step(comp, body, zmap):
+    """Remove everything above the stepped-down roof behind STEP_Z. zmap turns a shell depth into the body's own z."""
+    back = Z_TOP + LID_T + 1.0
+    drop = (back - STEP_Z) * math.tan(math.radians(STEP_A))
+    big = H + 200
+    a, b = (STEP_Y, zmap(STEP_Z)), (STEP_Y - drop, zmap(back))
+    c, d = (big, zmap(back)), (big, zmap(STEP_Z))
+    yz_region(comp, [('L', a, b), ('L', b, c), ('L', c, d), ('L', d, a)], CUT, [body])
+
+
+def round_step_edge(comp, body):
+    """Slightly round the roof's rear edge where the step starts (flat top and wings)."""
+    edges = adsk.core.ObjectCollection.create()
+    for e in body.edges:
+        bb = e.boundingBox
+        if (abs(bb.minPoint.z - mm(STEP_Z)) < 1e-5 and abs(bb.maxPoint.z - mm(STEP_Z)) < 1e-5
+                and bb.minPoint.y > mm(H / 2) - 1e-5):
+            edges.add(e)
+    inp = comp.features.filletFeatures.createInput()
+    inp.addConstantRadiusEdgeSet(edges, adsk.core.ValueInput.createByReal(mm(STEP_R)), False)
+    comp.features.filletFeatures.add(inp)
+
+
+def lid_post(comp, x, y):
+    """Lid screw post hanging from the ceiling, with a 45 deg underside so it prints face-down without support. The part
+    above the screw hole stops short of the lid's recessed strip."""
+    ceil, lo = H / 2 - WALL, y - POST_D / 2
+    body = prism(comp, x - POST_D / 2, lo, x + POST_D / 2, y + POST_D / 2, POST_Z0, Z_TOP, NEW).bodies.item(0)
+    web = prism(comp, x - POST_D / 2, y + POST_D / 2 - 0.1, x + POST_D / 2, ceil + 0.6, POST_Z0, STEP_IN_Z - 0.2, NEW).bodies.item(0)
+    combine(comp, body, web, JOIN)      # NEW then combine: a plain join would merge the web into the shell
+    z = lambda yy: POST_Z0 + ceil - yy
+    a, b = (lo - 1, z(lo - 1)), (ceil + 1, z(ceil + 1))
+    yz_region(comp, [('L', a, b), ('L', b, (ceil + 1, -5)), ('L', (ceil + 1, -5), (lo - 1, -5)), ('L', (lo - 1, -5), a)], CUT, [body])
+    return body
+
+
 def build_shell(comp):
     feat, tools = face_parts(comp)
     parts = feat + tools
@@ -447,21 +491,38 @@ def build_shell(comp):
     for t in tools:
         combine(comp, shell, t, CUT)
     for x, y in POSTS:
-        prism(comp, x - POST_D / 2, y - POST_D / 2, x + POST_D / 2, H / 2 - WALL + 0.6, POST_Z0, Z_TOP, JOIN)
+        combine(comp, shell, lid_post(comp, x, y), JOIN)
     if TILT > 0:
         cut_top_slope(comp)
     cut_underside(comp)
     for x, y in POSTS:
         cyl(comp, x, y, LID_PILOT_D, Z_TOP - POST_PILOT_DEPTH, Z_TOP + 1, CUT)
     roof_slots(comp)
+    cut_roof_step(comp, shell, lambda z: z)
+    try:
+        round_step_edge(comp, shell)
+    except Exception:
+        print('step edge fillet skipped')
+
+
+def trim_to_floor(comp, lid, lz):
+    """Trim the lower standoffs where they would touch the shell's swept floor."""
+    r = SW_R - WALL - LIP_TOL
+    a1 = math.asin((Z_TOP - SWEEP_START) / r)
+    a0 = math.asin((Z_TOP - 8.0 - SWEEP_START) / r)
+    pt = lambda a: (sweep_pt(r, a)[0], lz(sweep_pt(r, a)[1]))
+    S, M, E = pt(a0), pt((a0 + a1) / 2), pt(a1)
+    low = YB - 50
+    yz_region(comp, [('A', S, M, E), ('L', E, (low, E[1])), ('L', (low, E[1]), (low, S[1])), ('L', (low, S[1]), S)], CUT, [lid])
 
 
 def build_lid(comp):
     lx = lambda x: XOFF - x
     V, R = outer_outline(Y_BOT_OUT, 0.0)
-    extrude_outline(comp, V, R, 0, LID_T, NEW, XOFF)
+    lid = extrude_outline(comp, V, R, 0, LID_T, NEW, XOFF).bodies.item(0)
+    lz = lambda z: Z_TOP + LID_T - z       # lid z (outer face at 0) for a shell depth z
     # lip: a ring that follows the cavity at the back, notched round the posts
-    Vo, Ro = outline(HB, WALL + LIP_TOL, Y_BOT_IN + LIP_TOL, H / 2 - WALL - LIP_TOL, 0.0)
+    Vo, Ro = outline(HB, WALL + LIP_TOL, Y_BOT_IN + LIP_TOL, H / 2 - WALL - LIP_TOL, 0.0, 2.0)
     Vn, Rn = outline(HB, WALL + LIP_TOL + LIP_T, Y_BOT_IN + LIP_TOL + LIP_T, H / 2 - WALL - LIP_TOL - LIP_T, 0.0)
     sk = sketch_at(comp, LID_T - 0.1)
     draw_outline(sk, Vo, Ro, XOFF)
@@ -471,6 +532,12 @@ def build_lid(comp):
     for x, y in POSTS:
         prism(comp, lx(x) - POST_D / 2 - 0.5, y - POST_D / 2 - 0.5, lx(x) + POST_D / 2 + 0.5, y + POST_D / 2 + 0.5,
               LID_T - 0.2, LID_T + LIP_H + 1, CUT)
+    # recessed top strip behind the roof step: a wall inside the shell, joined to the plate by a ledge
+    top = H / 2 - WALL - LIP_TOL
+    Vs, Rs = outline(HB, WALL + LIP_TOL, STEP_IN_Y, top, 0.0, 2.0)
+    extrude_outline(comp, Vs, Rs, lz(STEP_Z), lz(STEP_IN_Z), JOIN, XOFF)
+    Vl, Rl = outline(HB, WALL + LIP_TOL, STEP_IN_Y, STEP_Y, 0.0)
+    extrude_outline(comp, Vl, Rl, LID_T - 0.1, lz(STEP_IN_Z), JOIN, XOFF)
     hx = (BOARD_CX - BOARD_L / 2 + BOARD_HOLE_INSET, BOARD_CX + BOARD_L / 2 - BOARD_HOLE_INSET)
     hy = (BOARD_CY - BOARD_W / 2 + BOARD_HOLE_INSET, BOARD_CY + BOARD_W / 2 - BOARD_HOLE_INSET)
     for x in hx:
@@ -483,6 +550,8 @@ def build_lid(comp):
         cyl(comp, lx(x), y, LID_HOLE_D, -1, LID_T + 1, CUT)
     # cable hole at the top of the lid, beside the board's door-side end (wires run inside from the terminal)
     cyl(comp, lx(WIRE_HOLE_X), WIRE_HOLE_Y, WIRE_HOLE_D, -1, LID_T + 1, CUT)
+    cut_roof_step(comp, lid, lz)
+    trim_to_floor(comp, lid, lz)
 
 
 def build_all():
