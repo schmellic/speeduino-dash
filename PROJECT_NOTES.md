@@ -409,4 +409,6 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 ## Dash underside side profile (2026-11-26, waiting on measurements)
 - User made a cardboard gauge of the profile the pod TOP must clear (side view). Confirmed shape of its top edge: a flat section, then a step down, then a long straight slope going further down (about 9 deg from the flat, read from a photo only). The step is real.
 - User measured: flat length L = 45 mm, step height S = 11 mm, slope angle A = 12 deg from the flat. Slope length T is not needed (the pod depth, 46 mm, cuts it off).
-- NOT yet known: which end (flat or sloped) faces the driver, and where the dial face sits along the profile. Pod not changed. Do not print the shell until the roof profile is done; the 250 mm top-edge template only checks the width.
+- User: the dial face sits at the outer end of the short flat piece, so the flat runs from the face back 45 mm, then the dash steps down 11 mm and slopes at 12 deg.
+- Current pod is 48.5 mm deep overall (Z_TOP 46 + lid 2.5), 3.5 mm too deep. Preferred fix: make it 45 mm overall so the roof stays flat (needs the tallest thing above the perfboard, plugs fitted, to be about 18 mm or less, or less WIRE_GAP). Also move the lid cable hole lower (now y = 28, which the stepped-down dash would block).
+- Pod not changed yet. Do not print the shell until this is done; the 250 mm top-edge template only checks the width.
