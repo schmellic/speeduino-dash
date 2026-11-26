@@ -405,3 +405,7 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 - RESULT (user, sliding template): 250 mm across the wing tips (design was 203). `WIDEN = 23.5` per side in DashPod.py: flat 134.8 -> 181.8 mm (+-90.9), wing tips and side walls move out 23.5 each side; wing angle and height unchanged. Screens and perfboard stay centred with the same spacing (about 48 mm more blank face each side of them, in total); the four lid screw posts spread out with the width (x +-32.1, +-96.4). Roof rivnut slots stay at x +-50 (rivnut drill template unchanged).
 - Built and checked (single piece each, STL sections): shell 250.0 x 99.8 x 46.0 mm, 226.0 wide at the bottom; lid 250.0 x 83.8 x 6.5. `dash_top_edge_template.stl` regenerated at 250 mm to confirm the fit before the shell. Not printed.
 - P1S bed is 256 x 256: only 3 mm spare each side, so no wide brim and place it clear of the front-left exclusion zone.
+
+## Dash underside side profile (2026-11-26, waiting on measurements)
+- User made a cardboard gauge of the profile the pod TOP must clear (side view). Confirmed shape of its top edge: a flat section, then a step down, then a long straight slope going further down (about 9 deg from the flat, read from a photo only). The step is real.
+- NOT yet known: flat length L, step height S, sloped length T, angle A (or drop at the far end), which end faces the driver, and where the dial face sits along the profile. Pod not changed. Do not print the shell until the roof profile is done; the 250 mm top-edge template only checks the width.
