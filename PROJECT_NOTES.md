@@ -415,3 +415,11 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 - Lid screw posts at y = 20 so the screw heads sit below the dash step; middle pair at x = +/-43 (at +/-32.1 they overlapped the perfboard since the widening). Post undersides 45 deg. Cable hole at y = 10 so wires can leave behind the pod. Lower perfboard standoffs trimmed to clear the swept floor.
 - Printing: shell face-down, lid plate-down, no supports.
 - Checked in Fusion: no overlap between shell, lid, perfboard, 22 mm component space, and the screen PCBs (checked on the shrunk model before the last lip notch change; shell/lid, board and components rechecked after it). Not printed or test-fitted.
+
+## Slimmer pod shape concepts (2026-11-26, user to choose)
+- User finds the pod too large, the bottom edge too long; wants cues from other pods and how it looks under the Beetle dash. Mock-ups made on a full-dash photo (2D concepts, scale estimated; NOT modelled in Fusion). Screens unchanged, face-outline fit around the screen pockets checked only (not lid posts, lid, underside sweep).
+- A "swept sides": same flat and wings, straight sides from the wing tips to bottom corners at x = +/-84, R34. 248 wide, face area about 16% less than now.
+- B "curved hull": curved sides into a slightly bowed bottom (y -40 at centre), 250 wide, about 21% less.
+- C "compact, no wings": 187 wide x 76 high, bottom half-width 92, top 94, bottom R32, top R14, about 26% less. Does not follow the dash shoulders.
+- Bottom flat goes from about 210 to about 140 mm in all three. Height stays (tach PCB sets it). Lid screw posts at x = +/-96 would need to move inward.
+- Check: in the mock-up the steering wheel rim hides part of the tach (driver side). Check the real sightline; swapping the two screens is an option.
