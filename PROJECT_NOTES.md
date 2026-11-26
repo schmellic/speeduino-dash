@@ -400,3 +400,8 @@ User confirmed the tach board outline (59.24 mm round part, 30.5 mm tail) and me
 - RESULT (user, template pushed fully up): the top edge is TOO NARROW. From the photos it is centred on the knob and the wing angle (about 40 deg) matches the dash curves; the dash bulge is wider than the wings. Amount not yet known.
 - `enclosure/stl/dash_width_template.stl` (`build_split_template()`): the same top edge as two halves (each 141.5 x 40 x 3 mm), overlapping 40 mm past the centre. Slide apart until both wings sit on the dash, tape, and measure across the two outer top corners; the design is 203.0 mm there, so the extra is (measured - 203). Result: pending.
 - Limit to remember: P1S bed 256 mm; the shell prints face-down at 203 mm wide now, so more than about 45 mm extra needs diagonal placement or a rethink (split shell, or shorter wings).
+
+## Pod widened to 250 mm tip to tip (2026-11-26)
+- RESULT (user, sliding template): 250 mm across the wing tips (design was 203). `WIDEN = 23.5` per side in DashPod.py: flat 134.8 -> 181.8 mm (+-90.9), wing tips and side walls move out 23.5 each side; wing angle and height unchanged. Screens and perfboard stay centred with the same spacing (about 48 mm more blank face each side of them, in total); the four lid screw posts spread out with the width (x +-32.1, +-96.4). Roof rivnut slots stay at x +-50 (rivnut drill template unchanged).
+- Built and checked (single piece each, STL sections): shell 250.0 x 99.8 x 46.0 mm, 226.0 wide at the bottom; lid 250.0 x 83.8 x 6.5. `dash_top_edge_template.stl` regenerated at 250 mm to confirm the fit before the shell. Not printed.
+- P1S bed is 256 x 256: only 3 mm spare each side, so no wide brim and place it clear of the front-left exclusion zone.

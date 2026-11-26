@@ -54,7 +54,8 @@ PITCH, YAW = 0.0, 0.0            # degrees: the face plate tips up (bottom towar
 TILT = 0.0                       # degrees: the top plane rises this much per mm of depth, so the face tips up toward the driver
 SIDE_TAPER = 0.12                 # each side moves in this much per mm of height going down (wider at the top)
 R_BOTTOM = 16.0                   # outer radius of the bottom corners
-WING_RISE, WING_X0, WING_X1, WING_R = 24.0, 67.4, 96.0, 20.0   # WING_X0 gives a 40 deg wing (test piece fit, 2026-11-23); the top edge curves up at both ends to follow the dash lip
+WIDEN = 23.5                      # extra on each side to match the dash: 250 mm tip to tip, measured with the sliding template (2026-11-26)
+WING_RISE, WING_X0, WING_X1, WING_R = 24.0, 67.4 + WIDEN, 96.0 + WIDEN, 20.0   # WING_X0 gives a 40 deg wing (test piece fit, 2026-11-23); the top edge curves up at both ends to follow the dash lip
 RIV_D, RIV_X, RIV_Z0, RIV_Z1 = 4.5, 50.0, 16.0, 34.0   # roof bolt slots for rivnuts in the dash lip (M4 clearance, x each side, along the depth): ASSUMED, check against the dash
 R_FACE = 3.0                      # rounded front edge (not on the top edge)
 SWEEP_START = 14.0                # depth where the underside starts to curve up
@@ -88,7 +89,7 @@ TACH_PCB_CY = YC + (TACH_C_FROM_TOP - (TACH_H - TACH_C_FROM_TOP)) / 2
 Y_EXT = H / 2 + WING_RISE                            # top of the end wings
 PY = IH / 2 - POST_D / 2
 POST_Z0 = FACE_T + max(GLASS_H + PCB_T, INFO_GLASS_H + INFO_PCB_T) + 0.5             # posts start behind the screens and hang from the ceiling
-_px0, _px1 = INFO_XMIN + POST_D / 2, LW / 2 - POST_D / 2
+_px0, _px1 = INFO_XMIN + POST_D / 2 - WIDEN, LW / 2 - POST_D / 2 + WIDEN   # lid posts spread with the width
 POSTS = [(_px0 + (_px1 - _px0) * i / 3.0, PY) for i in range(4)]
 # underside sweep: a circular arc, tangent to the flat bottom at SWEEP_START, rising SWEEP_RISE by the lid
 _L = Z_TOP - SWEEP_START
@@ -199,12 +200,13 @@ def _fits(hb):
             for sy in (-1, 1):
                 if clearance((cx + sx * (w / 2 + g), cy + sy * (h / 2 + g)), pts) < -0.2:
                     return False
-    return all(clearance(p, pts) >= 3.0 for p in POSTS)
+    return all(clearance((x - math.copysign(WIDEN, x), y), pts) >= 3.0 for x, y in (POSTS[0], POSTS[-1]))
 
 
 HB = 60.0
 while not _fits(HB):
     HB += 0.5
+HB += WIDEN                       # the screens set the least width; the dash sets the real one
 XOFF = 2 * (HB + SIDE_TAPER * (Y_EXT - YB)) + 15.0
 _in_hw = lambda y: HB + SIDE_TAPER * (y - YB) - WALL * K
 BOARD_CX = 0.0                    # perfboard centred across the pod; its terminal end faces +X (door side)
