@@ -48,6 +48,7 @@ IH = 71.0                         # inside height: the tach PCB (67.5) plus its 
 POST_D, LID_PILOT_D, LID_HOLE_D, POST_PILOT_DEPTH = 7.0, 2.8, 3.4, 12.0   # M3 machine screws
 SEAM = 12.0                       # gap between the two PCBs (the two middle lid posts sit in it)
 LIP_TOL, LIP_T, LIP_H = 0.2, 1.6, 2.0
+FLOOR_CLR = 0.5                    # gap between the lid's lip and standoffs and the shell floor
 
 # ---- Shape --------------------------------------------------------------
 PITCH, YAW = 0.0, 0.0            # degrees: the face plate tips up (bottom toward the driver) and turns to face the driver, who sits to the LEFT of the pod (LHD): the right-hand (info) end comes toward the driver; pivot is the top edge at the tach end
@@ -500,15 +501,10 @@ def build_shell(comp):
     for x, y in POSTS:
         cyl(comp, x, y, LID_PILOT_D, Z_TOP - POST_PILOT_DEPTH, Z_TOP + 1, CUT)
     roof_slots(comp)
-def trim_to_floor(comp, lid, lz):
-    """Trim the lower standoffs where they would touch the shell's swept floor."""
-    r = SW_R - WALL - LIP_TOL
-    a1 = math.asin((Z_TOP - SWEEP_START) / r)
-    a0 = math.asin((Z_TOP - 8.0 - SWEEP_START) / r)
-    pt = lambda a: (sweep_pt(r, a)[0], lz(sweep_pt(r, a)[1]))
-    S, M, E = pt(a0), pt((a0 + a1) / 2), pt(a1)
-    low = YB - 50
-    yz_region(comp, [('A', S, M, E), ('L', E, (low, E[1])), ('L', (low, E[1]), (low, S[1])), ('L', (low, S[1]), S)], CUT, [lid])
+def trim_to_floor(comp, lid):
+    """Keep the lip and the lower standoffs clear of the shell's swept floor. The cut is level (the floor is highest at the
+    lid), so nothing is left overhanging when the lid prints plate-down."""
+    clip_below(comp, lid, Y_BOT_IN + FLOOR_CLR, LID_T, LID_T + STANDOFF + 1.0)
 
 
 def round_back_edge(comp, lid):
@@ -528,7 +524,6 @@ def build_lid(comp):
     lid = face_body(comp, 0, LID_T, NEW, XOFF).bodies.item(0)
     clip_below(comp, lid, Y_BOT_OUT, -1.0, LID_T + 1.0)
     round_back_edge(comp, lid)
-    lz = lambda z: Z_TOP + LID_T - z       # lid z (outer face at 0) for a shell depth z
     # lip: a ring that follows the cavity at the back, notched round the posts
     t0, t1 = WALL + LIP_TOL, WALL + LIP_TOL + LIP_T
     lip = inset_body(comp, t0, H / 2 - t0, LID_T - 0.1, LID_T + LIP_H, XOFF)
@@ -552,7 +547,7 @@ def build_lid(comp):
         cyl(comp, lx(x), y, LID_HOLE_D, -1, LID_T + 1, CUT)
     # cable hole high on the lid but below the dash step, beside the board's door-side end (wires run inside from the terminal)
     cyl(comp, lx(WIRE_HOLE_X), WIRE_HOLE_Y, WIRE_HOLE_D, -1, LID_T + 1, CUT)
-    trim_to_floor(comp, lid, lz)
+    trim_to_floor(comp, lid)
 
 
 def build_all():
