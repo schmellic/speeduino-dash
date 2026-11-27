@@ -27,16 +27,35 @@ static uint8_t seq = 0;
 
 // Offsets taken from [OutputChannels] in the 61Bug mainController.ini (speeduino 202402).
 // Request is the ini's ochGetCommand: 'r', canId, 0x30, offset (2 bytes), length (2 bytes).
+// CRC-32 as the Speeduino uses it (the usual reflected one: zlib, Ethernet).
+static uint32_t crc32(const uint8_t *p, size_t n) {
+  uint32_t c = 0xFFFFFFFFu;
+  while (n--) {
+    c ^= *p++;
+    for (int k = 0; k < 8; k++) c = (c >> 1) ^ (0xEDB88320u & (0u - (c & 1u)));
+  }
+  return ~c;
+}
+
+// Talks to the ECU's secondary serial in its "Tuner Studio" protocol (set the ECU's secondary serial protocol to "Tuner Studio").
+// Unlike the plain "Generic" modes, every frame carries a length and a CRC and a half-received frame times out, so line noise
+// (for example while this board reboots) just fails the CRC and is thrown away. In the Generic modes a stray byte such as 'M'
+// or 'r' leaves the ECU waiting for parameter bytes with no timeout, and it stops answering until it is power-cycled.
+//   request:  len(2, big-endian) | 'r', canId 0, 0x30, offset(2, LE), length(2, LE) | CRC32 of the payload (4, big-endian)
+//   reply:    len(2) | rc (0 = OK), data | CRC32 of those bytes (4)
 static bool readSpeeduino(Telemetry &t) {
   // Clear stale bytes, but never loop forever: a noisy or streaming RX line would otherwise freeze the bridge here.
   for (int i = 0; i < 256 && SpeeduinoSerial.available(); i++) SpeeduinoSerial.read();
-  const uint8_t req[] = {'r', 0x00, 0x30, 0x00, 0x00, (uint8_t)REALTIME_LEN, 0x00};
+  uint8_t req[2 + 7 + 4] = {0x00, 0x07, 'r', 0x00, 0x30, 0x00, 0x00, (uint8_t)REALTIME_LEN, 0x00};
+  uint32_t rc = crc32(req + 2, 7);
+  req[9] = rc >> 24; req[10] = rc >> 16; req[11] = rc >> 8; req[12] = rc;
   SpeeduinoSerial.write(req, sizeof(req));
 
-  uint8_t buf[REALTIME_LEN + 2];
+  constexpr size_t REPLY_LEN = 2 + 1 + REALTIME_LEN + 4;
+  uint8_t buf[REPLY_LEN];
   size_t n = 0;
   uint32_t start = millis();
-  while (n < REALTIME_LEN + 2 && millis() - start < 100) {
+  while (n < REPLY_LEN && millis() - start < 100) {
     if (SpeeduinoSerial.available()) buf[n++] = SpeeduinoSerial.read();
     else delay(1);   // don't spin flat out while the ECU is quiet: the C3 has one core and the radio needs its share
   }
@@ -45,10 +64,10 @@ static bool readSpeeduino(Telemetry &t) {
   for (size_t i = 0; i < n; i++) Serial.printf(" %02X", buf[i]);
   Serial.println();
 #endif
-  // The ECU replies 'r', 0x30 (the command echo) and then the data. Insisting on that header and the full
-  // length means line noise can never look like a good reply.
-  if (n != REALTIME_LEN + 2 || buf[0] != 'r' || buf[1] != 0x30) return false;
-  const uint8_t *d = buf + 2;
+  if (n != REPLY_LEN || buf[0] != 0x00 || buf[1] != REALTIME_LEN + 1 || buf[2] != 0x00) return false;
+  uint32_t got = ((uint32_t)buf[REPLY_LEN - 4] << 24) | ((uint32_t)buf[REPLY_LEN - 3] << 16) | ((uint32_t)buf[REPLY_LEN - 2] << 8) | buf[REPLY_LEN - 1];
+  if (got != crc32(buf + 2, REALTIME_LEN + 1)) return false;
+  const uint8_t *d = buf + 3;
 
   t.mapKpa     = d[4] | (d[5] << 8);
   t.iatC       = (int16_t)d[6] - 40;
