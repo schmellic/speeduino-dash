@@ -43,6 +43,12 @@ static uint32_t crc32(const uint8_t *p, size_t n) {
 // or 'r' leaves the ECU waiting for parameter bytes with no timeout, and it stops answering until it is power-cycled.
 //   request:  len(2, big-endian) | 'r', canId 0, 0x30, offset(2, LE), length(2, LE) | CRC32 of the payload (4, big-endian)
 //   reply:    len(2) | rc (0 = OK), data | CRC32 of those bytes (4)
+// Set when the ECU starts answering in plain-command style instead of framed (that is what it does once TunerStudio has
+// connected over USB). From then on the bridge sends nothing, so it cannot collide with TunerStudio's traffic or feed the
+// ECU more stray commands. Only a reboot of the bridge clears it: in the car the ignition cycle restarts the ECU and the
+// bridge together.
+static bool holdOff = false;
+
 static bool readSpeeduino(Telemetry &t) {
   // Clear stale bytes, but never loop forever: a noisy or streaming RX line would otherwise freeze the bridge here.
   for (int i = 0; i < 256 && SpeeduinoSerial.available(); i++) SpeeduinoSerial.read();
@@ -64,6 +70,12 @@ static bool readSpeeduino(Telemetry &t) {
   for (size_t i = 0; i < n; i++) Serial.printf(" %02X", buf[i]);
   Serial.println();
 #endif
+  // A complete-looking reply that is not framed (no 00 21 header) is the ECU in plain-command mode: back off for good.
+  if (n >= REALTIME_LEN && !(buf[0] == 0x00 && buf[1] == REALTIME_LEN + 1)) {
+    holdOff = true;
+    Serial.println("HOLD: the ECU answers in plain-command mode (TunerStudio connected?). Bridge stops polling until it is rebooted.");
+    return false;
+  }
   if (n != REPLY_LEN || buf[0] != 0x00 || buf[1] != REALTIME_LEN + 1 || buf[2] != 0x00) return false;
   uint32_t got = ((uint32_t)buf[REPLY_LEN - 4] << 24) | ((uint32_t)buf[REPLY_LEN - 3] << 16) | ((uint32_t)buf[REPLY_LEN - 2] << 8) | buf[REPLY_LEN - 1];
   if (got != crc32(buf + 2, REALTIME_LEN + 1)) return false;
@@ -302,7 +314,7 @@ void loop() {
   simulate(t);
   t.linkOk = 1;
 #else
-  t.linkOk = readSpeeduino(t) ? 1 : 0;
+  t.linkOk = (!holdOff && readSpeeduino(t)) ? 1 : 0;
 #endif
   engineRpm = t.rpm;
   engineLink = t.linkOk;

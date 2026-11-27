@@ -319,3 +319,9 @@ Supersedes the cell order and the peak head panel in "Info screen design (2026-1
 - Full bridge power-off and replug (TunerStudio closed, ECU untouched) verified 2026-11-27: link=1 straight back.
 - Practical rule: tune with the bridge unplugged, then power-cycle the ECU (ignition off/on) afterwards. In the car every ignition cycle starts clean.
 - `BRIDGE_PROBE` debug flag (src/bridge/main.cpp) prints how the ECU answers a framed `Q`, plain `Q` and plain `S`: use it to see which mode the ECU is really in. TunerStudio's dialog can show the project's value, not the ECU's.
+
+### Bridge backs off when TunerStudio connects (2026-11-27, bench-tested)
+- The ECU is not reachable once installed, so the bridge cannot be unplugged for tuning. Instead `readSpeeduino()` detects the ECU answering in plain-command mode (a complete reply without the `00 21` frame header, which is what happens after TunerStudio connects) and sets `holdOff`: the bridge sends nothing more and reports `link=0` until it is rebooted. Only one frame is sent into the ECU's plain-command parser before it stops.
+- Bench test: TunerStudio connected with the bridge running: bridge printed `HOLD` after one frame and stopped polling; TunerStudio connected without errors and its gauges were live. After closing TunerStudio, an ECU power-cycle and a bridge reflash (restart) gave `link=1` again.
+- Needs: bridge and ECU both restarted by the ignition (check they are fed from the same switched supply) so one ignition cycle after tuning restores the dash. If the bridge has its own always-on supply it would stay silent after tuning until it is restarted.
+- Not yet tested: writing or burning in TunerStudio with the bridge running (the bridge is silent by then, so it should be the same as normal tuning), and the car with the engine running.
