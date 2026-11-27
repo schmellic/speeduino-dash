@@ -296,7 +296,7 @@ Supersedes the cell order and the peak head panel in "Info screen design (2026-1
 - `r` reply is `'r', 0x30` + data (34 bytes for 32 of data). The parser used to skip only one byte, so it would have read every value one byte off; it now requires the full 2-byte header and length (also stops noise giving link=1).
 - Protocol setting: Generic (ini File). Secondary serial enabled.
 - PROBLEM: whenever the bridge reboots (flash, reset, power-up), the ECU stops answering until the ECU is power-cycled. Reproduced: ECU power-cycle -> link=1; reset only the bridge -> link=0 and stays. Likely cause: TX is on GPIO21 = C3 UART0 TX, where the ROM bootloader prints its boot text at 115200; the ECU reads that as commands (some, like `G`, `r`, `M`, `B`, wait for more bytes) and its secondary-serial handler gets stuck.
-- Fix to do: re-solder bridge TX from GPIO21 to GPIO5 (GPIO5 is quiet at boot) and set SPEEDUINO_TX = 5. Garbage reaching the ECU could also have written to its RAM config: compare the tune with the saved .msq.
+- Tried: TX moved to GPIO5 (done 2026-11-27, SPEEDUINO_TX = 5). It did NOT cure it: after a bridge reset the ECU still stops answering until it is power-cycled. So the GPIO21 boot text is not the (only) cause. Next idea: the TX line floats while the C3 is in reset, so the ECU's RX3 may see noise; try a 10k pull-up from the bridge's TX pin (GPIO5) to 3V3 so the line idles high through a reboot. Garbage reaching the ECU could also have written to its RAM config: compare the tune with the saved .msq.
 - Lesson: never open or flash the ECU's own USB port (/dev/ttyACM0) to "test" - opening it resets the Mega. The bridge is the Espressif device in /dev/serial/by-id.
 
 ## Power-on splash (2026-11-23, flashed over USB)

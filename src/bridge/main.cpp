@@ -12,7 +12,7 @@
 #if CONFIG_IDF_TARGET_ESP32C3
 #define SpeeduinoSerial Serial1   // C3 has no Serial2
 constexpr int SPEEDUINO_RX = 4;
-constexpr int SPEEDUINO_TX = 21;   // the TX wire on the built bridge board is soldered to GPIO21, not GPIO5 (moving it to 5 is optional)
+constexpr int SPEEDUINO_TX = 5;    // GPIO5, not GPIO21: GPIO21 is UART0 TX and the C3's boot text on it jammed the ECU's Serial3
 #else
 #define SpeeduinoSerial Serial2
 constexpr int SPEEDUINO_RX = 16;
