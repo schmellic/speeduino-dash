@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <esp_now.h>
+#include <esp_wifi.h>
 #include <ArduinoOTA.h>
 #include <WebServer.h>
 #include <DNSServer.h>
@@ -856,7 +857,7 @@ void setup() {
   fadeBoth(true, 400);
 
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP(OTA_SSID, OTA_PASS, 1);   // channel 1, same as the bridge's default
+  WiFi.softAP(OTA_SSID, OTA_PASS, RADIO_CHANNEL);   // the bridge sits on the same channel (see Telemetry.h)
   ArduinoOTA.setHostname("speeduino-dash");
   ArduinoOTA.onStart([]() { otaBusy = true; });
   ArduinoOTA.onEnd([]() { otaBusy = false; });
@@ -890,6 +891,7 @@ void loop() {
       web.stop();
       dns.stop();
       WiFi.softAPdisconnect(true);   // leaves the radio in STA mode for ESP-NOW
+      esp_wifi_set_channel(RADIO_CHANNEL, WIFI_SECOND_CHAN_NONE);   // the radio otherwise falls back to channel 1 and stops hearing the bridge
       otaActive = false;
     }
   }

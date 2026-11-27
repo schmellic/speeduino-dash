@@ -15,3 +15,8 @@ struct __attribute__((packed)) Telemetry {
   uint8_t  linkOk;     // 1 = bridge is getting valid data from the ECU
   uint8_t  seq;
 };
+
+// Wi-Fi channel shared by the dash (its access point) and the bridge (ESP-NOW). Keep both on the same value.
+#ifndef RADIO_CHANNEL
+#define RADIO_CHANNEL 1
+#endif

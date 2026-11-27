@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <esp_now.h>
+#include <esp_wifi.h>
 #include <Update.h>
 #include "Telemetry.h"
 #include "BridgeUpdate.h"
@@ -227,6 +228,7 @@ static void updatePoll() {
 
 void setup() {
   Serial.begin(115200);
+  Serial.setTxTimeoutMs(0);   // never wait for a USB reader: with the cable plugged in but nothing reading, every printf used to stall the loop for seconds and the dash got about one packet every two seconds
 #if !SIMULATE
   SpeeduinoSerial.begin(SPEEDUINO_BAUD, SERIAL_8N1, SPEEDUINO_RX, SPEEDUINO_TX);
 #endif
@@ -286,6 +288,7 @@ void setup() {
   }
 #endif
   WiFi.mode(WIFI_STA);
+  esp_wifi_set_channel(RADIO_CHANNEL, WIFI_SECOND_CHAN_NONE);   // same channel as the dash's access point
 #ifdef BRIDGE_RADIOSCAN   // temporary: can this board's radio hear the dash's access point, and how loud?
   delay(1500);
   for (int round = 0; round < 3; round++) {
@@ -300,7 +303,10 @@ void setup() {
   // The C3 SuperMini's radio is not heard by the dash at full transmit power (its small 3.3 V regulator sags under the transmit
   // peaks and the signal is mangled): with the default 20 dBm the dash received nothing, at 8.5 dBm it receives every packet.
   // The dash is only a couple of metres away, so low power is plenty. Verified on the bench 2026-11-27.
-  WiFi.setTxPower(WIFI_POWER_8_5dBm);
+#ifndef BRIDGE_TX_POWER
+#define BRIDGE_TX_POWER WIFI_POWER_8_5dBm
+#endif
+  WiFi.setTxPower(BRIDGE_TX_POWER);
   if (esp_now_init() != ESP_OK) {
     Serial.println("ESP-NOW init failed");
     return;
