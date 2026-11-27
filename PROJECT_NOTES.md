@@ -338,3 +338,6 @@ Supersedes the cell order and the peak head panel in "Info screen design (2026-1
 - Fix: `Serial.setTxTimeoutMs(0)` right after `Serial.begin` in the bridge, so a print never waits. Verified: 107 packets in 11 s with nobody reading (was 9). In the car the bridge has no USB host, where prints were already dropped.
 - Measured and kept: 8.5 dBm transmit power (full power had delivered nothing); channel moves (11, 13) made no difference, so `RADIO_CHANNEL` is back to 1 (it is a shared constant in `include/Telemetry.h`, and the dash re-selects it after its access point closes, which is correct either way). The nearby access point on channel 2 was a red herring.
 - Lesson: when testing the radio, never judge packet rates unless the bridge's serial output is either being read or the print cannot block.
+
+### First test on car power only (2026-11-27)
+- Dash and bridge both powered from the ignition (no USB, no laptop): the dash shows live data and looks good (user). Engine not yet started. Still to check with the engine running: RPM, MAP, AFR, CLT (reads 0 C on the bench: check against TunerStudio), and the AFR warning thresholds.
