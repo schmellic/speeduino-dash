@@ -286,10 +286,32 @@ void setup() {
   }
 #endif
   WiFi.mode(WIFI_STA);
+#ifdef BRIDGE_RADIOSCAN   // temporary: can this board's radio hear the dash's access point, and how loud?
+  delay(1500);
+  for (int round = 0; round < 3; round++) {
+    int found = WiFi.scanNetworks();
+    Serial.printf("scan %d: %d networks\n", round, found);
+    for (int i = 0; i < found; i++) {
+      if (WiFi.SSID(i) == "SpeeduinoDash") Serial.printf("  SpeeduinoDash heard: rssi %d dBm, channel %d\n", (int)WiFi.RSSI(i), (int)WiFi.channel(i));
+    }
+  }
+  WiFi.scanDelete();
+#endif
+  // The C3 SuperMini's radio is not heard by the dash at full transmit power (its small 3.3 V regulator sags under the transmit
+  // peaks and the signal is mangled): with the default 20 dBm the dash received nothing, at 8.5 dBm it receives every packet.
+  // The dash is only a couple of metres away, so low power is plenty. Verified on the bench 2026-11-27.
+  WiFi.setTxPower(WIFI_POWER_8_5dBm);
   if (esp_now_init() != ESP_OK) {
     Serial.println("ESP-NOW init failed");
     return;
   }
+#ifdef BRIDGE_DEBUG
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  esp_now_register_send_cb([](const esp_now_send_info_t *, esp_now_send_status_t st) { Serial.printf("send status %d (0 = ok)\n", (int)st); });
+#else
+  esp_now_register_send_cb([](const uint8_t *, esp_now_send_status_t st) { Serial.printf("send status %d (0 = ok)\n", (int)st); });
+#endif
+#endif
   esp_now_peer_info_t peer = {};
   memcpy(peer.peer_addr, BROADCAST, 6);
   peer.channel = 0;
@@ -319,6 +341,11 @@ void loop() {
   engineRpm = t.rpm;
   engineLink = t.linkOk;
   t.seq = seq++;
-  esp_now_send(BROADCAST, (uint8_t *)&t, sizeof(t));
+  esp_err_t sendRc = esp_now_send(BROADCAST, (uint8_t *)&t, sizeof(t));
+#ifdef BRIDGE_DEBUG
+  Serial.printf("esp_now_send rc=%d (0 = queued) ch=%u\n", (int)sendRc, (unsigned)WiFi.channel());
+#else
+  (void)sendRc;
+#endif
   Serial.printf("rpm=%u map=%u clt=%d link=%u\n", t.rpm, t.mapKpa, t.cltC, t.linkOk);
 }

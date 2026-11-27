@@ -381,6 +381,7 @@ constexpr uint16_t C_WARN = RGB565_ORANGE, C_BAD = RGB565_RED, C_OK = RGB565_GRE
 static volatile Telemetry latest = {};
 static volatile uint32_t lastRxMs = 0;
 static volatile uint32_t rxGood = 0, rxOther = 0, rxLastLen = 0;   // packet counters for the serial status line
+static int nowInitRc = -1;   // esp_now_init() result, shown on the status line
 
 static void handlePacket(const uint8_t *data, int len, const uint8_t *src) {
   if (len != sizeof(Telemetry)) { rxOther = rxOther + 1; rxLastLen = len; }
@@ -865,7 +866,8 @@ void setup() {
   otaActive = true;
 
 #if !SIM_LOCAL
-  if (esp_now_init() == ESP_OK) esp_now_register_recv_cb(onRecv);
+  nowInitRc = (int)esp_now_init();
+  if (nowInitRc == ESP_OK) esp_now_register_recv_cb(onRecv);
   else Serial.println("ESP-NOW init failed");
 #endif
 }
@@ -876,8 +878,8 @@ void loop() {
     lastStatus = millis();
     Telemetry t;
     memcpy(&t, (const void *)&latest, sizeof(t));
-    Serial.printf("rx good=%u other=%u(len %u) age=%ums link=%u rpm=%u map=%u clt=%d afr=%u\n", (unsigned)rxGood, (unsigned)rxOther,
-                  (unsigned)rxLastLen, (unsigned)(millis() - lastRxMs), t.linkOk, t.rpm, t.mapKpa, t.cltC, t.o2Raw);
+    Serial.printf("rx good=%u other=%u(len %u) age=%ums link=%u rpm=%u map=%u clt=%d afr=%u now=%d ch=%u mode=%d\n", (unsigned)rxGood, (unsigned)rxOther,
+                  (unsigned)rxLastLen, (unsigned)(millis() - lastRxMs), t.linkOk, t.rpm, t.mapKpa, t.cltC, t.o2Raw, nowInitRc, (unsigned)WiFi.channel(), (int)WiFi.getMode());
   }
   if (otaActive) {
     ArduinoOTA.handle();
