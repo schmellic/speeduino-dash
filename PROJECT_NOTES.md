@@ -312,3 +312,9 @@ Supersedes the cell order and the peak head panel in "Info screen design (2026-1
 - Verified on the bench 2026-11-27: link=1, and three bridge resets in a row (ECU not touched) all recovered. Not yet verified: unplugging the bridge's power completely, engine running, TunerStudio over USB while the secondary is in Tuner Studio mode (should still work; the source suggests the secondary diverts only while a frame is in progress).
 - The earlier garbage could have written stray values into the ECU's RAM config (only an accidental `b`/`B` burn would be permanent): compare the ECU's tune with the saved .msq.
 - Never open /dev/ttyACM*: port numbers swap between boots. Use /dev/serial/by-id (Espressif = bridge, Arduino = the ECU).
+
+### TunerStudio connecting breaks the framed link until the ECU is power-cycled (2026-11-27)
+- With the ECU's secondary serial set to Tuner Studio (burned, ECU power-cycled) and TunerStudio NOT connected: framed `Q` returns `00 11 00 "speeduino 202501" CRC`, plain commands get no answer, and the bridge link is solid through flashing and repeated resets.
+- After TunerStudio connects over USB, the ECU starts treating the secondary port's bytes as plain legacy commands (framed requests come back as raw text/data, `link=0`), and it stays that way after TunerStudio is closed, until the ECU is power-cycled. Likely cause (not confirmed in the source): TunerStudio's legacy commands set the firmware's allow-legacy-comms flag. The ECU's own note also says the primary and secondary ports cannot be used simultaneously in this mode.
+- Practical rule: tune with the bridge unplugged, then power-cycle the ECU (ignition off/on) afterwards. In the car every ignition cycle starts clean.
+- `BRIDGE_PROBE` debug flag (src/bridge/main.cpp) prints how the ECU answers a framed `Q`, plain `Q` and plain `S`: use it to see which mode the ECU is really in. TunerStudio's dialog can show the project's value, not the ECU's.

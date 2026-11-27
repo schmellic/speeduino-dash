@@ -218,6 +218,34 @@ void setup() {
 #if !SIMULATE
   SpeeduinoSerial.begin(SPEEDUINO_BAUD, SERIAL_8N1, SPEEDUINO_RX, SPEEDUINO_TX);
 #endif
+#ifdef BRIDGE_PROBE   // temporary: show how the ECU answers a framed request and a plain one
+  delay(3000);
+  for (;;) {
+    for (int mode = 0; mode < 3; mode++) {
+      while (SpeeduinoSerial.available()) SpeeduinoSerial.read();
+      uint8_t f[16];
+      size_t fn = 0;
+      if (mode == 0) {   // framed 'Q'
+        f[0] = 0; f[1] = 1; f[2] = 'Q';
+        uint32_t c = crc32(f + 2, 1);
+        f[3] = c >> 24; f[4] = c >> 16; f[5] = c >> 8; f[6] = c; fn = 7;
+      } else if (mode == 1) { f[0] = 'Q'; fn = 1; }   // plain 'Q'
+      else { f[0] = 'S'; fn = 1; }                    // plain 'S'
+      SpeeduinoSerial.write(f, fn);
+      uint8_t rb[64];
+      size_t rn = 0;
+      uint32_t t0 = millis();
+      while (rn < sizeof(rb) && millis() - t0 < 300) { if (SpeeduinoSerial.available()) rb[rn++] = SpeeduinoSerial.read(); else delay(1); }
+      Serial.printf("probe %s n=%u:", mode == 0 ? "framed-Q" : mode == 1 ? "plain-Q" : "plain-S", (unsigned)rn);
+      for (size_t i = 0; i < rn; i++) Serial.printf(" %02X", rb[i]);
+      Serial.print("  |");
+      for (size_t i = 0; i < rn; i++) Serial.print(rb[i] >= 32 && rb[i] < 127 ? (char)rb[i] : '.');
+      Serial.println();
+      delay(500);
+    }
+    Serial.println("---");
+  }
+#endif
 #ifdef BRIDGE_BAUDSCAN   // temporary: try single-byte commands at two baud rates, show what the ECU sends back
   delay(3000);
   const uint32_t bauds[] = {115200, 9600};
